@@ -1,0 +1,259 @@
+@startuml ATK Mahkamah Agung - Class Diagram
+
+title Class Diagram\nSistem Alat Tulis Kantor (ATK) Mahkamah Agung
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+
+' ==================== ENUMS ====================
+enum Role {
+    ADMIN
+    PENGAWAS
+}
+
+enum TransactionType {
+    MASUK
+    KELUAR
+}
+
+enum StockMovementType {
+    PENAMBAHAN
+    PENGURANGAN
+    PENYESUAIAN
+}
+
+' ==================== MODELS ====================
+
+class User {
+    - id: bigint <<PK>>
+    - name: string
+    - email: string
+    - password: string
+    - role: Role
+    - email_verified_at: timestamp
+    - remember_token: string
+    - created_at: timestamp
+    - updated_at: timestamp
+    --
+    + isAdmin(): boolean
+    + isPengawas(): boolean
+    + transactions(): HasMany
+    + stockMovements(): HasMany
+}
+
+class Barang {
+    - id: bigint <<PK>>
+    - kode: string <<unique>>
+    - nama: string
+    - satuan: string
+    - stok: integer
+    - stok_minimum: integer
+    - deskripsi: text
+    - is_active: boolean
+    - created_at: timestamp
+    - updated_at: timestamp
+    --
+    + isLowStock(): boolean
+    + addStock(qty: int): void
+    + reduceStock(qty: int): void
+    + transactionItems(): HasMany
+    + stockMovements(): HasMany
+}
+
+class Ruangan {
+    - id: bigint <<PK>>
+    - kode: string <<unique>>
+    - nama: string
+    - penanggung_jawab: string
+    - deskripsi: text
+    - is_active: boolean
+    - created_at: timestamp
+    - updated_at: timestamp
+    --
+    + transactions(): HasMany
+    + getTotalUsage(): array
+}
+
+class Transaction {
+    - id: bigint <<PK>>
+    - kode_transaksi: string <<unique>>
+    - ruangan_id: bigint <<FK>>
+    - user_id: bigint <<FK>>
+    - type: TransactionType
+    - tanggal: date
+    - keterangan: text
+    - created_at: timestamp
+    - updated_at: timestamp
+    --
+    + items(): HasMany
+    + ruangan(): BelongsTo
+    + user(): BelongsTo
+    + generateKode(): string
+}
+
+class TransactionItem {
+    - id: bigint <<PK>>
+    - transaction_id: bigint <<FK>>
+    - barang_id: bigint <<FK>>
+    - jumlah: integer
+    - created_at: timestamp
+    - updated_at: timestamp
+    --
+    + transaction(): BelongsTo
+    + barang(): BelongsTo
+}
+
+class StockMovement {
+    - id: bigint <<PK>>
+    - barang_id: bigint <<FK>>
+    - user_id: bigint <<FK>>
+    - transaction_id: bigint <<FK>> <<nullable>>
+    - type: StockMovementType
+    - jumlah: integer
+    - stok_sebelum: integer
+    - stok_sesudah: integer
+    - keterangan: text
+    - created_at: timestamp
+    - updated_at: timestamp
+    --
+    + barang(): BelongsTo
+    + user(): BelongsTo
+    + transaction(): BelongsTo
+}
+
+class Setting {
+    - id: bigint <<PK>>
+    - key: string <<unique>>
+    - value: text
+    - created_at: timestamp
+    - updated_at: timestamp
+    --
+    + {static} get(key: string): mixed
+    + {static} set(key: string, value: mixed): void
+}
+
+' ==================== CONTROLLERS ====================
+
+abstract class Controller {
+    # middleware(): array
+}
+
+class AuthController {
+    + login(request: Request): Response
+    + logout(): Response
+}
+
+class DashboardController {
+    + index(): Response
+    + getStatistics(): JsonResponse
+}
+
+class BarangController {
+    + index(): Response
+    + create(): Response
+    + store(request: Request): Response
+    + show(barang: Barang): Response
+    + edit(barang: Barang): Response
+    + update(request: Request, barang: Barang): Response
+    + destroy(barang: Barang): Response
+}
+
+class RuanganController {
+    + index(): Response
+    + create(): Response
+    + store(request: Request): Response
+    + show(ruangan: Ruangan): Response
+    + edit(ruangan: Ruangan): Response
+    + update(request: Request, ruangan: Ruangan): Response
+    + destroy(ruangan: Ruangan): Response
+}
+
+class TransactionController {
+    + index(): Response
+    + create(): Response
+    + store(request: Request): Response
+    + show(transaction: Transaction): Response
+}
+
+class StockController {
+    + index(): Response
+    + create(): Response
+    + store(request: Request): Response
+}
+
+class ReportController {
+    + index(): Response
+    + exportPdf(request: Request): Response
+    + exportExcel(request: Request): Response
+    + kartuStok(barang: Barang): Response
+}
+
+' ==================== SERVICES ====================
+
+class StockService {
+    + addStock(barang: Barang, qty: int, user: User, keterangan: string): StockMovement
+    + reduceStock(barang: Barang, qty: int, user: User, transaction: Transaction): StockMovement
+    + adjustStock(barang: Barang, qty: int, user: User, keterangan: string): StockMovement
+}
+
+class TransactionService {
+    + createTransaction(data: array, user: User): Transaction
+    + processItems(transaction: Transaction, items: array): void
+}
+
+class ReportService {
+    + generateInventoryReport(filters: array): Collection
+    + generateUsageReport(ruangan: Ruangan, period: array): array
+    + generateKartuStok(barang: Barang): array
+}
+
+' ==================== RELATIONSHIPS ====================
+
+' Model Relationships
+User "1" --> "*" Transaction : creates
+User "1" --> "*" StockMovement : records
+User --> Role
+
+Barang "1" --> "*" TransactionItem : has
+Barang "1" --> "*" StockMovement : tracks
+
+Ruangan "1" --> "*" Transaction : receives
+
+Transaction "1" --> "*" TransactionItem : contains
+Transaction --> TransactionType
+Transaction "*" --> "1" Ruangan : belongs to
+Transaction "*" --> "1" User : created by
+
+TransactionItem "*" --> "1" Transaction : belongs to
+TransactionItem "*" --> "1" Barang : references
+
+StockMovement "*" --> "1" Barang : tracks
+StockMovement "*" --> "1" User : recorded by
+StockMovement "*" --> "0..1" Transaction : linked to
+StockMovement --> StockMovementType
+
+' Controller Inheritance
+Controller <|-- AuthController
+Controller <|-- DashboardController
+Controller <|-- BarangController
+Controller <|-- RuanganController
+Controller <|-- TransactionController
+Controller <|-- StockController
+Controller <|-- ReportController
+
+' Controller-Service Dependencies
+TransactionController ..> TransactionService : uses
+TransactionController ..> StockService : uses
+StockController ..> StockService : uses
+ReportController ..> ReportService : uses
+
+' Service-Model Dependencies
+StockService ..> Barang : modifies
+StockService ..> StockMovement : creates
+TransactionService ..> Transaction : creates
+TransactionService ..> TransactionItem : creates
+TransactionService ..> StockService : uses
+ReportService ..> Barang : queries
+ReportService ..> StockMovement : queries
+
+@enduml

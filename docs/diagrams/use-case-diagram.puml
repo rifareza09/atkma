@@ -1,0 +1,149 @@
+@startuml ATK Mahkamah Agung - Use Case Diagram
+
+title Use Case Diagram\nSistem Alat Tulis Kantor (ATK) Mahkamah Agung
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+' ==================== ACTORS ====================
+actor "Admin" as Admin #LightBlue
+actor "Pengawas" as Pengawas #LightGreen
+actor "Sistem" as System #LightGray
+
+' ==================== SYSTEM BOUNDARY ====================
+rectangle "Sistem ATK Mahkamah Agung" {
+
+    ' === Epic: Sistem & Hak Akses ===
+    package "Sistem & Hak Akses" #FFE4B5 {
+        usecase "UC01: Login ke Sistem" as UC01
+        usecase "UC02: Logout dari Sistem" as UC02
+        usecase "UC03: Kelola Hak Akses" as UC03
+    }
+
+    ' === Epic: Manajemen Data Master ===
+    package "Manajemen Data Master" #E6E6FA {
+        usecase "UC04: Kelola Data Barang" as UC04
+        usecase "UC05: Tambah Barang Baru" as UC05
+        usecase "UC06: Edit Data Barang" as UC06
+        usecase "UC07: Hapus Data Barang" as UC07
+        usecase "UC08: Lihat Daftar Barang" as UC08
+        usecase "UC09: Kelola Data Ruangan" as UC09
+        usecase "UC10: Tambah Ruangan Baru" as UC10
+        usecase "UC11: Edit Data Ruangan" as UC11
+        usecase "UC12: Hapus Data Ruangan" as UC12
+        usecase "UC13: Lihat Daftar Ruangan" as UC13
+    }
+
+    ' === Epic: Transaksi Permintaan Barang ===
+    package "Transaksi Permintaan Barang" #FFEFD5 {
+        usecase "UC14: Catat Permintaan Barang" as UC14
+        usecase "UC15: Lihat Daftar Transaksi" as UC15
+        usecase "UC16: Detail Transaksi" as UC16
+        usecase "UC17: Kurangi Stok Otomatis" as UC17
+    }
+
+    ' === Epic: Manajemen Stok ===
+    package "Manajemen Stok" #E0FFE0 {
+        usecase "UC18: Catat Barang Masuk" as UC18
+        usecase "UC19: Lihat Riwayat Stok Masuk" as UC19
+        usecase "UC20: Tambah Stok Otomatis" as UC20
+    }
+
+    ' === Epic: Monitoring & Pengawasan ===
+    package "Monitoring & Pengawasan" #FFE4E1 {
+        usecase "UC21: Lihat Dashboard Ringkasan" as UC21
+        usecase "UC22: Pantau Stok Gudang" as UC22
+        usecase "UC23: Pantau Jatah Ruangan" as UC23
+        usecase "UC24: Lihat Statistik Penggunaan" as UC24
+    }
+
+    ' === Epic: Pencarian & Filter ===
+    package "Pencarian & Filter Data" #E0FFFF {
+        usecase "UC25: Filter Transaksi" as UC25
+        usecase "UC26: Cari Barang" as UC26
+        usecase "UC27: Cari Ruangan" as UC27
+    }
+
+    ' === Epic: Pelaporan ===
+    package "Pelaporan" #FFF0F5 {
+        usecase "UC28: Ekspor Laporan PDF" as UC28
+        usecase "UC29: Ekspor Laporan Excel" as UC29
+        usecase "UC30: Cetak Kartu Stok" as UC30
+    }
+}
+
+' ==================== RELATIONSHIPS ====================
+
+' Admin - Sistem & Hak Akses
+Admin --> UC01
+Admin --> UC02
+
+' Admin - Manajemen Data Master
+Admin --> UC04
+UC04 ..> UC05 : <<include>>
+UC04 ..> UC06 : <<include>>
+UC04 ..> UC07 : <<include>>
+UC04 ..> UC08 : <<include>>
+
+Admin --> UC09
+UC09 ..> UC10 : <<include>>
+UC09 ..> UC11 : <<include>>
+UC09 ..> UC12 : <<include>>
+UC09 ..> UC13 : <<include>>
+
+' Admin - Transaksi
+Admin --> UC14
+Admin --> UC15
+UC15 ..> UC16 : <<extend>>
+
+' Admin - Manajemen Stok
+Admin --> UC18
+Admin --> UC19
+
+' Admin - Pencarian & Filter
+Admin --> UC25
+Admin --> UC26
+Admin --> UC27
+
+' Pengawas - Sistem & Hak Akses
+Pengawas --> UC01
+Pengawas --> UC02
+
+' Pengawas - Monitoring (READ ONLY)
+Pengawas --> UC21
+Pengawas --> UC22
+Pengawas --> UC23
+Pengawas --> UC24
+
+' Pengawas - View Data (READ ONLY)
+Pengawas --> UC08
+Pengawas --> UC13
+Pengawas --> UC15
+
+' Pengawas - Pelaporan
+Pengawas --> UC28
+Pengawas --> UC29
+Pengawas --> UC30
+
+' System - Automated Actions
+System --> UC03
+System --> UC17
+System --> UC20
+
+UC14 ..> UC17 : <<include>>
+UC18 ..> UC20 : <<include>>
+
+' ==================== LEGEND ====================
+legend right
+  |= Warna |= Epic |
+  | <#FFE4B5> | Sistem & Hak Akses |
+  | <#E6E6FA> | Manajemen Data Master |
+  | <#FFEFD5> | Transaksi Permintaan |
+  | <#E0FFE0> | Manajemen Stok |
+  | <#FFE4E1> | Monitoring & Pengawasan |
+  | <#E0FFFF> | Pencarian & Filter |
+  | <#FFF0F5> | Pelaporan |
+endlegend
+
+@enduml

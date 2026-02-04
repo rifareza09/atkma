@@ -1,0 +1,78 @@
+@startuml ATK Mahkamah Agung - Activity Diagram
+
+title Activity Diagram - Proses Permintaan Barang ATK\nMahkamah Agung
+
+|Admin|
+start
+:Login ke Sistem;
+
+:Pilih Menu "Permintaan Barang";
+
+:Klik "Tambah Permintaan Baru";
+
+:Pilih Ruangan dari Dropdown;
+
+:Input Tanggal Permintaan;
+
+|#AntiqueWhite|Sistem|
+:Tampilkan Form Input Barang;
+
+|Admin|
+repeat
+    :Pilih Barang dari Dropdown;
+    :Input Jumlah yang Diminta;
+
+    |Sistem|
+    if (Stok Mencukupi?) then (Ya)
+        :Tampilkan Stok Tersedia;
+        :Tambahkan ke Daftar Permintaan;
+    else (Tidak)
+        :Tampilkan Peringatan\n"Stok Tidak Mencukupi";
+        |Admin|
+        :Sesuaikan Jumlah atau\nPilih Barang Lain;
+    endif
+
+    |Admin|
+repeat while (Tambah Barang Lagi?) is (Ya) not (Tidak)
+
+:Input Keterangan (Opsional);
+
+:Klik "Simpan Permintaan";
+
+|Sistem|
+:Validasi Data Input;
+
+if (Data Valid?) then (Ya)
+    :Generate Kode Transaksi;
+    :Simpan Data Transaksi;
+    :Simpan Item-item Transaksi;
+
+    fork
+        :Kurangi Stok Barang\ndi Database;
+    fork again
+        :Catat Stock Movement\n(PENGURANGAN);
+    end fork
+
+    :Tampilkan Notifikasi Sukses;
+    :Redirect ke Detail Transaksi;
+
+    |Admin|
+    :Lihat Detail Transaksi;
+
+    if (Perlu Cetak?) then (Ya)
+        |Sistem|
+        :Generate PDF Bukti Permintaan;
+        |Admin|
+        :Cetak Dokumen;
+    else (Tidak)
+    endif
+
+else (Tidak)
+    :Tampilkan Error Validation;
+    |Admin|
+    :Perbaiki Data Input;
+endif
+
+stop
+
+@enduml

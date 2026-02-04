@@ -1,0 +1,126 @@
+@startuml ATK Mahkamah Agung - Sequence Diagram
+
+title Sequence Diagram - Proses Permintaan Barang ATK\nMahkamah Agung
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam maxmessagesize 150
+
+actor Admin
+participant "Browser\n(React/Inertia)" as Browser
+participant "TransactionController" as TC
+participant "TransactionService" as TS
+participant "StockService" as SS
+participant "Transaction Model" as TM
+participant "TransactionItem Model" as TIM
+participant "Barang Model" as BM
+participant "StockMovement Model" as SM
+database "Database\n(SQLite/MySQL)" as DB
+
+== Inisialisasi Form Permintaan ==
+
+Admin -> Browser: Klik "Tambah Permintaan"
+activate Browser
+
+Browser -> TC: GET /transactions/create
+activate TC
+
+TC -> DB: Query Barang (active)
+DB --> TC: List Barang
+
+TC -> DB: Query Ruangan (active)
+DB --> TC: List Ruangan
+
+TC --> Browser: Inertia::render('Transactions/Create',\n{barangs, ruangans})
+deactivate TC
+
+Browser --> Admin: Tampilkan Form
+deactivate Browser
+
+== Input Data Permintaan ==
+
+Admin -> Browser: Input data permintaan\n(ruangan, tanggal, items[])
+activate Browser
+
+Browser -> Browser: Validasi client-side
+
+Browser -> TC: POST /transactions\n{ruangan_id, tanggal, items[], keterangan}
+activate TC
+
+TC -> TC: Validate Request
+
+alt Validasi Gagal
+    TC --> Browser: Redirect back with errors
+    Browser --> Admin: Tampilkan error
+else Validasi Sukses
+
+    TC -> TS: createTransaction(data, user)
+    activate TS
+
+    TS -> DB: Begin Transaction
+
+    TS -> TM: create({kode, ruangan_id, user_id, type, tanggal})
+    activate TM
+    TM -> DB: INSERT transactions
+    DB --> TM: Transaction created
+    TM --> TS: Transaction object
+    deactivate TM
+
+    loop For each item in items[]
+        TS -> BM: find(barang_id)
+        activate BM
+        BM -> DB: SELECT barang
+        DB --> BM: Barang data
+        BM --> TS: Barang object
+        deactivate BM
+
+        alt Stok Tidak Cukup
+            TS -> DB: Rollback
+            TS --> TC: throw InsufficientStockException
+            TC --> Browser: Redirect back with error
+            Browser --> Admin: "Stok tidak mencukupi"
+        else Stok Cukup
+            TS -> TIM: create({transaction_id, barang_id, jumlah})
+            activate TIM
+            TIM -> DB: INSERT transaction_items
+            DB --> TIM: Item created
+            TIM --> TS: TransactionItem object
+            deactivate TIM
+
+            TS -> SS: reduceStock(barang, jumlah, user, transaction)
+            activate SS
+
+            SS -> BM: reduceStock(jumlah)
+            activate BM
+            BM -> DB: UPDATE barangs SET stok = stok - jumlah
+            DB --> BM: Updated
+            BM --> SS: void
+            deactivate BM
+
+            SS -> SM: create({barang_id, user_id, transaction_id,\ntype: PENGURANGAN, jumlah,\nstok_sebelum, stok_sesudah})
+            activate SM
+            SM -> DB: INSERT stock_movements
+            DB --> SM: Movement created
+            SM --> SS: StockMovement object
+            deactivate SM
+
+            SS --> TS: StockMovement object
+            deactivate SS
+        end
+    end
+
+    TS -> DB: Commit Transaction
+
+    TS --> TC: Transaction object
+    deactivate TS
+
+    TC --> Browser: redirect("/transactions/{id}")\n->with('success', 'Permintaan berhasil disimpan')
+end
+
+deactivate TC
+
+Browser --> Admin: Tampilkan halaman detail\ndengan notifikasi sukses
+
+deactivate Browser
+
+@enduml

@@ -1,0 +1,199 @@
+// ============================================================
+// ERD - Sistem ATK Mahkamah Agung
+// Platform: https://dbdiagram.io
+// ============================================================
+// Cara Penggunaan:
+// 1. Buka https://dbdiagram.io
+// 2. Klik "Go to App" atau "Try it Free"
+// 3. Hapus contoh yang ada
+// 4. Copy-paste semua kode di bawah ini
+// 5. Diagram akan ter-generate otomatis
+// ============================================================
+
+// ==================== TABLES ====================
+
+Table users {
+  id bigint [pk, increment]
+  name varchar(255) [not null]
+  email varchar(255) [unique, not null]
+  email_verified_at timestamp
+  password varchar(255) [not null]
+  role enum('admin', 'pengawas') [not null, default: 'admin']
+  two_factor_secret text
+  two_factor_recovery_codes text
+  two_factor_confirmed_at timestamp
+  remember_token varchar(100)
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    email [unique]
+    role
+  }
+}
+
+Table barangs {
+  id bigint [pk, increment]
+  kode varchar(50) [unique, not null, note: 'Kode manual barang, contoh: ATK-001']
+  nama varchar(255) [not null]
+  satuan varchar(50) [not null, note: 'Satuan barang: pcs, rim, box, lusin, dll']
+  stok int [not null, default: 0]
+  stok_minimum int [not null, default: 10, note: 'Batas minimum stok untuk warning']
+  deskripsi text
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    kode [unique]
+    nama
+    is_active
+  }
+}
+
+Table ruangans {
+  id bigint [pk, increment]
+  kode varchar(50) [unique, not null, note: 'Kode ruangan, contoh: R-001']
+  nama varchar(255) [not null, note: 'Nama ruangan/unit kerja']
+  penanggung_jawab varchar(255) [note: 'Nama penanggung jawab ruangan']
+  deskripsi text
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    kode [unique]
+    nama
+    is_active
+  }
+}
+
+Table transactions {
+  id bigint [pk, increment]
+  kode_transaksi varchar(50) [unique, not null, note: 'Auto-generated: TRX-YYYYMMDD-XXX']
+  ruangan_id bigint [ref: > ruangans.id, not null]
+  user_id bigint [ref: > users.id, not null, note: 'Admin yang mencatat']
+  type enum('masuk', 'keluar') [not null, note: 'masuk=penambahan stok, keluar=permintaan']
+  tanggal date [not null]
+  keterangan text
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    kode_transaksi [unique]
+    ruangan_id
+    user_id
+    type
+    tanggal
+    (tanggal, type)
+  }
+}
+
+Table transaction_items {
+  id bigint [pk, increment]
+  transaction_id bigint [ref: > transactions.id, not null]
+  barang_id bigint [ref: > barangs.id, not null]
+  jumlah int [not null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    transaction_id
+    barang_id
+    (transaction_id, barang_id)
+  }
+}
+
+Table stock_movements {
+  id bigint [pk, increment]
+  barang_id bigint [ref: > barangs.id, not null]
+  user_id bigint [ref: > users.id, not null, note: 'User yang melakukan perubahan']
+  transaction_id bigint [ref: > transactions.id, note: 'Nullable, untuk tracking dari transaksi mana']
+  type enum('penambahan', 'pengurangan', 'penyesuaian') [not null]
+  jumlah int [not null, note: 'Jumlah perubahan (selalu positif)']
+  stok_sebelum int [not null]
+  stok_sesudah int [not null]
+  keterangan text
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    barang_id
+    user_id
+    transaction_id
+    type
+    created_at
+    (barang_id, created_at)
+  }
+}
+
+Table settings {
+  id bigint [pk, increment]
+  key varchar(255) [unique, not null]
+  value text
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    key [unique]
+  }
+}
+
+Table password_reset_tokens {
+  email varchar(255) [pk]
+  token varchar(255) [not null]
+  created_at timestamp
+}
+
+Table sessions {
+  id varchar(255) [pk]
+  user_id bigint [ref: > users.id]
+  ip_address varchar(45)
+  user_agent text
+  payload longtext [not null]
+  last_activity int [not null]
+
+  indexes {
+    user_id
+    last_activity
+  }
+}
+
+// ==================== TABLE GROUPS ====================
+
+TableGroup master_data {
+  users
+  barangs
+  ruangans
+  settings
+}
+
+TableGroup transaksi {
+  transactions
+  transaction_items
+}
+
+TableGroup stok {
+  stock_movements
+}
+
+TableGroup auth {
+  password_reset_tokens
+  sessions
+}
+
+// ==================== NOTES ====================
+
+Note overview {
+  'Sistem ATK Mahkamah Agung
+
+  Fitur Utama:
+  - Manajemen Barang & Ruangan
+  - Transaksi Permintaan Barang
+  - Tracking Stok Realtime
+  - Laporan & Export PDF/Excel
+
+  Roles:
+  - Admin: Full access (CRUD)
+  - Pengawas: Read-only + Report'
+}
