@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\BarangController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RuanganController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -10,8 +13,16 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Protected routes with authentication
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Barang routes - Admin can create/update/delete, Pengawas can only view
+    Route::resource('barang', BarangController::class);
+
+    // Ruangan routes - Admin can create/update/delete, Pengawas can only view
+    Route::resource('ruangan', RuanganController::class);
+});
 
 require __DIR__.'/settings.php';
