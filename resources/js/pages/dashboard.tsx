@@ -41,76 +41,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ dashboardData }: DashboardProps) {
-    // Temporary mock data - akan diganti dengan real data dari backend
-    const mockData: DashboardData = dashboardData || {
-        stats: {
-            total_barang: 150,
-            total_ruangan: 25,
-            total_transaksi_bulan_ini: 48,
-            barang_stok_rendah: 8,
-        },
-        barang_stok_rendah: [
-            {
-                id: 1,
-                kode_barang: 'ATK-001',
-                nama_barang: 'Kertas A4 80gsm',
-                kategori: 'Kertas',
-                satuan: 'rim',
-                stok: 5,
-                stok_minimum: 20,
-                harga_satuan: 45000,
-                status: 'aktif',
-                persentase_stok: 25,
-                created_at: '2025-01-01',
-                updated_at: '2025-02-01',
-            },
-            {
-                id: 2,
-                kode_barang: 'ATK-015',
-                nama_barang: 'Tinta Printer Hitam',
-                kategori: 'Tinta',
-                satuan: 'pcs',
-                stok: 3,
-                stok_minimum: 10,
-                harga_satuan: 85000,
-                status: 'aktif',
-                persentase_stok: 30,
-                created_at: '2025-01-01',
-                updated_at: '2025-02-01',
-            },
-        ],
-        transaksi_terbaru: [
-            {
-                id: 1,
-                kode_transaksi: 'TRX-2025-001',
-                tanggal_transaksi: '2025-02-05',
-                jenis_transaksi: 'keluar',
-                ruangan_id: 1,
-                ruangan_nama: 'Ruang Administrasi',
-                status: 'completed',
-                total_items: 5,
-                jumlah_item: 5,
-                created_by: 1,
-                created_at: '2025-02-05',
-                updated_at: '2025-02-05',
-            },
-            {
-                id: 2,
-                kode_transaksi: 'TRX-2025-002',
-                tanggal_transaksi: '2025-02-04',
-                jenis_transaksi: 'masuk',
-                status: 'completed',
-                total_items: 10,
-                jumlah_item: 10,
-                created_by: 1,
-                created_at: '2025-02-04',
-                updated_at: '2025-02-04',
-            },
-        ],
-        grafik_transaksi: [],
-    };
-
-    const { stats, barang_stok_rendah, transaksi_terbaru } = mockData;
+    const { stats, barang_stok_rendah, transaksi_terbaru } = dashboardData;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

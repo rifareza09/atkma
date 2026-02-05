@@ -1,162 +1,183 @@
-# 🏛️ Aplikasi ATK Mahkamah Agung RI
+# Aplikasi ATK Mahkamah Agung
 
-Sistem manajemen Alat Tulis Kantor (ATK) untuk Mahkamah Agung Republik Indonesia.
+Sistem Alat Tulis Kantor (ATK) untuk Mahkamah Agung - Laravel 12 + React + TypeScript + Inertia.js
 
-## 📚 Dokumentasi
+## 🚀 Tech Stack
 
-- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Panduan lengkap pengembangan
-- **[Frontend Progress](docs/FRONTEND_PROGRESS.md)** - Status pengembangan frontend
-- **[Git Collaboration](docs/GIT_COLLABORATION_GUIDE.md)** - Panduan kolaborasi Git
+**Backend:**
+- Laravel 12
+- SQLite (development) / MySQL (production)
+- Laravel Fortify (Authentication)
 
-## 🚀 Quick Start
+**Frontend:**
+- React 18+ dengan TypeScript
+- Vite
+- Inertia.js (SSR Bridge)
+- shadcn/ui + Tailwind CSS
+
+## 📦 Installation
 
 ### Prerequisites
-
 - PHP 8.2+
-- Node.js 18+
 - Composer
-- npm/yarn
+- Node.js 18+
+- NPM/Yarn
 
-### Installation
+### Setup
 
+1. Clone repository
 ```bash
-# Clone repository
 git clone <repository-url>
 cd atkma
+```
 
-# Install dependencies
+2. Install dependencies
+```bash
 composer install
 npm install
+```
 
-# Setup environment
+3. Setup environment
+```bash
 cp .env.example .env
 php artisan key:generate
+```
 
-# Run migrations
-php artisan migrate
+4. Setup database
+```bash
+# SQLite (default)
+touch database/database.sqlite
+php artisan migrate:fresh --seed
+```
 
-# Start development servers
-# Terminal 1: Laravel
+5. Run development server
+```bash
+# Terminal 1 - Laravel
 php artisan serve
+# atau gunakan Herd: http://atkma.test
 
-# Terminal 2: Vite
+# Terminal 2 - Vite
 npm run dev
 ```
 
-## 🛠️ Tech Stack
+## 🔑 Login Credentials
 
-### Backend
+**Admin:**
+- Username: `admin`
+- Password: `password`
 
-- **Framework:** Laravel 12
-- **Authentication:** Laravel Fortify
-- **Database:** SQLite (dev) / MySQL (prod)
-
-### Frontend
-
-- **Framework:** React 18 + TypeScript
-- **SSR:** Inertia.js
-- **UI:** shadcn/ui + Tailwind CSS
-- **Icons:** Lucide React
-- **Build:** Vite
+**Pengawas:**
+- Username: `pengawas`
+- Password: `password`
 
 ## 📁 Project Structure
 
 ```
-atkma/
-├── app/                  # Laravel backend
-├── resources/
-│   ├── js/              # React frontend
-│   │   ├── components/  # Reusable components
-│   │   ├── pages/       # Page components
-│   │   ├── types/       # TypeScript types
-│   │   └── lib/         # Utilities
-│   └── css/             # Styles
-├── routes/              # Laravel routes
-├── database/            # Migrations & seeders
-└── docs/                # Documentation
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── BarangController.php      ✅ DONE
+│   │   ├── RuanganController.php     ⏳ TODO (BE)
+│   │   └── DashboardController.php   ✅ DONE
+│   ├── Middleware/
+│   │   └── RoleMiddleware.php        ✅ DONE
+│   └── Requests/
+│       ├── BarangRequest.php         ✅ DONE
+│       └── RuanganRequest.php        ⏳ TODO (BE)
+├── Models/
+│   ├── User.php                      ✅ DONE
+│   ├── Barang.php                    ✅ DONE
+│   ├── Ruangan.php                   ✅ DONE
+│   ├── Transaction.php               ✅ DONE
+│   └── ...
+├── Policies/
+│   ├── BarangPolicy.php              ✅ DONE
+│   ├── RuanganPolicy.php             ✅ DONE
+│   └── TransactionPolicy.php         ✅ DONE
+└── ...
+
+resources/js/
+├── pages/
+│   ├── auth/                         ✅ DONE (FE 1)
+│   ├── dashboard.tsx                 ✅ DONE (FE 1 - placeholder)
+│   ├── Barang/                       ⏳ TODO (FE 1/FE 2)
+│   │   ├── Index.tsx
+│   │   ├── Create.tsx
+│   │   ├── Edit.tsx
+│   │   └── Show.tsx
+│   └── Ruangan/                      ⏳ TODO (FE 1/FE 2)
+│       ├── Index.tsx
+│       ├── Create.tsx
+│       ├── Edit.tsx
+│       └── Show.tsx
+├── components/                       ✅ DONE (FE 1)
+└── layouts/                          ✅ DONE (FE 1)
 ```
 
-## 🎯 Features
+## 👥 Development Status
 
-### ✅ Implemented (Phase 1-2)
+### ✅ Completed (BE 1)
+- Database migrations (barangs, ruangans, transactions, etc)
+- Models & Relationships
+- Authentication dengan username
+- Authorization (Policies & Middleware)
+- CRUD Backend APIs (Barang, Ruangan)
+- Dashboard API dengan statistik
+- Seeders dengan data sample
 
-- 🏠 Dashboard dengan statistik
-- 📦 Master Data Barang (CRUD)
-- 🏢 Master Data Ruangan (partial CRUD)
-- 🎨 Reusable UI Components
-- 📊 Data tables dengan pagination
-- 🔔 Toast notifications
+### ✅ Completed (FE 1)
+- Auth pages (Login, Register, dll)
+- Layout system
+- Components library
+- Dashboard placeholder
 
-### 🚧 In Progress (Phase 3)
+### ⏳ Next Tasks
 
-- 📝 Transaksi Permintaan Barang
-- 📥 Transaksi Barang Masuk
-- 🔍 Advanced filters
-- 📈 Dashboard charts
+**FE 1 - Priority HIGH:**
+1. Update Login form (email → username)
+2. Implementasi Dashboard dengan data real
+3. CRUD Barang pages (Index, Create, Edit, Show)
 
-### 📋 Planned (Phase 4)
+**FE 2 - Priority MEDIUM:**
+1. CRUD Ruangan pages (Index, Create, Edit, Show)
+2. Searchable Select components
+3. Data Tables with pagination
 
-- 📄 Export PDF/Excel
-- 📊 Laporan & Kartu Stok
-- 🎨 Branding MA
-- 🔎 Searchable dropdown
+**BE 1 - Priority HIGH (next):**
+1. RuanganController implementation
+2. TransactionController & Services
+3. Stock Service (auto reduce/add)
 
-## 📝 Available Scripts
+## 📚 Documentation
+
+- [Development Guide](docs/DEVELOPMENT_GUIDE.md)
+- [Login Username Guide](docs/LOGIN_USERNAME_GUIDE.md)
+- [Silabus Magang](SILABUS_JAM_KERJA_MAGANG.md)
+
+## 🔐 Authorization
+
+**Admin:**
+- Full access (create, read, update, delete)
+
+**Pengawas:**
+- Read-only access
+
+## 🌐 Routes
 
 ```bash
-# Development
-npm run dev              # Start Vite dev server
-php artisan serve        # Start Laravel server
-
-# Build
-npm run build           # Build for production
-npm run build:ssr       # Build with SSR support
-
-# Code Quality
-npm run lint            # Run ESLint
-npm run format          # Format with Prettier
-npm run types           # TypeScript type checking
+php artisan route:list
 ```
 
-## 🤝 Team Roles
+## 📝 Notes
 
-### Frontend Developer 1 ✅
+- Login menggunakan **username** (bukan email)
+- Soft delete menggunakan `is_active` flag
+- Database: SQLite untuk development, MySQL untuk production
 
-- Type definitions
-- Core components
-- Dashboard
-- Master Barang CRUD
-- Master Ruangan (partial)
+## 🤝 Contributing
 
-### Frontend Developer 2 📌
-
-- Complete Master Ruangan
-- Transaksi pages
-- Filters & search
-- Export features
-- Charts
-
-### Backend Developer 🔗
-
-- API implementation
-- Database design
-- Business logic
-- Authentication
-- Validation
-
-## 📞 Support
-
-Untuk pertanyaan atau bantuan, hubungi:
-
-- **Project Lead:** [Name]
-- **Tech Lead:** [Name]
-- **Documentation:** `docs/` folder
+Lihat [Git Collaboration Guide](docs/GIT_COLLABORATION_GUIDE.md)
 
 ## 📄 License
 
-[Add License Information]
-
----
-
-**Mahkamah Agung Republik Indonesia**  
-_Sistem Manajemen ATK v1.0_
+Private - Mahkamah Agung Indonesia

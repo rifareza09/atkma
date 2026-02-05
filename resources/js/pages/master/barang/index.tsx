@@ -32,47 +32,6 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
     const { toast } = useToast();
     const [search, setSearch] = useState(filters.search || '');
 
-    // Mock data untuk development
-    const mockBarangs: PaginatedResponse<Barang> = barangs || {
-        data: [
-            {
-                id: 1,
-                kode_barang: 'ATK-001',
-                nama_barang: 'Kertas A4 80gsm',
-                kategori: 'Kertas',
-                satuan: 'rim',
-                stok: 50,
-                stok_minimum: 20,
-                harga_satuan: 45000,
-                status: 'aktif',
-                deskripsi: 'Kertas A4 putih 80gsm isi 500 lembar',
-                created_at: '2025-01-01T00:00:00.000Z',
-                updated_at: '2025-02-01T00:00:00.000Z',
-            },
-            {
-                id: 2,
-                kode_barang: 'ATK-002',
-                nama_barang: 'Pulpen Hitam Standard',
-                kategori: 'Alat Tulis',
-                satuan: 'pcs',
-                stok: 200,
-                stok_minimum: 100,
-                harga_satuan: 2500,
-                status: 'aktif',
-                created_at: '2025-01-01T00:00:00.000Z',
-                updated_at: '2025-02-01T00:00:00.000Z',
-            },
-        ],
-        meta: {
-            current_page: 1,
-            from: 1,
-            last_page: 1,
-            per_page: 15,
-            to: 2,
-            total: 2,
-        },
-    };
-
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get(
@@ -226,13 +185,13 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                 {/* Data Table */}
                 <DataTable<Barang>
                     columns={columns}
-                    data={mockBarangs.data}
+                    data={barangs.data}
                     keyField="id"
                 />
 
                 {/* Pagination */}
                 <Pagination
-                    meta={mockBarangs.meta}
+                    meta={barangs.meta}
                     onPageChange={(page) => {
                         router.get(
                             barangIndex(),
