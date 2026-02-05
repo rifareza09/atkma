@@ -1,5 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { 
+    LayoutGrid, 
+    Package, 
+    Building2, 
+    ArrowRightLeft, 
+    ArrowDownToLine, 
+    FileText,
+} from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -12,6 +19,13 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { 
+    barangIndex, 
+    ruanganIndex, 
+    transaksiPermintaanIndex, 
+    transaksiMasukIndex,
+    laporanInventaris
+} from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
@@ -22,18 +36,38 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Data Barang',
+        href: barangIndex(),
+        icon: Package,
+    },
+    {
+        title: 'Data Ruangan',
+        href: ruanganIndex(),
+        icon: Building2,
+    },
+    {
+        title: 'Permintaan Barang',
+        href: transaksiPermintaanIndex(),
+        icon: ArrowRightLeft,
+    },
+    {
+        title: 'Barang Masuk',
+        href: transaksiMasukIndex(),
+        icon: ArrowDownToLine,
+    },
+    {
+        title: 'Laporan',
+        href: laporanInventaris(),
+        icon: FileText,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Mahkamah Agung RI',
+        href: 'https://www.mahkamahagung.go.id',
+        icon: Building2,
     },
 ];
 

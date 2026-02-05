@@ -2,7 +2,6 @@ import type {
     Barang,
     Ruangan,
     Transaction,
-    TransactionItem,
     User,
     PaginatedData,
     DashboardProps,

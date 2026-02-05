@@ -11,7 +11,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('dashboard', function () {
-    return Inertia::render('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return Inertia::render('dashboard', [
+        'dashboardData' => null, // Component will use mock data when null
+    ]);
+})->name('dashboard');
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

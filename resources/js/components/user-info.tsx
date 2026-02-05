@@ -6,10 +6,31 @@ export function UserInfo({
     user,
     showEmail = false,
 }: {
-    user: User;
+    user: User | null;
     showEmail?: boolean;
 }) {
     const getInitials = useInitials();
+
+    // Handle when user is null (not authenticated)
+    if (!user) {
+        return (
+            <>
+                <Avatar className="h-8 w-8 overflow-hidden rounded-full">
+                    <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                        GU
+                    </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">Guest User</span>
+                    {showEmail && (
+                        <span className="truncate text-xs text-muted-foreground">
+                            guest@example.com
+                        </span>
+                    )}
+                </div>
+            </>
+        );
+    }
 
     return (
         <>
