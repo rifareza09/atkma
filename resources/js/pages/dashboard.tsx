@@ -25,8 +25,9 @@ import {
 } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
 import type { 
-    BreadcrumbItem, 
-    DashboardData,
+    BreadcrumbItem,
+    Barang,
+    Transaction,
 } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,11 +38,27 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface DashboardProps {
-    dashboardData: DashboardData;
+    stats: {
+        total_barang: number;
+        total_barang_stok_rendah: number;
+        total_ruangan: number;
+        total_transaksi_hari_ini: number;
+        total_transaksi_bulan_ini: number;
+    };
+    chart_data: {
+        transaksi_7_hari: Array<{ tanggal: string; total: number }>;
+    };
+    top_barang: Array<{ nama: string; total_permintaan: number }>;
+    top_ruangan: Array<{ nama: string; total_transaksi: number }>;
+    barang_stok_rendah: Barang[];
+    transaksi_terbaru: Transaction[];
 }
 
-export default function Dashboard({ dashboardData }: DashboardProps) {
-    const { stats, barang_stok_rendah, transaksi_terbaru } = dashboardData;
+export default function Dashboard({ 
+    stats, 
+    barang_stok_rendah, 
+    transaksi_terbaru 
+}: DashboardProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -80,7 +97,7 @@ export default function Dashboard({ dashboardData }: DashboardProps) {
                     />
                     <StatCard
                         title="Stok Rendah"
-                        value={stats.barang_stok_rendah}
+                        value={stats.total_barang_stok_rendah}
                         icon={<AlertCircle className="size-4 text-destructive" />}
                         description="Barang perlu restok"
                     />
@@ -160,14 +177,13 @@ export default function Dashboard({ dashboardData }: DashboardProps) {
                                                 </TableCell>
                                                 <TableCell>
                                                     {new Date(
-                                                        transaksi.tanggal_transaksi,
+                                                        transaksi.tanggal_transaksi || transaksi.created_at,
                                                     ).toLocaleDateString('id-ID')}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge
                                                         variant={
-                                                            transaksi.jenis_transaksi ===
-                                                            'masuk'
+                                                            transaksi.jenis_transaksi === 'masuk'
                                                                 ? 'default'
                                                                 : 'secondary'
                                                         }
