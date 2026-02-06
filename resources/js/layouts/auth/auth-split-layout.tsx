@@ -1,42 +1,81 @@
-import { Link, usePage } from '@inertiajs/react';
-import AppLogoIcon from '@/components/app-logo-icon';
-import { home } from '@/routes';
-import type { AuthLayoutProps, SharedData } from '@/types';
+import { Building2, LockKeyhole } from 'lucide-react';
+import type { AuthLayoutProps } from '@/types';
 
 export default function AuthSplitLayout({
     children,
     title,
     description,
 }: AuthLayoutProps) {
-    const { name } = usePage<SharedData>().props;
-
     return (
-        <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-                <div className="absolute inset-0 bg-zinc-900" />
-                <Link
-                    href={home()}
-                    className="relative z-20 flex items-center text-lg font-medium"
-                >
-                    <AppLogoIcon className="mr-2 size-8 fill-current text-white" />
-                    {name}
-                </Link>
-            </div>
-            <div className="w-full lg:p-8">
-                <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                    <Link
-                        href={home()}
-                        className="relative z-20 flex items-center justify-center lg:hidden"
-                    >
-                        <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
-                    </Link>
-                    <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
-                        <h1 className="text-xl font-medium">{title}</h1>
-                        <p className="text-sm text-balance text-muted-foreground">
-                            {description}
+        <div className="flex min-h-screen">
+            {/* Left Side - Blue Section */}
+            <div className="hidden lg:flex lg:w-1/2 bg-[#1e7fd6] text-white flex-col justify-between p-12">
+                <div>
+                    {/* Logo and Header */}
+                    <div className="flex items-center gap-3 mb-16">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/10 backdrop-blur">
+                            <Building2 className="h-7 w-7" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold tracking-wide">
+                                MAHKAMAH AGUNG
+                            </h1>
+                            <p className="text-xs tracking-widest opacity-90">
+                                REPUBLIK INDONESIA
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="max-w-md">
+                        <h2 className="text-4xl font-bold mb-6 leading-tight">
+                            Sistem Inventaris
+                            <br />
+                            ATK Internal
+                        </h2>
+                        <p className="text-lg opacity-90 leading-relaxed">
+                            Platform manajemen aset terpadu untuk efisiensi dan
+                            transparansi penggunaan alat tulis kantor di lingkungan
+                            Mahkamah Agung.
                         </p>
                     </div>
+                </div>
+
+                {/* Footer */}
+                <div className="text-sm opacity-75">
+                    © {new Date().getFullYear()} Mahkamah Agung Republik Indonesia. Hak Cipta Dilindungi.
+                </div>
+            </div>
+
+            {/* Right Side - Form Section */}
+            <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8">
+                <div className="w-full max-w-md">
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                            {title}
+                        </h2>
+                        <p className="text-sm text-gray-600">{description}</p>
+                    </div>
+
                     {children}
+
+                    {/* Restricted Area Notice */}
+                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0">
+                                <LockKeyhole className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                                    AREA TERBATAS
+                                </h3>
+                                <p className="text-xs text-blue-800 leading-relaxed">
+                                    Hanya untuk staf berwenang. Segala aktivitas login dicatat dan
+                                    dipantau untuk tujuan keamanan. Akses tanpa izin dilarang keras.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

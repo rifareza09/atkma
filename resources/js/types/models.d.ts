@@ -18,7 +18,9 @@ export type StockMovementType = 'penambahan' | 'pengurangan' | 'penyesuaian';
 export interface User {
     id: number;
     name: string;
+    username?: string;
     email: string;
+    avatar?: string;
     role: Role;
     email_verified_at: string | null;
     two_factor_confirmed_at: string | null;
@@ -66,6 +68,7 @@ export interface Transaction {
     ruangan?: Ruangan;
     user?: User;
     items?: TransactionItem[];
+    stockMovements?: StockMovement[];
 }
 
 export interface TransactionItem {
@@ -195,13 +198,15 @@ export interface TransactionIndexProps {
         date_to?: string;
     };
     ruangans: Ruangan[]; // Untuk dropdown filter
+    barangs: Barang[]; // Untuk dropdown filter
+    transactionTypes: Array<{ value: string; label: string }>; // Jenis transaksi
 }
 
 // Transaction Create
 export interface TransactionCreateProps {
     barangs: Barang[]; // Barang aktif dengan stok
     ruangans: Ruangan[]; // Ruangan aktif
-    type: TransactionType; // 'masuk' atau 'keluar'
+    transactionTypes: Array<{ value: string; label: string }>; // Jenis transaksi
 }
 
 // Transaction Show
@@ -239,6 +244,7 @@ export interface RuanganFormData {
 }
 
 export interface TransactionFormData {
+    type: TransactionType;
     ruangan_id: number | '';
     tanggal: string;
     keterangan: string;
@@ -248,6 +254,17 @@ export interface TransactionFormData {
 export interface TransactionItemFormData {
     barang_id: number | '';
     jumlah: number | '';
+}
+
+// ==================== REPORT FILTERS ====================
+
+export interface ReportFilter {
+    date_from?: string;
+    date_to?: string;
+    ruangan_id?: number;
+    type?: TransactionType;
+    barang_id?: number;
+    low_stock?: boolean;
 }
 
 // ==================== FLASH MESSAGES ====================

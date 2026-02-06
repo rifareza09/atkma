@@ -25,7 +25,7 @@ class BarangController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('kode', 'like', "%{$search}%")
-                  ->orWhere('nama', 'like', "%{$search}%");
+                    ->orWhere('nama', 'like', "%{$search}%");
             });
         }
 
@@ -43,7 +43,7 @@ class BarangController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('Barang/Index', [
+        return Inertia::render('master/barang/index', [
             'barangs' => $barangs,
             'filters' => $request->only(['search', 'status', 'low_stock']),
         ]);
@@ -56,7 +56,7 @@ class BarangController extends Controller
     {
         $this->authorize('create', Barang::class);
 
-        return Inertia::render('Barang/Create');
+        return Inertia::render('master/barang/create');
     }
 
     /**
@@ -81,7 +81,7 @@ class BarangController extends Controller
 
         $barang->load(['transactionItems.transaction', 'stockMovements']);
 
-        return Inertia::render('Barang/Show', [
+        return Inertia::render('master/barang/show', [
             'barang' => $barang,
         ]);
     }
@@ -93,7 +93,7 @@ class BarangController extends Controller
     {
         $this->authorize('update', $barang);
 
-        return Inertia::render('Barang/Edit', [
+        return Inertia::render('master/barang/edit', [
             'barang' => $barang,
         ]);
     }
