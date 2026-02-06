@@ -3,6 +3,7 @@
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -23,6 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Ruangan routes - Admin can create/update/delete, Pengawas can only view
     Route::resource('ruangan', RuanganController::class);
+
+    // Transaction routes - Admin can create/delete, Pengawas can only view
+    Route::resource('transactions', TransactionController::class);
 });
 
 require __DIR__.'/settings.php';
