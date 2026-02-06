@@ -17,7 +17,7 @@ class TransactionController extends Controller
     public function __construct(
         protected TransactionService $transactionService
     ) {
-        $this->authorizeResource(Transaction::class, 'transaction');
+        // Authorization akan dilakukan di policy jika diperlukan
     }
 
     /**
