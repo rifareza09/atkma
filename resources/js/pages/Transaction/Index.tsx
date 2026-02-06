@@ -47,9 +47,9 @@ export default function Index({
     transactionTypes,
 }: TransactionIndexProps) {
     const [search, setSearch] = useState(filters.search || '');
-    const [type, setType] = useState(filters.type || '');
+    const [type, setType] = useState(filters.type || 'all');
     const [ruanganId, setRuanganId] = useState(
-        filters.ruangan_id?.toString() || ''
+        filters.ruangan_id?.toString() || 'all'
     );
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
@@ -58,11 +58,11 @@ export default function Index({
         router.get(
             '/transactions',
             {
-                search,
-                type,
-                ruangan_id: ruanganId,
-                date_from: dateFrom,
-                date_to: dateTo,
+                search: search || undefined,
+                type: type === 'all' ? undefined : type,
+                ruangan_id: ruanganId === 'all' ? undefined : ruanganId,
+                date_from: dateFrom || undefined,
+                date_to: dateTo || undefined,
             },
             {
                 preserveState: true,
@@ -73,8 +73,8 @@ export default function Index({
 
     const handleReset = () => {
         setSearch('');
-        setType('');
-        setRuanganId('');
+        setType('all');
+        setRuanganId('all');
         setDateFrom('');
         setDateTo('');
         router.get('/transactions', {}, { preserveState: true });
@@ -155,7 +155,7 @@ export default function Index({
                                         <SelectValue placeholder="Semua jenis" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">
+                                        <SelectItem value="all">
                                             Semua jenis
                                         </SelectItem>
                                         {transactionTypes.map((t: { value: string; label: string }) => (
@@ -180,7 +180,7 @@ export default function Index({
                                         <SelectValue placeholder="Semua ruangan" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">
+                                        <SelectItem value="all">
                                             Semua ruangan
                                         </SelectItem>
                                         {ruangans.map((r) => (

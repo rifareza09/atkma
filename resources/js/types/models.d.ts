@@ -254,6 +254,17 @@ export interface TransactionItemFormData {
     jumlah: number | '';
 }
 
+// ==================== REPORT FILTERS ====================
+
+export interface ReportFilter {
+    date_from?: string;
+    date_to?: string;
+    ruangan_id?: number;
+    type?: TransactionType;
+    barang_id?: number;
+    low_stock?: boolean;
+}
+
 // ==================== FLASH MESSAGES ====================
 
 export interface FlashMessages {

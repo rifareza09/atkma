@@ -31,13 +31,13 @@ interface BarangIndexProps {
 }
 
 const statusOptions: FilterOption[] = [
-    { value: '', label: 'Semua Status' },
+    { value: 'all', label: 'Semua Status' },
     { value: '1', label: 'Aktif' },
     { value: '0', label: 'Tidak Aktif' },
 ];
 
 const stockOptions: FilterOption[] = [
-    { value: '', label: 'Semua Stok' },
+    { value: 'all', label: 'Semua Stok' },
     { value: '1', label: 'Stok Rendah' },
 ];
 
@@ -59,7 +59,7 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
     const handleFilterChange = (key: string, value: string) => {
         router.get(
             barangIndex(),
-            { ...filters, [key]: value || undefined },
+            { ...filters, [key]: value === 'all' ? undefined : value },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -195,13 +195,13 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                         className="max-w-md"
                     />
                     <FilterSelect
-                        value={filters.status}
+                        value={filters.status || 'all'}
                         onValueChange={(value) => handleFilterChange('status', value)}
                         options={statusOptions}
                         placeholder="Status"
                     />
                     <FilterSelect
-                        value={filters.low_stock ? '1' : ''}
+                        value={filters.low_stock ? '1' : 'all'}
                         onValueChange={(value) => handleFilterChange('low_stock', value)}
                         options={stockOptions}
                         placeholder="Filter Stok"

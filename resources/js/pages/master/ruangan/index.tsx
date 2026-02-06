@@ -30,7 +30,7 @@ interface RuanganIndexProps {
 }
 
 const statusOptions: FilterOption[] = [
-    { value: '', label: 'Semua Status' },
+    { value: 'all', label: 'Semua Status' },
     { value: '1', label: 'Aktif' },
     { value: '0', label: 'Tidak Aktif' },
 ];
@@ -53,7 +53,7 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
     const handleFilterChange = (key: string, value: string) => {
         router.get(
             ruanganIndex(),
-            { ...filters, [key]: value || undefined },
+            { ...filters, [key]: value === 'all' ? undefined : value },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -180,7 +180,7 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                         className="max-w-md"
                     />
                     <FilterSelect
-                        value={filters.status}
+                        value={filters.status || 'all'}
                         onValueChange={(value) => handleFilterChange('status', value)}
                         options={statusOptions}
                         placeholder="Status"

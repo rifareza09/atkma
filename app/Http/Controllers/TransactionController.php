@@ -40,7 +40,7 @@ class TransactionController extends Controller
             ->orderBy('nama')
             ->get();
 
-        return Inertia::render('Transaction/Index', [
+        return Inertia::render('transaksi/permintaan/index', [
             'transactions' => $transactions,
             'filters' => $filters,
             'ruangans' => $ruangans,
@@ -67,7 +67,7 @@ class TransactionController extends Controller
             ->orderBy('nama')
             ->get();
 
-        return Inertia::render('Transaction/Create', [
+        return Inertia::render('transaksi/permintaan/create', [
             'ruangans' => $ruangans,
             'barangs' => $barangs,
             'transactionTypes' => [
@@ -99,7 +99,7 @@ class TransactionController extends Controller
             );
 
             return redirect()
-                ->route('transactions.index')
+                ->route('permintaan.index')
                 ->with('success', 'Transaksi berhasil dibuat');
         } catch (\Exception $e) {
             return back()
@@ -121,7 +121,7 @@ class TransactionController extends Controller
             'stockMovements.user'
         ]);
 
-        return Inertia::render('Transaction/Show', [
+        return Inertia::render('transaksi/permintaan/show', [
             'transaction' => $transaction,
         ]);
     }
@@ -158,7 +158,7 @@ class TransactionController extends Controller
             $transaction->delete();
 
             return redirect()
-                ->route('transactions.index')
+                ->route('permintaan.index')
                 ->with('success', 'Transaksi berhasil dihapus');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal menghapus transaksi: ' . $e->getMessage()]);

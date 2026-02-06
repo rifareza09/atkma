@@ -1,10 +1,10 @@
 import { Link } from '@inertiajs/react';
-import { 
-    LayoutGrid, 
-    Package, 
-    Building2, 
-    ArrowRightLeft, 
-    ArrowDownToLine, 
+import {
+    LayoutGrid,
+    Package,
+    Building2,
+    ArrowRightLeft,
+    ArrowDownToLine,
     FileText,
 } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
@@ -19,10 +19,10 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { 
-    barangIndex, 
-    ruanganIndex, 
-    transaksiPermintaanIndex, 
+import {
+    barangIndex,
+    ruanganIndex,
+    transaksiPermintaanIndex,
     transaksiMasukIndex,
     laporanInventaris
 } from '@/lib/atk-routes';
