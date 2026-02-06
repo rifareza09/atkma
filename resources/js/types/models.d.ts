@@ -18,7 +18,9 @@ export type StockMovementType = 'penambahan' | 'pengurangan' | 'penyesuaian';
 export interface User {
     id: number;
     name: string;
+    username?: string;
     email: string;
+    avatar?: string;
     role: Role;
     email_verified_at: string | null;
     two_factor_confirmed_at: string | null;

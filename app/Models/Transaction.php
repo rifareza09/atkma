@@ -18,6 +18,7 @@ class Transaction extends Model
         'ruangan_id',
         'user_id',
         'type',
+        'status',
         'tanggal',
         'keterangan',
     ];
