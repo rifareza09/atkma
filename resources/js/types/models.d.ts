@@ -66,6 +66,7 @@ export interface Transaction {
     ruangan?: Ruangan;
     user?: User;
     items?: TransactionItem[];
+    stockMovements?: StockMovement[];
 }
 
 export interface TransactionItem {
@@ -195,13 +196,15 @@ export interface TransactionIndexProps {
         date_to?: string;
     };
     ruangans: Ruangan[]; // Untuk dropdown filter
+    barangs: Barang[]; // Untuk dropdown filter
+    transactionTypes: Array<{ value: string; label: string }>; // Jenis transaksi
 }
 
 // Transaction Create
 export interface TransactionCreateProps {
     barangs: Barang[]; // Barang aktif dengan stok
     ruangans: Ruangan[]; // Ruangan aktif
-    type: TransactionType; // 'masuk' atau 'keluar'
+    transactionTypes: Array<{ value: string; label: string }>; // Jenis transaksi
 }
 
 // Transaction Show
@@ -239,6 +242,7 @@ export interface RuanganFormData {
 }
 
 export interface TransactionFormData {
+    type: TransactionType;
     ruangan_id: number | '';
     tanggal: string;
     keterangan: string;

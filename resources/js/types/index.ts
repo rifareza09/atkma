@@ -1,5 +1,6 @@
 export type * from './atk';
-export type * from './auth';
+export type * from './models';
+export type { Auth, TwoFactorSetupData, TwoFactorSecretKey } from './auth';
 export type * from './navigation';
 export type * from './ui';
 
