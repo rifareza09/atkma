@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { barangIndex } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { BarangFormData, BarangSatuan, BarangStatus, BreadcrumbItem, SelectOption } from '@/types';
+import type { BarangFormData, BarangSatuan, BreadcrumbItem, SelectOption } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -27,22 +27,20 @@ const satuanOptions: SelectOption[] = [
 ];
 
 const statusOptions: SelectOption[] = [
-    { value: 'aktif', label: 'Aktif' },
-    { value: 'tidak_aktif', label: 'Tidak Aktif' },
+    { value: 'true', label: 'Aktif' },
+    { value: 'false', label: 'Tidak Aktif' },
 ];
 
 export default function BarangCreate() {
     const { toast } = useToast();
     
     const { data, setData, post, processing, errors } = useForm<BarangFormData>({
-        kode_barang: '',
-        nama_barang: '',
-        kategori: '',
+        kode: '',
+        nama: '',
         satuan: 'pcs',
         stok: 0,
-        stok_minimum: 0,
-        harga_satuan: 0,
-        status: 'aktif',
+        stok_minimum: 10,
+        is_active: true,
         deskripsi: '',
     });
 
@@ -98,11 +96,11 @@ export default function BarangCreate() {
                                 {/* Kode Barang */}
                                 <InputWithLabel
                                     label="Kode Barang"
-                                    value={data.kode_barang}
+                                    value={data.kode}
                                     onChange={(e) =>
-                                        setData('kode_barang', e.target.value)
+                                        setData('kode', e.target.value)
                                     }
-                                    error={errors.kode_barang}
+                                    error={errors.kode}
                                     required
                                     placeholder="Contoh: ATK-001"
                                 />
@@ -110,25 +108,13 @@ export default function BarangCreate() {
                                 {/* Nama Barang */}
                                 <InputWithLabel
                                     label="Nama Barang"
-                                    value={data.nama_barang}
+                                    value={data.nama}
                                     onChange={(e) =>
-                                        setData('nama_barang', e.target.value)
+                                        setData('nama', e.target.value)
                                     }
-                                    error={errors.nama_barang}
+                                    error={errors.nama}
                                     required
                                     placeholder="Contoh: Kertas A4 80gsm"
-                                />
-
-                                {/* Kategori */}
-                                <InputWithLabel
-                                    label="Kategori"
-                                    value={data.kategori}
-                                    onChange={(e) =>
-                                        setData('kategori', e.target.value)
-                                    }
-                                    error={errors.kategori}
-                                    required
-                                    placeholder="Contoh: Kertas, Alat Tulis"
                                 />
 
                                 {/* Satuan */}
@@ -143,7 +129,21 @@ export default function BarangCreate() {
                                     required
                                 />
 
-                                {/* Stok */}
+                                {/* Stok Minimum */}
+                                <InputWithLabel
+                                    label="Stok Minimum"
+                                    type="number"
+                                    value={data.stok_minimum.toString()}
+                                    onChange={(e) =>
+                                        setData('stok_minimum', parseInt(e.target.value) || 10)
+                                    }
+                                    error={errors.stok_minimum}
+                                    required
+                                    min="0"
+                                    helperText="Peringatan stok rendah"
+                                />
+
+                                {/* Stok Awal */}
                                 <InputWithLabel
                                     label="Stok Awal"
                                     type="number"
@@ -153,44 +153,18 @@ export default function BarangCreate() {
                                     }
                                     error={errors.stok}
                                     min="0"
-                                />
-
-                                {/* Stok Minimum */}
-                                <InputWithLabel
-                                    label="Stok Minimum"
-                                    type="number"
-                                    value={data.stok_minimum.toString()}
-                                    onChange={(e) =>
-                                        setData('stok_minimum', parseInt(e.target.value) || 0)
-                                    }
-                                    error={errors.stok_minimum}
-                                    required
-                                    min="0"
-                                    helperText="Peringatan stok rendah"
-                                />
-
-                                {/* Harga Satuan */}
-                                <InputWithLabel
-                                    label="Harga Satuan (Rp)"
-                                    type="number"
-                                    value={data.harga_satuan.toString()}
-                                    onChange={(e) =>
-                                        setData('harga_satuan', parseInt(e.target.value) || 0)
-                                    }
-                                    error={errors.harga_satuan}
-                                    required
-                                    min="0"
+                                    helperText="Stok awal saat barang ditambahkan"
                                 />
 
                                 {/* Status */}
                                 <SelectWithLabel
                                     label="Status"
-                                    value={data.status}
+                                    value={data.is_active ? 'true' : 'false'}
                                     onValueChange={(value) =>
-                                        setData('status', value as BarangStatus)
+                                        setData('is_active', value === 'true')
                                     }
                                     options={statusOptions}
-                                    error={errors.status}
+                                    error={errors.is_active}
                                     required
                                 />
                             </div>

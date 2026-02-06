@@ -9,7 +9,6 @@
 // ENUMS
 // ============================================================================
 
-export type BarangStatus = 'aktif' | 'tidak_aktif';
 export type BarangSatuan = 'pcs' | 'box' | 'rim' | 'set' | 'pack' | 'lusin' | 'unit';
 export type TransactionType = 'masuk' | 'keluar';
 export type TransactionStatus = 'pending' | 'approved' | 'rejected' | 'completed';
@@ -18,36 +17,37 @@ export type TransactionStatus = 'pending' | 'approved' | 'rejected' | 'completed
 // MASTER DATA MODELS
 // ============================================================================
 
+/**
+ * Barang Model - Matches database structure
+ * Database fields: kode, nama, satuan, stok, stok_minimum, deskripsi, is_active
+ */
 export interface Barang extends Record<string, unknown> {
     id: number;
-    kode_barang: string;
-    nama_barang: string;
-    kategori: string;
-    satuan: BarangSatuan;
+    kode: string;  // kode manual barang (e.g., "ATK-001")
+    nama: string;  // nama barang
+    satuan: BarangSatuan;  // pcs, rim, box, dll
     stok: number;
     stok_minimum: number;
-    harga_satuan: number;
-    status: BarangStatus;
     deskripsi?: string;
+    is_active: boolean;  // true/false, not 'aktif'/'tidak_aktif'
     created_at: string;
     updated_at: string;
 }
 
+/**
+ * Ruangan Model - Matches database structure
+ * Database fields: kode, nama, penanggung_jawab, deskripsi, is_active
+ */
 export interface Ruangan extends Record<string, unknown> {
     id: number;
-    kode_ruangan: string;
-    nama_ruangan: string;
-    gedung: string;
-    lantai: number;
-    kapasitas: number;
-    lokasi: string;
-    penanggung_jawab?: string;
-    kontak_penanggung_jawab?: string;
-    jatah_bulanan?: number;
-    status: 'aktif' | 'tidak_aktif';
-    keterangan?: string;
+    kode: string;  // kode manual ruangan (e.g., "R-101")
+    nama: string;  // nama ruangan
+    penanggung_jawab?: string;  // nama penanggung jawab
+    deskripsi?: string;  // deskripsi/keterangan ruangan
+    is_active: boolean;  // true/false, not 'aktif'/'tidak_aktif'
     created_at: string;
     updated_at: string;
+    transactions_count?: number;  // relationship count
 }
 
 // ============================================================================
@@ -117,30 +117,28 @@ export interface StockMovement extends Record<string, unknown> {
 // FORM DATA TYPES
 // ============================================================================
 
+/**
+ * Barang Form Data - Matches backend validation rules
+ */
 export interface BarangFormData {
-    kode_barang: string;
-    nama_barang: string;
-    kategori: string;
+    kode: string;
+    nama: string;
     satuan: BarangSatuan;
     stok?: number;
     stok_minimum: number;
-    harga_satuan: number;
-    status: BarangStatus;
     deskripsi?: string;
+    is_active: boolean;
 }
 
+/**
+ * Ruangan Form Data - Matches backend validation rules
+ */
 export interface RuanganFormData {
-    kode_ruangan: string;
-    nama_ruangan: string;
-    gedung: string;
-    lantai: number;
-    kapasitas: number;
-    lokasi: string;
+    kode: string;
+    nama: string;
     penanggung_jawab?: string;
-    kontak_penanggung_jawab?: string;
-    jatah_bulanan?: number;
-    status: 'aktif' | 'tidak_aktif';
-    keterangan?: string;
+    deskripsi?: string;
+    is_active: boolean;
 }
 
 export interface TransactionFormData {
@@ -220,9 +218,8 @@ export interface ColumnDef<T> {
 
 export interface BarangFilter {
     search?: string;
-    kategori?: string;
-    status?: BarangStatus;
-    stok_rendah?: boolean;
+    status?: boolean | string;  // is_active filter (true/false or '1'/'0')
+    low_stock?: boolean;  // filter barang stok rendah
 }
 
 export interface TransactionFilter {
@@ -257,5 +254,4 @@ export interface BarangSelectOption extends SelectOption {
     value: number;
     stok: number;
     satuan: string;
-    harga_satuan: number;
 }

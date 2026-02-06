@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { barangIndex, barangShow } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { Barang, BarangFormData, BarangSatuan, BarangStatus, BreadcrumbItem, SelectOption } from '@/types';
+import type { Barang, BarangFormData, BarangSatuan, BreadcrumbItem, SelectOption } from '@/types';
 
 const satuanOptions: SelectOption[] = [
     { value: 'pcs', label: 'Pcs (Pieces)' },
@@ -20,8 +20,8 @@ const satuanOptions: SelectOption[] = [
 ];
 
 const statusOptions: SelectOption[] = [
-    { value: 'aktif', label: 'Aktif' },
-    { value: 'tidak_aktif', label: 'Tidak Aktif' },
+    { value: 'true', label: 'Aktif' },
+    { value: 'false', label: 'Tidak Aktif' },
 ];
 
 interface BarangEditProps {
@@ -35,19 +35,17 @@ export default function BarangEdit({ barang }: BarangEditProps) {
         { title: 'Dashboard', href: dashboard().url },
         { title: 'Master Data', href: '#' },
         { title: 'Data Barang', href: barangIndex() },
-        { title: barang.nama_barang, href: barangShow(barang.id) },
+        { title: barang.nama, href: barangShow(barang.id) },
         { title: 'Edit', href: '#' },
     ];
 
     const { data, setData, put, processing, errors } = useForm<BarangFormData>({
-        kode_barang: barang.kode_barang,
-        nama_barang: barang.nama_barang,
-        kategori: barang.kategori,
+        kode: barang.kode,
+        nama: barang.nama,
         satuan: barang.satuan,
         stok: barang.stok,
         stok_minimum: barang.stok_minimum,
-        harga_satuan: barang.harga_satuan,
-        status: barang.status,
+        is_active: barang.is_active,
         deskripsi: barang.deskripsi || '',
     });
 
@@ -73,7 +71,7 @@ export default function BarangEdit({ barang }: BarangEditProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit ${barang.nama_barang}`} />
+            <Head title={`Edit ${barang.nama}`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 {/* Page Header */}
@@ -81,7 +79,7 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                     <div>
                         <h1 className="text-3xl font-bold">Edit Barang</h1>
                         <p className="text-muted-foreground">
-                            Perbarui informasi barang {barang.kode_barang}
+                            Perbarui informasi barang {barang.kode}
                         </p>
                     </div>
                     <Button variant="outline" asChild>
@@ -103,11 +101,11 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                                 {/* Kode Barang */}
                                 <InputWithLabel
                                     label="Kode Barang"
-                                    value={data.kode_barang}
+                                    value={data.kode}
                                     onChange={(e) =>
-                                        setData('kode_barang', e.target.value)
+                                        setData('kode', e.target.value)
                                     }
-                                    error={errors.kode_barang}
+                                    error={errors.kode}
                                     required
                                     placeholder="Contoh: ATK-001"
                                 />
@@ -115,25 +113,13 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                                 {/* Nama Barang */}
                                 <InputWithLabel
                                     label="Nama Barang"
-                                    value={data.nama_barang}
+                                    value={data.nama}
                                     onChange={(e) =>
-                                        setData('nama_barang', e.target.value)
+                                        setData('nama', e.target.value)
                                     }
-                                    error={errors.nama_barang}
+                                    error={errors.nama}
                                     required
                                     placeholder="Contoh: Kertas A4 80gsm"
-                                />
-
-                                {/* Kategori */}
-                                <InputWithLabel
-                                    label="Kategori"
-                                    value={data.kategori}
-                                    onChange={(e) =>
-                                        setData('kategori', e.target.value)
-                                    }
-                                    error={errors.kategori}
-                                    required
-                                    placeholder="Contoh: Kertas, Alat Tulis"
                                 />
 
                                 {/* Satuan */}
@@ -148,7 +134,21 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                                     required
                                 />
 
-                                {/* Stok */}
+                                {/* Stok Minimum */}
+                                <InputWithLabel
+                                    label="Stok Minimum"
+                                    type="number"
+                                    value={data.stok_minimum.toString()}
+                                    onChange={(e) =>
+                                        setData('stok_minimum', parseInt(e.target.value) || 10)
+                                    }
+                                    error={errors.stok_minimum}
+                                    required
+                                    min="0"
+                                    helperText="Peringatan stok rendah"
+                                />
+
+                                {/* Stok (read-only for edit, managed by transactions) */}
                                 <InputWithLabel
                                     label="Stok Saat Ini"
                                     type="number"
@@ -158,44 +158,18 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                                     }
                                     error={errors.stok}
                                     min="0"
-                                />
-
-                                {/* Stok Minimum */}
-                                <InputWithLabel
-                                    label="Stok Minimum"
-                                    type="number"
-                                    value={data.stok_minimum.toString()}
-                                    onChange={(e) =>
-                                        setData('stok_minimum', parseInt(e.target.value) || 0)
-                                    }
-                                    error={errors.stok_minimum}
-                                    required
-                                    min="0"
-                                    helperText="Peringatan stok rendah"
-                                />
-
-                                {/* Harga Satuan */}
-                                <InputWithLabel
-                                    label="Harga Satuan (Rp)"
-                                    type="number"
-                                    value={data.harga_satuan.toString()}
-                                    onChange={(e) =>
-                                        setData('harga_satuan', parseInt(e.target.value) || 0)
-                                    }
-                                    error={errors.harga_satuan}
-                                    required
-                                    min="0"
+                                    helperText="Ubah stok melalui transaksi"
                                 />
 
                                 {/* Status */}
                                 <SelectWithLabel
                                     label="Status"
-                                    value={data.status}
+                                    value={data.is_active ? 'true' : 'false'}
                                     onValueChange={(value) =>
-                                        setData('status', value as BarangStatus)
+                                        setData('is_active', value === 'true')
                                     }
                                     options={statusOptions}
-                                    error={errors.status}
+                                    error={errors.is_active}
                                     required
                                 />
                             </div>
@@ -224,7 +198,7 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 size-4" />
-                                    {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                    {processing ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </div>
                         </form>

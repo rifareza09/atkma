@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class RuanganController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
@@ -25,8 +28,8 @@ class RuanganController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('kode', 'like', "%{$search}%")
-                  ->orWhere('nama', 'like', "%{$search}%")
-                  ->orWhere('penanggung_jawab', 'like', "%{$search}%");
+                    ->orWhere('nama', 'like', "%{$search}%")
+                    ->orWhere('penanggung_jawab', 'like', "%{$search}%");
             });
         }
 
@@ -40,7 +43,7 @@ class RuanganController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('Ruangan/Index', [
+        return Inertia::render('master/ruangan/index', [
             'ruangans' => $ruangans,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -53,7 +56,7 @@ class RuanganController extends Controller
     {
         $this->authorize('create', Ruangan::class);
 
-        return Inertia::render('Ruangan/Create');
+        return Inertia::render('master/ruangan/create');
     }
 
     /**
@@ -80,7 +83,7 @@ class RuanganController extends Controller
             $query->latest()->limit(10);
         }]);
 
-        return Inertia::render('Ruangan/Show', [
+        return Inertia::render('master/ruangan/show', [
             'ruangan' => $ruangan,
         ]);
     }
@@ -92,7 +95,7 @@ class RuanganController extends Controller
     {
         $this->authorize('update', $ruangan);
 
-        return Inertia::render('Ruangan/Edit', [
+        return Inertia::render('master/ruangan/edit', [
             'ruangan' => $ruangan,
         ]);
     }

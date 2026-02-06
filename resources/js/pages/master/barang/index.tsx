@@ -1,12 +1,14 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Pencil, Eye, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Eye, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Column } from '@/components/data-table';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
+import { FilterSelect, type FilterOption } from '@/components/filter-select';
 import { Pagination } from '@/components/pagination';
+import { SearchInput } from '@/components/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { barangCreate, barangEdit, barangShow, barangIndex } from '@/lib/atk-routes';
@@ -23,20 +25,30 @@ interface BarangIndexProps {
     barangs: PaginatedResponse<Barang>;
     filters: {
         search?: string;
-        kategori?: string;
         status?: string;
+        low_stock?: boolean;
     };
 }
 
+const statusOptions: FilterOption[] = [
+    { value: '', label: 'Semua Status' },
+    { value: '1', label: 'Aktif' },
+    { value: '0', label: 'Tidak Aktif' },
+];
+
+const stockOptions: FilterOption[] = [
+    { value: '', label: 'Semua Stok' },
+    { value: '1', label: 'Stok Rendah' },
+];
+
 export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
     const { toast } = useToast();
-    const [search, setSearch] = useState(filters.search || '');
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSearch = (search: string) => {
         router.get(
             barangIndex(),
-            { search },
+            { ...filters, search },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -44,41 +56,49 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
         );
     };
 
-    const handleDelete = (id: number) => {
-        if (confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
-            router.delete(`/master/barang/${id}`, {
-                onSuccess: () => {
-                    toast({
-                        title: 'Berhasil',
-                        description: 'Barang berhasil dihapus',
-                    });
-                },
-                onError: () => {
-                    toast({
-                        title: 'Gagal',
-                        description: 'Terjadi kesalahan saat menghapus barang',
-                        variant: 'destructive',
-                    });
-                },
-            });
-        }
+    const handleFilterChange = (key: string, value: string) => {
+        router.get(
+            barangIndex(),
+            { ...filters, [key]: value || undefined },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const handleDelete = () => {
+        if (!deleteId) return;
+
+        router.delete(`/master/barang/${deleteId}`, {
+            onSuccess: () => {
+                toast({
+                    title: 'Berhasil',
+                    description: 'Barang berhasil dihapus',
+                });
+                setDeleteId(null);
+            },
+            onError: () => {
+                toast({
+                    title: 'Gagal',
+                    description: 'Terjadi kesalahan saat menghapus barang',
+                    variant: 'destructive',
+                });
+            },
+        });
     };
 
     const columns: Column<Barang>[] = [
         {
-            key: 'kode_barang',
+            key: 'kode',
             label: 'Kode Barang',
             render: (item) => (
-                <span className="font-medium">{item.kode_barang}</span>
+                <span className="font-medium">{item.kode}</span>
             ),
         },
         {
-            key: 'nama_barang',
+            key: 'nama',
             label: 'Nama Barang',
-        },
-        {
-            key: 'kategori',
-            label: 'Kategori',
         },
         {
             key: 'stok',
@@ -99,21 +119,21 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
             className: 'text-right',
         },
         {
-            key: 'harga_satuan',
-            label: 'Harga',
+            key: 'stok_minimum',
+            label: 'Stok Minimum',
             render: (item) => (
-                <span>
-                    Rp {item.harga_satuan.toLocaleString('id-ID')}
+                <span className="text-muted-foreground">
+                    {item.stok_minimum} {item.satuan}
                 </span>
             ),
             className: 'text-right',
         },
         {
-            key: 'status',
+            key: 'is_active',
             label: 'Status',
             render: (item) => (
-                <Badge variant={item.status === 'aktif' ? 'default' : 'secondary'}>
-                    {item.status}
+                <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                    {item.is_active ? 'Aktif' : 'Tidak Aktif'}
                 </Badge>
             ),
         },
@@ -121,7 +141,7 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
             key: 'actions',
             label: 'Aksi',
             render: (item) => (
-                <div className="flex gap-2">
+                <div className="flex justify-end gap-2">
                     <Button size="sm" variant="ghost" asChild>
                         <Link href={barangShow(item.id)}>
                             <Eye className="size-4" />
@@ -135,7 +155,7 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                     <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleteId(item.id)}
                     >
                         <Trash2 className="size-4 text-destructive" />
                     </Button>
@@ -168,18 +188,24 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
 
                 {/* Search & Filter */}
                 <div className="flex items-center gap-4">
-                    <form onSubmit={handleSearch} className="flex flex-1 gap-2">
-                        <Input
-                            placeholder="Cari kode atau nama barang..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="max-w-md"
-                        />
-                        <Button type="submit">
-                            <Search className="mr-2 size-4" />
-                            Cari
-                        </Button>
-                    </form>
+                    <SearchInput
+                        value={filters.search}
+                        onSearch={handleSearch}
+                        placeholder="Cari kode atau nama barang..."
+                        className="max-w-md"
+                    />
+                    <FilterSelect
+                        value={filters.status}
+                        onValueChange={(value) => handleFilterChange('status', value)}
+                        options={statusOptions}
+                        placeholder="Status"
+                    />
+                    <FilterSelect
+                        value={filters.low_stock ? '1' : ''}
+                        onValueChange={(value) => handleFilterChange('low_stock', value)}
+                        options={stockOptions}
+                        placeholder="Filter Stok"
+                    />
                 </div>
 
                 {/* Data Table */}
@@ -190,20 +216,33 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                 />
 
                 {/* Pagination */}
-                <Pagination
-                    meta={barangs.meta}
-                    onPageChange={(page) => {
-                        router.get(
-                            barangIndex(),
-                            { ...filters, page },
-                            {
-                                preserveState: true,
-                                preserveScroll: true,
-                            },
-                        );
-                    }}
-                />
+                {barangs.meta && (
+                    <Pagination
+                        meta={barangs.meta}
+                        onPageChange={(page) => {
+                            router.get(
+                                barangIndex(),
+                                { ...filters, page },
+                                {
+                                    preserveState: true,
+                                    preserveScroll: true,
+                                },
+                            );
+                        }}
+                    />
+                )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={deleteId !== null}
+                onOpenChange={(open) => !open && setDeleteId(null)}
+                onConfirm={handleDelete}
+                title="Hapus Barang"
+                description="Yakin ingin menghapus barang ini? Data akan disimpan dalam soft delete."
+                confirmText="Hapus"
+                cancelText="Batal"
+            />
         </AppLayout>
     );
 }

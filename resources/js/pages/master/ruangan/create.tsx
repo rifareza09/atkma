@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
-import { InputWithLabel, SelectWithLabel } from '@/components/form';
+import { InputWithLabel, SelectWithLabel, TextareaWithLabel } from '@/components/form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -17,25 +17,19 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const statusOptions: SelectOption[] = [
-    { value: 'aktif', label: 'Aktif' },
-    { value: 'tidak_aktif', label: 'Tidak Aktif' },
+    { value: 'true', label: 'Aktif' },
+    { value: 'false', label: 'Tidak Aktif' },
 ];
 
 export default function RuanganCreate() {
     const { toast } = useToast();
     
     const { data, setData, post, processing, errors } = useForm<RuanganFormData>({
-        kode_ruangan: '',
-        nama_ruangan: '',
-        gedung: '',
-        lantai: 1,
-        kapasitas: 0,
-        lokasi: '',
+        kode: '',
+        nama: '',
         penanggung_jawab: '',
-        kontak_penanggung_jawab: '',
-        jatah_bulanan: undefined,
-        status: 'aktif',
-        keterangan: '',
+        deskripsi: '',
+        is_active: true,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -63,10 +57,13 @@ export default function RuanganCreate() {
             <Head title="Tambah Ruangan" />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
+                {/* Page Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold">Tambah Ruangan</h1>
-                        <p className="text-muted-foreground">Tambah data ruangan baru</p>
+                        <p className="text-muted-foreground">
+                            Tambah data ruangan baru
+                        </p>
                     </div>
                     <Button variant="outline" asChild>
                         <Link href={ruanganIndex()}>
@@ -76,6 +73,7 @@ export default function RuanganCreate() {
                     </Button>
                 </div>
 
+                {/* Form */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Informasi Ruangan</CardTitle>
@@ -83,71 +81,67 @@ export default function RuanganCreate() {
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid gap-6 md:grid-cols-2">
+                                {/* Kode Ruangan */}
                                 <InputWithLabel
                                     label="Kode Ruangan"
-                                    value={data.kode_ruangan}
-                                    onChange={(e) => setData('kode_ruangan', e.target.value)}
-                                    error={errors.kode_ruangan}
+                                    value={data.kode}
+                                    onChange={(e) =>
+                                        setData('kode', e.target.value)
+                                    }
+                                    error={errors.kode}
                                     required
-                                    placeholder="Contoh: RG-001"
+                                    placeholder="Contoh: R-101"
                                 />
 
+                                {/* Nama Ruangan */}
                                 <InputWithLabel
                                     label="Nama Ruangan"
-                                    value={data.nama_ruangan}
-                                    onChange={(e) => setData('nama_ruangan', e.target.value)}
-                                    error={errors.nama_ruangan}
+                                    value={data.nama}
+                                    onChange={(e) =>
+                                        setData('nama', e.target.value)
+                                    }
+                                    error={errors.nama}
                                     required
-                                    placeholder="Contoh: Ruang Administrasi"
+                                    placeholder="Contoh: Ruang Rapat A"
                                 />
 
-                                <InputWithLabel
-                                    label="Lokasi"
-                                    value={data.lokasi}
-                                    onChange={(e) => setData('lokasi', e.target.value)}
-                                    error={errors.lokasi}
-                                    required
-                                    placeholder="Contoh: Lantai 1, Gedung A"
-                                />
-
+                                {/* Penanggung Jawab */}
                                 <InputWithLabel
                                     label="Penanggung Jawab"
-                                    value={data.penanggung_jawab}
-                                    onChange={(e) => setData('penanggung_jawab', e.target.value)}
+                                    value={data.penanggung_jawab || ''}
+                                    onChange={(e) =>
+                                        setData('penanggung_jawab', e.target.value)
+                                    }
                                     error={errors.penanggung_jawab}
-                                    required
-                                    placeholder="Nama lengkap"
+                                    placeholder="Nama penanggung jawab ruangan"
                                 />
 
-                                <InputWithLabel
-                                    label="Kontak Penanggung Jawab"
-                                    value={data.kontak_penanggung_jawab || ''}
-                                    onChange={(e) => setData('kontak_penanggung_jawab', e.target.value)}
-                                    error={errors.kontak_penanggung_jawab}
-                                    placeholder="Nomor telepon"
-                                />
-
-                                <InputWithLabel
-                                    label="Jatah Bulanan (Rp)"
-                                    type="number"
-                                    value={data.jatah_bulanan?.toString() || ''}
-                                    onChange={(e) => setData('jatah_bulanan', parseInt(e.target.value) || undefined)}
-                                    error={errors.jatah_bulanan}
-                                    min="0"
-                                    placeholder="Opsional"
-                                    helperText="Batas anggaran ATK per bulan"
-                                />
-
+                                {/* Status */}
                                 <SelectWithLabel
                                     label="Status"
-                                    value={data.status}
-                                    onValueChange={(value) => setData('status', value as 'aktif' | 'tidak_aktif')}
+                                    value={data.is_active ? 'true' : 'false'}
+                                    onValueChange={(value) =>
+                                        setData('is_active', value === 'true')
+                                    }
                                     options={statusOptions}
-                                    error={errors.status}
+                                    error={errors.is_active}
                                     required
                                 />
                             </div>
 
+                            {/* Deskripsi */}
+                            <TextareaWithLabel
+                                label="Deskripsi"
+                                value={data.deskripsi || ''}
+                                onChange={(e) =>
+                                    setData('deskripsi', e.target.value)
+                                }
+                                error={errors.deskripsi}
+                                placeholder="Deskripsi ruangan (opsional)"
+                                rows={4}
+                            />
+
+                            {/* Action Buttons */}
                             <div className="flex justify-end gap-4">
                                 <Button
                                     type="button"

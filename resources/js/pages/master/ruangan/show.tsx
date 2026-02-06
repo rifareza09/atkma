@@ -18,25 +18,25 @@ export default function RuanganShow({ ruangan }: RuanganShowProps) {
         { title: 'Dashboard', href: dashboard().url },
         { title: 'Master Data', href: '#' },
         { title: 'Data Ruangan', href: ruanganIndex() },
-        { title: ruangan.nama_ruangan, href: '#' },
+        { title: ruangan.nama, href: '#' },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={ruangan.nama_ruangan} />
+            <Head title={ruangan.nama} />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 {/* Page Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold">{ruangan.nama_ruangan}</h1>
-                            <Badge variant={ruangan.status === 'aktif' ? 'default' : 'secondary'}>
-                                {ruangan.status}
+                            <h1 className="text-3xl font-bold">{ruangan.nama}</h1>
+                            <Badge variant={ruangan.is_active ? 'default' : 'secondary'}>
+                                {ruangan.is_active ? 'Aktif' : 'Tidak Aktif'}
                             </Badge>
                         </div>
                         <p className="text-muted-foreground">
-                            {ruangan.kode_ruangan}
+                            {ruangan.kode}
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -67,33 +67,21 @@ export default function RuanganShow({ ruangan }: RuanganShowProps) {
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Kode Ruangan
                                     </p>
-                                    <p className="text-lg font-semibold">{ruangan.kode_ruangan}</p>
+                                    <p className="text-lg font-semibold">{ruangan.kode}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Nama Ruangan
                                     </p>
-                                    <p className="text-lg font-semibold">{ruangan.nama_ruangan}</p>
+                                    <p className="text-lg font-semibold">{ruangan.nama}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        Gedung
+                                        Status
                                     </p>
-                                    <p className="text-lg">{ruangan.gedung}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Lantai
-                                    </p>
-                                    <p className="text-lg">Lantai {ruangan.lantai}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Kapasitas
-                                    </p>
-                                    <p className="text-lg font-semibold">
-                                        {ruangan.kapasitas} Orang
-                                    </p>
+                                    <Badge variant={ruangan.is_active ? 'default' : 'secondary'}>
+                                        {ruangan.is_active ? 'Aktif' : 'Tidak Aktif'}
+                                    </Badge>
                                 </div>
                                 {ruangan.penanggung_jawab && (
                                     <div>
@@ -105,14 +93,14 @@ export default function RuanganShow({ ruangan }: RuanganShowProps) {
                                 )}
                             </div>
 
-                            {ruangan.keterangan && (
+                            {ruangan.deskripsi && (
                                 <>
                                     <Separator />
                                     <div>
                                         <p className="text-sm font-medium text-muted-foreground">
-                                            Keterangan
+                                            Deskripsi
                                         </p>
-                                        <p className="mt-1 text-sm">{ruangan.keterangan}</p>
+                                        <p className="mt-1 text-sm">{ruangan.deskripsi}</p>
                                     </div>
                                 </>
                             )}
@@ -137,45 +125,39 @@ export default function RuanganShow({ ruangan }: RuanganShowProps) {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Building2 className="size-5" />
-                                    Lokasi
+                                    Informasi
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Gedung</p>
-                                    <p className="text-xl font-bold">{ruangan.gedung}</p>
+                                    <p className="text-sm text-muted-foreground">Kode</p>
+                                    <p className="text-xl font-bold">{ruangan.kode}</p>
                                 </div>
                                 
                                 <Separator />
                                 
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Lantai</p>
-                                    <p className="text-xl font-semibold">
-                                        Lantai {ruangan.lantai}
+                                    <p className="text-sm text-muted-foreground">Total Transaksi</p>
+                                    <p className="text-2xl font-bold">
+                                        {ruangan.transactions_count || 0}
                                     </p>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Users className="size-5" />
-                                    Kapasitas
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Maksimal Orang</p>
-                                    <p className="text-3xl font-bold">
-                                        {ruangan.kapasitas}
-                                        <span className="text-lg font-normal text-muted-foreground ml-2">
-                                            Orang
-                                        </span>
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {ruangan.penanggung_jawab && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Users className="size-5" />
+                                        Penanggung Jawab
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="font-medium">{ruangan.penanggung_jawab}</p>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
                 </div>
             </div>

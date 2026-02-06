@@ -127,9 +127,9 @@ export default function Dashboard({
                                         {barang_stok_rendah.map((barang) => (
                                             <TableRow key={barang.id}>
                                                 <TableCell className="font-medium">
-                                                    {barang.kode_barang}
+                                                    {barang.kode}
                                                 </TableCell>
-                                                <TableCell>{barang.nama_barang}</TableCell>
+                                                <TableCell>{barang.nama}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Badge variant="destructive">
                                                         {barang.stok} {barang.satuan}

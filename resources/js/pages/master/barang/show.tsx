@@ -1,9 +1,9 @@
- 
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Pencil, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { barangIndex, barangEdit } from '@/lib/atk-routes';
@@ -19,34 +19,34 @@ export default function BarangShow({ barang }: BarangShowProps) {
         { title: 'Dashboard', href: dashboard().url },
         { title: 'Master Data', href: '#' },
         { title: 'Data Barang', href: barangIndex() },
-        { title: barang.nama_barang, href: '#' },
+        { title: barang.nama, href: '#' },
     ];
 
     const persentaseStok = barang.stok_minimum > 0 
-        ? (barang.stok / barang.stok_minimum) * 100 
+        ? Math.min((barang.stok / barang.stok_minimum) * 100, 100)
         : 100;
 
     const isStokRendah = barang.stok <= barang.stok_minimum;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={barang.nama_barang} />
+            <Head title={barang.nama} />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 {/* Page Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold">{barang.nama_barang}</h1>
-                            <Badge variant={barang.status === 'aktif' ? 'default' : 'secondary'}>
-                                {barang.status}
+                            <h1 className="text-3xl font-bold">{barang.nama}</h1>
+                            <Badge variant={barang.is_active ? 'default' : 'secondary'}>
+                                {barang.is_active ? 'Aktif' : 'Tidak Aktif'}
                             </Badge>
                             {isStokRendah && (
                                 <Badge variant="destructive">Stok Rendah</Badge>
                             )}
                         </div>
                         <p className="text-muted-foreground">
-                            {barang.kode_barang}
+                            {barang.kode}
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -77,19 +77,13 @@ export default function BarangShow({ barang }: BarangShowProps) {
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Kode Barang
                                     </p>
-                                    <p className="text-lg font-semibold">{barang.kode_barang}</p>
+                                    <p className="text-lg font-semibold">{barang.kode}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Nama Barang
                                     </p>
-                                    <p className="text-lg font-semibold">{barang.nama_barang}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Kategori
-                                    </p>
-                                    <p className="text-lg">{barang.kategori}</p>
+                                    <p className="text-lg font-semibold">{barang.nama}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
@@ -99,19 +93,11 @@ export default function BarangShow({ barang }: BarangShowProps) {
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        Harga Satuan
+                                        Status
                                     </p>
-                                    <p className="text-lg font-semibold">
-                                        Rp {barang.harga_satuan.toLocaleString('id-ID')}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Total Nilai Stok
-                                    </p>
-                                    <p className="text-lg font-semibold">
-                                        Rp {(barang.stok * barang.harga_satuan).toLocaleString('id-ID')}
-                                    </p>
+                                    <Badge variant={barang.is_active ? 'default' : 'secondary'}>
+                                        {barang.is_active ? 'Aktif' : 'Tidak Aktif'}
+                                    </Badge>
                                 </div>
                             </div>
 
@@ -141,69 +127,62 @@ export default function BarangShow({ barang }: BarangShowProps) {
                         </CardContent>
                     </Card>
 
-                    {/* Informasi Stok */}
-                    <div className="space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Package className="size-5" />
-                                    Informasi Stok
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Stok Saat Ini</p>
-                                    <p className="text-3xl font-bold">
-                                        {barang.stok}
-                                        <span className="text-lg font-normal text-muted-foreground ml-2">
-                                            {barang.satuan}
-                                        </span>
-                                    </p>
-                                </div>
-                                
-                                <Separator />
-                                
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Stok Minimum</p>
-                                    <p className="text-xl font-semibold">
-                                        {barang.stok_minimum} {barang.satuan}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <p className="text-sm text-muted-foreground mb-2">
-                                        Persentase Stok
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full transition-all ${
-                                                    isStokRendah
-                                                        ? 'bg-destructive'
-                                                        : 'bg-primary'
-                                                }`}
-                                                style={{
-                                                    width: `${Math.min(persentaseStok, 100)}%`,
-                                                }}
-                                            />
-                                        </div>
-                                        <span className="text-sm font-medium">
-                                            {persentaseStok.toFixed(0)}%
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {isStokRendah && (
-                                    <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                                        <p className="font-medium">⚠️ Peringatan</p>
-                                        <p className="mt-1">
-                                            Stok barang dibawah batas minimum. Segera lakukan restok.
+                    {/* Info Stok */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Package className="size-5" />
+                                Informasi Stok
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div>
+                                <div className="flex items-end justify-between mb-2">
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Stok Saat Ini</p>
+                                        <p className="text-3xl font-bold">
+                                            {barang.stok}
                                         </p>
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
+                                    <p className="text-sm text-muted-foreground mb-1">
+                                        {barang.satuan}
+                                    </p>
+                                </div>
+                                
+                                <Progress 
+                                    value={persentaseStok} 
+                                    className={`h-2 ${isStokRendah ? 'bg-destructive/20' : ''}`}
+                                />
+                                
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    {persentaseStok.toFixed(0)}% dari stok minimum
+                                </p>
+                            </div>
+
+                            <Separator />
+
+                            <div>
+                                <p className="text-sm text-muted-foreground">Stok Minimum</p>
+                                <p className="text-xl font-semibold">
+                                    {barang.stok_minimum} {barang.satuan}
+                                </p>
+                            </div>
+
+                            {isStokRendah && (
+                                <>
+                                    <Separator />
+                                    <div className="rounded-lg bg-destructive/10 p-3">
+                                        <p className="text-sm font-medium text-destructive">
+                                            ⚠️ Stok di bawah minimum!
+                                        </p>
+                                        <p className="text-xs text-destructive/80 mt-1">
+                                            Segera lakukan restok barang
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </AppLayout>

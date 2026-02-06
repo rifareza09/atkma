@@ -1,12 +1,14 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Pencil, Eye, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Eye, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Column } from '@/components/data-table';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
+import { FilterSelect, type FilterOption } from '@/components/filter-select';
 import { Pagination } from '@/components/pagination';
+import { SearchInput } from '@/components/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { ruanganCreate, ruanganEdit, ruanganShow, ruanganIndex } from '@/lib/atk-routes';
@@ -27,53 +29,20 @@ interface RuanganIndexProps {
     };
 }
 
+const statusOptions: FilterOption[] = [
+    { value: '', label: 'Semua Status' },
+    { value: '1', label: 'Aktif' },
+    { value: '0', label: 'Tidak Aktif' },
+];
+
 export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
     const { toast } = useToast();
-    const [search, setSearch] = useState(filters.search || '');
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
-    // Mock data untuk development
-    const mockRuangans: PaginatedResponse<Ruangan> = ruangans || {
-        data: [
-            {
-                id: 1,
-                kode_ruangan: 'RG-001',
-                nama_ruangan: 'Ruang Administrasi',
-                lokasi: 'Lantai 1, Gedung A',
-                penanggung_jawab: 'Budi Santoso',
-                kontak_penanggung_jawab: '081234567890',
-                jatah_bulanan: 500000,
-                status: 'aktif',
-                created_at: '2025-01-01T00:00:00.000Z',
-                updated_at: '2025-02-01T00:00:00.000Z',
-            },
-            {
-                id: 2,
-                kode_ruangan: 'RG-002',
-                nama_ruangan: 'Ruang Arsip',
-                lokasi: 'Lantai 2, Gedung A',
-                penanggung_jawab: 'Siti Aminah',
-                kontak_penanggung_jawab: '081234567891',
-                jatah_bulanan: 300000,
-                status: 'aktif',
-                created_at: '2025-01-01T00:00:00.000Z',
-                updated_at: '2025-02-01T00:00:00.000Z',
-            },
-        ],
-        meta: {
-            current_page: 1,
-            from: 1,
-            last_page: 1,
-            per_page: 15,
-            to: 2,
-            total: 2,
-        },
-    };
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSearch = (search: string) => {
         router.get(
             ruanganIndex(),
-            { search },
+            { ...filters, search },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -81,64 +50,75 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
         );
     };
 
-    const handleDelete = (id: number) => {
-        if (confirm('Apakah Anda yakin ingin menghapus ruangan ini?')) {
-            router.delete(`/master/ruangan/${id}`, {
-                onSuccess: () => {
-                    toast({
-                        title: 'Berhasil',
-                        description: 'Ruangan berhasil dihapus',
-                    });
-                },
-                onError: () => {
-                    toast({
-                        title: 'Gagal',
-                        description: 'Terjadi kesalahan saat menghapus ruangan',
-                        variant: 'destructive',
-                    });
-                },
-            });
-        }
+    const handleFilterChange = (key: string, value: string) => {
+        router.get(
+            ruanganIndex(),
+            { ...filters, [key]: value || undefined },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const handleDelete = () => {
+        if (!deleteId) return;
+
+        router.delete(`/master/ruangan/${deleteId}`, {
+            onSuccess: () => {
+                toast({
+                    title: 'Berhasil',
+                    description: 'Ruangan berhasil dihapus',
+                });
+                setDeleteId(null);
+            },
+            onError: () => {
+                toast({
+                    title: 'Gagal',
+                    description: 'Terjadi kesalahan saat menghapus ruangan',
+                    variant: 'destructive',
+                });
+            },
+        });
     };
 
     const columns: Column<Ruangan>[] = [
         {
-            key: 'kode_ruangan',
+            key: 'kode',
             label: 'Kode Ruangan',
             render: (item) => (
-                <span className="font-medium">{item.kode_ruangan}</span>
+                <span className="font-medium">{item.kode}</span>
             ),
         },
         {
-            key: 'nama_ruangan',
+            key: 'nama',
             label: 'Nama Ruangan',
-        },
-        {
-            key: 'lokasi',
-            label: 'Lokasi',
         },
         {
             key: 'penanggung_jawab',
             label: 'Penanggung Jawab',
-        },
-        {
-            key: 'jatah_bulanan',
-            label: 'Jatah Bulanan',
             render: (item) => (
-                <span>
-                    {item.jatah_bulanan 
-                        ? `Rp ${item.jatah_bulanan.toLocaleString('id-ID')}`
-                        : '-'}
+                <span className="text-muted-foreground">
+                    {item.penanggung_jawab || '-'}
                 </span>
             ),
-            className: 'text-right',
         },
         {
-            key: 'status',
+            key: 'transactions_count',
+            label: 'Total Transaksi',
+            render: (item) => (
+                <span className="text-center">
+                    {item.transactions_count || 0}
+                </span>
+            ),
+            className: 'text-center',
+        },
+        {
+            key: 'is_active',
             label: 'Status',
             render: (item) => (
-                <Badge variant={item.status === 'aktif' ? 'default' : 'secondary'}>
-                    {item.status}
+                <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                    {item.is_active ? 'Aktif' : 'Tidak Aktif'}
                 </Badge>
             ),
         },
@@ -146,7 +126,7 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
             key: 'actions',
             label: 'Aksi',
             render: (item) => (
-                <div className="flex gap-2">
+                <div className="flex justify-end gap-2">
                     <Button size="sm" variant="ghost" asChild>
                         <Link href={ruanganShow(item.id)}>
                             <Eye className="size-4" />
@@ -160,7 +140,7 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                     <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleteId(item.id)}
                     >
                         <Trash2 className="size-4 text-destructive" />
                     </Button>
@@ -193,42 +173,55 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
 
                 {/* Search & Filter */}
                 <div className="flex items-center gap-4">
-                    <form onSubmit={handleSearch} className="flex flex-1 gap-2">
-                        <Input
-                            placeholder="Cari kode atau nama ruangan..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="max-w-md"
-                        />
-                        <Button type="submit">
-                            <Search className="mr-2 size-4" />
-                            Cari
-                        </Button>
-                    </form>
+                    <SearchInput
+                        value={filters.search}
+                        onSearch={handleSearch}
+                        placeholder="Cari kode, nama, atau penanggung jawab..."
+                        className="max-w-md"
+                    />
+                    <FilterSelect
+                        value={filters.status}
+                        onValueChange={(value) => handleFilterChange('status', value)}
+                        options={statusOptions}
+                        placeholder="Status"
+                    />
                 </div>
 
                 {/* Data Table */}
                 <DataTable<Ruangan>
                     columns={columns}
-                    data={mockRuangans.data}
+                    data={ruangans.data}
                     keyField="id"
                 />
 
                 {/* Pagination */}
-                <Pagination
-                    meta={mockRuangans.meta}
-                    onPageChange={(page) => {
-                        router.get(
-                            ruanganIndex(),
-                            { ...filters, page },
-                            {
-                                preserveState: true,
-                                preserveScroll: true,
-                            },
-                        );
-                    }}
-                />
+                {ruangans.meta && (
+                    <Pagination
+                        meta={ruangans.meta}
+                        onPageChange={(page) => {
+                            router.get(
+                                ruanganIndex(),
+                                { ...filters, page },
+                                {
+                                    preserveState: true,
+                                    preserveScroll: true,
+                                },
+                            );
+                        }}
+                    />
+                )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={deleteId !== null}
+                onOpenChange={(open) => !open && setDeleteId(null)}
+                onConfirm={handleDelete}
+                title="Hapus Ruangan"
+                description="Yakin ingin menghapus ruangan ini? Data akan disimpan dalam soft delete."
+                confirmText="Hapus"
+                cancelText="Batal"
+            />
         </AppLayout>
     );
 }
