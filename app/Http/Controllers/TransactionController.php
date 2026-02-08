@@ -26,7 +26,7 @@ class TransactionController extends Controller
     public function index(Request $request): Response
     {
         $filters = $request->only(['search', 'type', 'ruangan_id', 'barang_id', 'from_date', 'to_date']);
-        
+
         $transactions = $this->transactionService->getTransactions($filters);
 
         // Get filter options
@@ -36,7 +36,7 @@ class TransactionController extends Controller
             ->get();
 
         $barangs = Barang::where('is_active', true)
-            ->select('id', 'nama', 'kode_barang')
+            ->select('id', 'nama', 'kode')
             ->orderBy('nama')
             ->get();
 
@@ -58,12 +58,12 @@ class TransactionController extends Controller
     public function create(): Response
     {
         $ruangans = Ruangan::where('is_active', true)
-            ->select('id', 'nama', 'kode_ruangan')
+            ->select('id', 'nama', 'kode')
             ->orderBy('nama')
             ->get();
 
         $barangs = Barang::where('is_active', true)
-            ->select('id', 'nama', 'kode_barang', 'satuan', 'stok')
+            ->select('id', 'nama', 'kode', 'satuan', 'stok')
             ->orderBy('nama')
             ->get();
 
@@ -83,7 +83,7 @@ class TransactionController extends Controller
     public function store(TransactionRequest $request)
     {
         $validated = $request->validated();
-        
+
         // Validate stock availability for outgoing transactions
         $type = TransactionType::from($validated['type']);
         $stockErrors = $this->transactionService->validateItemsStock($validated['items'], $type);
@@ -93,13 +93,13 @@ class TransactionController extends Controller
         }
 
         try {
-            $this->transactionService->createTransaction(
+            $transaction = $this->transactionService->createTransaction(
                 $validated,
                 $request->user()
             );
 
             return redirect()
-                ->route('permintaan.index')
+                ->route('permintaan.show', $transaction->id)
                 ->with('success', 'Transaksi berhasil dibuat');
         } catch (\Exception $e) {
             return back()
@@ -133,7 +133,7 @@ class TransactionController extends Controller
     {
         // Note: Editing transactions is typically not allowed for audit trail
         // But we include it for completeness. Consider disabling in production.
-        
+
         abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
     }
 
@@ -153,7 +153,7 @@ class TransactionController extends Controller
     {
         // Note: Deleting transactions affects stock movements
         // Consider soft deletes or disabling deletion in production
-        
+
         try {
             $transaction->delete();
 

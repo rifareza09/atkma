@@ -8,9 +8,7 @@ import {
     FileText,
     Settings,
 } from 'lucide-react';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -22,6 +20,7 @@ import {
 } from '@/components/ui/sidebar';
 import {
     barangIndex,
+    inventoryIndex,
     ruanganIndex,
     transaksiPermintaanIndex,
     transaksiMasukIndex,
@@ -39,7 +38,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Inventory',
-        href: barangIndex(),
+        href: inventoryIndex(),
         icon: Package,
     },
     {
@@ -83,8 +82,8 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset" className="bg-[#3B5998] border-r-0">
-            <SidebarHeader className="bg-[#3B5998] border-b border-white/10">
+        <Sidebar collapsible="icon" variant="inset" className="bg-[#2563eb] border-r-0">
+            <SidebarHeader className="bg-[#2563eb] border-b border-white/10">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="hover:bg-white/10">
@@ -96,13 +95,12 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="bg-[#3B5998]">
+            <SidebarContent className="bg-[#2563eb]">
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter className="bg-[#3B5998] border-t border-white/10">
+            <SidebarFooter className="bg-[#2563eb] border-t border-white/10">
                 <NavMain items={settingsNavItems} />
-                <NavUser />
             </SidebarFooter>
         </Sidebar>
     );

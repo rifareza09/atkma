@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Pencil, Eye, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Eye, Trash2, FileText, Download } from 'lucide-react';
 import { useState } from 'react';
 import type { Column } from '@/components/data-table';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -178,12 +178,30 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                             Kelola data master barang ATK
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={barangCreate()}>
-                            <Plus className="mr-2 size-4" />
-                            Tambah Barang
-                        </Link>
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open('/reports/inventory/pdf', '_blank')}
+                        >
+                            <FileText className="mr-2 h-4 w-4" />
+                            PDF
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open('/reports/inventory/excel', '_blank')}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Excel
+                        </Button>
+                        <Button asChild>
+                            <Link href={barangCreate()}>
+                                <Plus className="mr-2 size-4" />
+                                Tambah Barang
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Search & Filter */}

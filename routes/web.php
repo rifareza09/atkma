@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\TransactionController;
@@ -20,6 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Inventory - Card based selection page
+    Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
+
     // Master Data Routes
     Route::prefix('master')->group(function () {
         // Barang routes - Admin can create/update/delete, Pengawas can only view
@@ -34,19 +38,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('permintaan', TransactionController::class);
     });
 
+    // Laporan Pages - View reports with filters
+    Route::prefix('laporan')->group(function () {
+        Route::get('/inventaris', [ReportController::class, 'inventaris'])->name('laporan.inventaris');
+        Route::get('/transaksi', [ReportController::class, 'transaksi'])->name('laporan.transaksi');
+    });
+
     // Report routes - Export PDF and Excel
     Route::prefix('reports')->group(function () {
         // Inventory reports
         Route::get('/inventory/pdf', [ReportController::class, 'exportInventoryPdf'])->name('reports.inventory.pdf');
         Route::get('/inventory/excel', [ReportController::class, 'exportInventoryExcel'])->name('reports.inventory.excel');
-        
+
         // Kartu stok per barang
         Route::get('/kartu-stok/{barang}', [ReportController::class, 'kartuStokPdf'])->name('reports.kartu-stok');
-        
+
         // Transaction reports
         Route::get('/transactions/pdf', [ReportController::class, 'exportTransactionPdf'])->name('reports.transactions.pdf');
         Route::get('/transactions/excel', [ReportController::class, 'exportTransactionExcel'])->name('reports.transactions.excel');
-        
+
         // Stock movement reports
         Route::get('/stock-movements/excel', [ReportController::class, 'exportStockMovementExcel'])->name('reports.stock-movements.excel');
     });

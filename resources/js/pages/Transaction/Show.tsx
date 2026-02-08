@@ -283,7 +283,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                                 <td className="py-4">
                                                     <code className="rounded bg-muted px-2 py-1 text-sm">
                                                         {item.barang
-                                                            ?.kode_barang || '-'}
+                                                            ?.kode || '-'}
                                                     </code>
                                                 </td>
                                                 <td className="py-4 font-medium">

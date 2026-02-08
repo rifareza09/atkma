@@ -95,11 +95,11 @@ export default function BarangMasukShow({ movement }: BarangMasukShowProps) {
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div>
                                         <p className="text-sm text-muted-foreground">Kode Barang</p>
-                                        <p className="text-lg font-medium">{movement.barang?.kode_barang}</p>
+                                        <p className="text-lg font-medium">{movement.barang?.kode}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Nama Barang</p>
-                                        <p className="text-lg font-medium">{movement.barang?.nama_barang}</p>
+                                        <p className="text-lg font-medium">{movement.barang?.nama}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Kategori</p>
