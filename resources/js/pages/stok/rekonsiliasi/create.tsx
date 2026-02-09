@@ -208,7 +208,7 @@ export default function Create({ barangs }: StockReconciliationCreateProps) {
                                 {items.map((item, index) => {
                                     const barang = getBarangById(item.barang_id);
                                     const difference = item.physical_stock - item.system_stock;
-                                    
+
                                     return (
                                         <TableRow key={item.barang_id}>
                                             <TableCell className="font-medium">

@@ -41,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Transaction routes - Admin can create/delete, Pengawas can only view
     Route::prefix('transaksi')->group(function () {
         Route::resource('permintaan', TransactionController::class);
-        
+
         // Transaction approval routes - Admin only
         Route::post('permintaan/{transaction}/approve', [TransactionController::class, 'approve'])
             ->name('permintaan.approve');

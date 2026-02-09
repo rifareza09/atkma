@@ -38,11 +38,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Show({ transaction }: TransactionShowProps) {
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
     const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
-    
+
     const rejectForm = useForm({
         rejection_reason: '',
     });
-    
+
     const reviseForm = useForm({
         revision_notes: '',
     });
@@ -293,14 +293,14 @@ export default function Show({ transaction }: TransactionShowProps) {
                                         </div>
                                     </>
                                 )}
-                                
+
                                 {/* Approval Information */}
                                 {transaction.status && transaction.status !== 'pending' && (
                                     <>
                                         <Separator className="my-4 border-t-2" />
                                         <div className="pt-2">
                                             <h4 className="font-semibold text-sm mb-3">Informasi Persetujuan:</h4>
-                                            
+
                                             {transaction.status === 'approved' && transaction.approver && (
                                                 <>
                                                     <div className="flex justify-between mb-2">
@@ -315,7 +315,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                                     )}
                                                 </>
                                             )}
-                                            
+
                                             {transaction.status === 'rejected' && transaction.rejector && (
                                                 <>
                                                     <div className="flex justify-between mb-2">
@@ -338,7 +338,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                                     )}
                                                 </>
                                             )}
-                                            
+
                                             {transaction.status === 'revised' && transaction.revisor && (
                                                 <>
                                                     <div className="flex justify-between mb-2">

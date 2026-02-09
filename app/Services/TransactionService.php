@@ -103,7 +103,7 @@ class TransactionService
 
         foreach ($items as $index => $item) {
             $barang = \App\Models\Barang::find($item['barang_id']);
-            
+
             if (!$barang) {
                 $errors["items.{$index}.barang_id"] = "Barang tidak ditemukan";
                 continue;

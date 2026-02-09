@@ -109,8 +109,8 @@ class DashboardController extends Controller
             ->limit(10)
             ->get()
             ->map(function ($item) {
-                $item->stock_percentage = $item->stok_minimum > 0 
-                    ? round(($item->stok / $item->stok_minimum) * 100, 2) 
+                $item->stock_percentage = $item->stok_minimum > 0
+                    ? round(($item->stok / $item->stok_minimum) * 100, 2)
                     : 0;
                 $item->critical = $item->stok == 0;
                 $item->shortage = max(0, $item->stok_minimum - $item->stok);

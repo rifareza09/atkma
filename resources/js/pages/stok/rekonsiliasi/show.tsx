@@ -37,11 +37,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Show({ 
-    reconciliation, 
-    matched_items, 
+export default function Show({
+    reconciliation,
+    matched_items,
     discrepancies,
-    stats 
+    stats
 }: StockReconciliationShowProps) {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('id-ID', {
