@@ -5,8 +5,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StockReconciliationController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -75,6 +77,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Stock movement reports
         Route::get('/stock-movements/excel', [ReportController::class, 'exportStockMovementExcel'])->name('reports.stock-movements.excel');
+    });
+
+    // User Management routes - Admin only
+    Route::prefix('settings')->group(function () {
+        // Application Settings
+        Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/clear-cache', [SettingsController::class, 'clearCache'])->name('settings.clear-cache');
+        
+        // User Management
+        Route::resource('users', UserController::class);
+        
+        // Additional user actions
+        Route::post('users/{user}/toggle-activation', [UserController::class, 'toggleActivation'])
+            ->name('users.toggle-activation');
+        Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])
+            ->name('users.reset-password');
     });
 });
 

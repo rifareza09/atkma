@@ -327,6 +327,28 @@ export interface TransactionItemFormData {
     jumlah: number | '';
 }
 
+export interface UserFormData {
+    name: string;
+    username: string;
+    email: string;
+    role: Role;
+    password?: string;
+    password_confirmation?: string;
+}
+
+export interface SettingsFormData {
+    app_name: string;
+    app_description?: string;
+    items_per_page: number;
+    low_stock_threshold: number;
+    enable_email_notifications: boolean;
+    enable_stock_alerts: boolean;
+    enable_audit_log: boolean;
+    backup_enabled: boolean;
+    backup_schedule?: 'daily' | 'weekly' | 'monthly';
+    backup_retention_days?: number;
+}
+
 // ==================== REPORT FILTERS ====================
 
 export interface ReportFilter {
