@@ -50,8 +50,8 @@ export default function BarangMasukIndex({ movements, filters }: BarangMasukInde
             label: 'Barang',
             render: (movement) => (
                 <div>
-                    <p className="font-medium">{movement.barang?.nama_barang}</p>
-                    <p className="text-xs text-muted-foreground">{movement.barang?.kode_barang}</p>
+                    <p className="font-medium">{movement.barang?.nama}</p>
+                    <p className="text-xs text-muted-foreground">{movement.barang?.kode}</p>
                 </div>
             ),
         },

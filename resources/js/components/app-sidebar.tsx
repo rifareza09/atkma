@@ -3,13 +3,12 @@ import {
     LayoutGrid,
     Package,
     Building2,
-    ArrowRightLeft,
-    ArrowDownToLine,
+    FileCheck,
+    CheckSquare,
     FileText,
+    Settings,
 } from 'lucide-react';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -21,6 +20,7 @@ import {
 } from '@/components/ui/sidebar';
 import {
     barangIndex,
+    inventoryIndex,
     ruanganIndex,
     transaksiPermintaanIndex,
     transaksiMasukIndex,
@@ -37,29 +37,38 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Data Barang',
-        href: barangIndex(),
+        title: 'Inventory',
+        href: inventoryIndex(),
         icon: Package,
     },
     {
-        title: 'Data Ruangan',
+        title: 'Requests',
+        href: transaksiPermintaanIndex(),
+        icon: FileCheck,
+    },
+    {
+        title: 'Approval Management',
+        href: transaksiPermintaanIndex(),
+        icon: CheckSquare,
+        badge: '12',
+    },
+    {
+        title: 'Rooms',
         href: ruanganIndex(),
         icon: Building2,
     },
     {
-        title: 'Permintaan Barang',
-        href: transaksiPermintaanIndex(),
-        icon: ArrowRightLeft,
-    },
-    {
-        title: 'Barang Masuk',
-        href: transaksiMasukIndex(),
-        icon: ArrowDownToLine,
-    },
-    {
-        title: 'Laporan',
+        title: 'Reports',
         href: laporanInventaris(),
         icon: FileText,
+    },
+];
+
+const settingsNavItems: NavItem[] = [
+    {
+        title: 'Settings',
+        href: '#',
+        icon: Settings,
     },
 ];
 
@@ -73,11 +82,11 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
+        <Sidebar collapsible="icon" variant="inset" className="bg-[#2563eb] border-r-0">
+            <SidebarHeader className="bg-[#2563eb] border-b border-white/10">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton size="lg" asChild className="hover:bg-white/10">
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
@@ -86,13 +95,12 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent className="bg-[#2563eb]">
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
+            <SidebarFooter className="bg-[#2563eb] border-t border-white/10">
+                <NavMain items={settingsNavItems} />
             </SidebarFooter>
         </Sidebar>
     );

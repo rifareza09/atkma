@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TransactionApprovalRequest;
 use App\Http\Requests\TransactionRequest;
 use App\Models\Barang;
 use App\Models\Ruangan;
@@ -26,7 +27,7 @@ class TransactionController extends Controller
     public function index(Request $request): Response
     {
         $filters = $request->only(['search', 'type', 'ruangan_id', 'barang_id', 'from_date', 'to_date']);
-        
+
         $transactions = $this->transactionService->getTransactions($filters);
 
         // Get filter options
@@ -36,7 +37,7 @@ class TransactionController extends Controller
             ->get();
 
         $barangs = Barang::where('is_active', true)
-            ->select('id', 'nama', 'kode_barang')
+            ->select('id', 'nama', 'kode')
             ->orderBy('nama')
             ->get();
 
@@ -58,12 +59,12 @@ class TransactionController extends Controller
     public function create(): Response
     {
         $ruangans = Ruangan::where('is_active', true)
-            ->select('id', 'nama', 'kode_ruangan')
+            ->select('id', 'nama', 'kode')
             ->orderBy('nama')
             ->get();
 
         $barangs = Barang::where('is_active', true)
-            ->select('id', 'nama', 'kode_barang', 'satuan', 'stok')
+            ->select('id', 'nama', 'kode', 'satuan', 'stok')
             ->orderBy('nama')
             ->get();
 
@@ -83,7 +84,7 @@ class TransactionController extends Controller
     public function store(TransactionRequest $request)
     {
         $validated = $request->validated();
-        
+
         // Validate stock availability for outgoing transactions
         $type = TransactionType::from($validated['type']);
         $stockErrors = $this->transactionService->validateItemsStock($validated['items'], $type);
@@ -93,13 +94,13 @@ class TransactionController extends Controller
         }
 
         try {
-            $this->transactionService->createTransaction(
+            $transaction = $this->transactionService->createTransaction(
                 $validated,
                 $request->user()
             );
 
             return redirect()
-                ->route('permintaan.index')
+                ->route('permintaan.show', $transaction->id)
                 ->with('success', 'Transaksi berhasil dibuat');
         } catch (\Exception $e) {
             return back()
@@ -133,7 +134,7 @@ class TransactionController extends Controller
     {
         // Note: Editing transactions is typically not allowed for audit trail
         // But we include it for completeness. Consider disabling in production.
-        
+
         abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
     }
 
@@ -153,7 +154,7 @@ class TransactionController extends Controller
     {
         // Note: Deleting transactions affects stock movements
         // Consider soft deletes or disabling deletion in production
-        
+
         try {
             $transaction->delete();
 
@@ -162,6 +163,74 @@ class TransactionController extends Controller
                 ->with('success', 'Transaksi berhasil dihapus');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal menghapus transaksi: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Approve a transaction
+     */
+    public function approve(Transaction $transaction)
+    {
+        // Authorization check (only admin can approve)
+        $this->authorize('approve', $transaction);
+
+        try {
+            $updatedTransaction = $this->transactionService->approveTransaction(
+                $transaction,
+                auth()->user()
+            );
+
+            return redirect()
+                ->route('permintaan.show', $updatedTransaction)
+                ->with('success', 'Transaksi berhasil disetujui');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Reject a transaction
+     */
+    public function reject(TransactionApprovalRequest $request, Transaction $transaction)
+    {
+        // Authorization check (only admin can reject)
+        $this->authorize('reject', $transaction);
+
+        try {
+            $updatedTransaction = $this->transactionService->rejectTransaction(
+                $transaction,
+                auth()->user(),
+                $request->input('rejection_reason')
+            );
+
+            return redirect()
+                ->route('permintaan.show', $updatedTransaction)
+                ->with('success', 'Transaksi berhasil ditolak');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Revise a transaction
+     */
+    public function revise(TransactionApprovalRequest $request, Transaction $transaction)
+    {
+        // Authorization check (only admin can revise)
+        $this->authorize('revise', $transaction);
+
+        try {
+            $updatedTransaction = $this->transactionService->reviseTransaction(
+                $transaction,
+                auth()->user(),
+                $request->input('revision_notes')
+            );
+
+            return redirect()
+                ->route('permintaan.show', $updatedTransaction)
+                ->with('success', 'Transaksi telah diminta untuk direvisi');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }

@@ -11,11 +11,86 @@ use App\Models\StockMovement;
 use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReportController extends Controller
 {
+    /**
+     * Display the laporan inventaris page
+     */
+    public function inventaris(Request $request): Response
+    {
+        $query = Barang::query()->where('is_active', true);
+
+        // Apply filters
+        if ($request->has('ruangan_id') && $request->ruangan_id) {
+            // If you have a relationship between Barang and Ruangan, filter by it
+            // For now, we'll just pass the filter to frontend
+        }
+
+        if ($request->has('status') && $request->status) {
+            if ($request->status === 'low_stock') {
+                $query->whereRaw('stok <= stok_minimum');
+            }
+        }
+
+        if ($request->has('from_date') && $request->from_date) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->has('to_date') && $request->to_date) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $barangs = $query->orderBy('nama')->get();
+
+        return Inertia::render('laporan/inventaris', [
+            'barangs' => $barangs,
+            'ruangans' => Ruangan::where('is_active', true)
+                ->orderBy('nama')
+                ->get(),
+            'filters' => $request->only(['ruangan_id', 'status', 'from_date', 'to_date']),
+        ]);
+    }
+
+    /**
+     * Display the laporan transaksi page
+     */
+    public function transaksi(Request $request): Response
+    {
+        $query = Transaction::with(['ruangan', 'user', 'items.barang']);
+
+        // Apply filters
+        if ($request->has('type') && $request->type) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->has('ruangan_id') && $request->ruangan_id) {
+            $query->where('ruangan_id', $request->ruangan_id);
+        }
+
+        if ($request->has('from_date') && $request->from_date) {
+            $query->whereDate('tanggal', '>=', $request->from_date);
+        }
+
+        if ($request->has('to_date') && $request->to_date) {
+            $query->whereDate('tanggal', '<=', $request->to_date);
+        }
+
+        $transactions = $query->orderBy('tanggal', 'desc')->get();
+
+        return Inertia::render('laporan/transaksi', [
+            'transactions' => $transactions,
+            'ruangans' => Ruangan::where('is_active', true)
+                ->orderBy('nama')
+                ->get(),
+            'filters' => $request->only(['type', 'ruangan_id', 'from_date', 'to_date']),
+        ]);
+    }
+
     /**
      * Export daftar inventaris ke PDF
      */

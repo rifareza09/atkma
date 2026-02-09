@@ -18,8 +18,13 @@ export type StockMovementType = 'penambahan' | 'pengurangan' | 'penyesuaian';
 export interface User {
     id: number;
     name: string;
+<<<<<<< HEAD
     username: string;
+=======
+    username?: string;
+>>>>>>> e17f940f4abeb85d5fdeb0028eb150f400b3edd1
     email: string;
+    avatar?: string;
     role: Role;
     is_active: boolean;
     email_verified_at: string | null;
@@ -70,6 +75,15 @@ export interface Transaction {
     type: TransactionType;
     tanggal: string; // Format: YYYY-MM-DD
     keterangan: string | null;
+    status?: 'pending' | 'approved' | 'rejected' | 'revised';
+    approved_by?: number | null;
+    approved_at?: string | null;
+    rejected_by?: number | null;
+    rejected_at?: string | null;
+    rejection_reason?: string | null;
+    revised_by?: number | null;
+    revised_at?: string | null;
+    revision_notes?: string | null;
     created_at: string;
     updated_at: string;
     // Relationships (optional, tergantung eager loading)
@@ -77,6 +91,9 @@ export interface Transaction {
     user?: User;
     items?: TransactionItem[];
     stockMovements?: StockMovement[];
+    approver?: User;
+    rejector?: User;
+    revisor?: User;
 }
 
 export interface TransactionItem {
@@ -106,6 +123,38 @@ export interface StockMovement {
     barang?: Barang;
     user?: User;
     transaction?: Transaction;
+}
+
+export interface StockReconciliation {
+    id: number;
+    user_id: number;
+    reconciliation_date: string;
+    notes: string | null;
+    created_at: string;
+    updated_at: string;
+    // Relationships
+    user?: User;
+    items?: StockReconciliationItem[];
+    // Computed attributes
+    total_items?: number;
+    discrepancies?: StockReconciliationItem[];
+    total_discrepancies?: number;
+}
+
+export interface StockReconciliationItem {
+    id: number;
+    stock_reconciliation_id: number;
+    barang_id: number;
+    system_stock: number;
+    physical_stock: number;
+    difference: number;
+    created_at: string;
+    updated_at: string;
+    // Relationships
+    barang?: Barang;
+    stock_reconciliation?: StockReconciliation;
+    // Computed attributes
+    discrepancy_type?: 'surplus' | 'shortage' | 'match';
 }
 
 // ==================== PAGINATION ====================
@@ -232,6 +281,33 @@ export interface KartuStokProps {
     };
 }
 
+// Stock Reconciliation Index
+export interface StockReconciliationIndexProps {
+    reconciliations: PaginatedData<StockReconciliation>;
+    filters: {
+        date_from?: string;
+        date_to?: string;
+    };
+}
+
+// Stock Reconciliation Create
+export interface StockReconciliationCreateProps {
+    barangs: Barang[]; // All active barangs with current stock
+}
+
+// Stock Reconciliation Show
+export interface StockReconciliationShowProps {
+    reconciliation: StockReconciliation;
+    matched_items: StockReconciliationItem[];
+    discrepancies: StockReconciliationItem[];
+    stats: {
+        total: number;
+        matched: number;
+        surplus: number;
+        shortage: number;
+    };
+}
+
 // ==================== FORM DATA ====================
 // Data yang dikirim dari Form ke Controller
 
@@ -262,6 +338,28 @@ export interface TransactionFormData {
 export interface TransactionItemFormData {
     barang_id: number | '';
     jumlah: number | '';
+}
+
+export interface UserFormData {
+    name: string;
+    username: string;
+    email: string;
+    role: Role;
+    password?: string;
+    password_confirmation?: string;
+}
+
+export interface SettingsFormData {
+    app_name: string;
+    app_description?: string;
+    items_per_page: number;
+    low_stock_threshold: number;
+    enable_email_notifications: boolean;
+    enable_stock_alerts: boolean;
+    enable_audit_log: boolean;
+    backup_enabled: boolean;
+    backup_schedule?: 'daily' | 'weekly' | 'monthly';
+    backup_retention_days?: number;
 }
 
 // ==================== REPORT FILTERS ====================

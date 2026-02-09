@@ -5,6 +5,9 @@
  * Routes ini akan mengikuti pattern Laravel Wayfinder
  */
 
+// Inventory - Card based selection
+export const inventoryIndex = () => '/inventory';
+
 // Master Data Routes
 export const barangIndex = () => '/master/barang';
 export const barangCreate = () => '/master/barang/create';

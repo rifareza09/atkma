@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Pencil, Package } from 'lucide-react';
+import { ArrowLeft, Pencil, Package, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +55,13 @@ export default function BarangShow({ barang }: BarangShowProps) {
                                 <ArrowLeft className="mr-2 size-4" />
                                 Kembali
                             </Link>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => window.open(`/reports/kartu-stok/${barang.id}`, '_blank')}
+                        >
+                            <FileText className="mr-2 size-4" />
+                            Lihat Kartu Stok
                         </Button>
                         <Button asChild>
                             <Link href={barangEdit(barang.id)}>

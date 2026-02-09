@@ -43,7 +43,7 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
 
     const barangOptions: SelectOption[] = barangs.map((b) => ({
         value: b.id.toString(),
-        label: `${b.kode_barang} - ${b.nama_barang} (Stok: ${b.stok})`,
+        label: `${b.kode} - ${b.nama} (Stok: ${b.stok})`,
     }));
 
     const selectedBarang = barangs.find(b => b.id === data.barang_id);

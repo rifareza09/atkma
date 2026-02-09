@@ -195,7 +195,7 @@ export default function Create({
                                                     key={r.id}
                                                     value={r.id.toString()}
                                                 >
-                                                    {r.kode_ruangan} - {r.nama}
+                                                    {r.kode} - {r.nama}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -323,7 +323,7 @@ export default function Create({
                                                                 key={b.id}
                                                                 value={b.id.toString()}
                                                             >
-                                                                {b.kode_barang}{' '}
+                                                                {b.kode}{' '}
                                                                 - {b.nama} (Stok:{' '}
                                                                 {b.stok}{' '}
                                                                 {b.satuan})

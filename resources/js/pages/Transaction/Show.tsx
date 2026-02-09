@@ -1,5 +1,6 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { ArrowDown, ArrowLeft, ArrowUp, Package, Trash } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ArrowDown, ArrowLeft, ArrowUp, Check, Package, Trash, X, Edit } from 'lucide-react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +12,16 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import type { BreadcrumbItem, TransactionShowProps } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -25,6 +36,17 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Show({ transaction }: TransactionShowProps) {
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+    const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
+    
+    const rejectForm = useForm({
+        rejection_reason: '',
+    });
+    
+    const reviseForm = useForm({
+        revision_notes: '',
+    });
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('id-ID', {
             day: 'numeric',
@@ -55,6 +77,69 @@ export default function Show({ transaction }: TransactionShowProps) {
                 Barang Keluar
             </Badge>
         );
+    };
+
+    const getStatusBadge = (status?: string) => {
+        if (!status || status === 'pending') {
+            return (
+                <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                    Menunggu Persetujuan
+                </Badge>
+            );
+        }
+        if (status === 'approved') {
+            return (
+                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    <Check className="mr-1 size-3" />
+                    Disetujui
+                </Badge>
+            );
+        }
+        if (status === 'rejected') {
+            return (
+                <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                    <X className="mr-1 size-3" />
+                    Ditolak
+                </Badge>
+            );
+        }
+        if (status === 'revised') {
+            return (
+                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    <Edit className="mr-1 size-3" />
+                    Perlu Revisi
+                </Badge>
+            );
+        }
+        return null;
+    };
+
+    const handleApprove = () => {
+        if (confirm('Apakah Anda yakin ingin menyetujui transaksi ini?')) {
+            router.post(`/transaksi/permintaan/${transaction.id}/approve`, {}, {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const handleReject = () => {
+        rejectForm.post(`/transaksi/permintaan/${transaction.id}/reject`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setRejectDialogOpen(false);
+                rejectForm.reset();
+            },
+        });
+    };
+
+    const handleRevise = () => {
+        reviseForm.post(`/transaksi/permintaan/${transaction.id}/revise`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setReviseDialogOpen(false);
+                reviseForm.reset();
+            },
+        });
     };
 
     const handleDelete = () => {
@@ -89,6 +174,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                 {transaction.kode_transaksi}
                             </h1>
                             {getTypeBadge(transaction.type)}
+                            {getStatusBadge(transaction.status)}
                         </div>
                         <p className="text-muted-foreground">
                             Detail lengkap transaksi barang
@@ -101,8 +187,38 @@ export default function Show({ transaction }: TransactionShowProps) {
                                 Kembali
                             </Button>
                         </Link>
+                        {(!transaction.status || transaction.status === 'pending' || transaction.status === 'revised') && (
+                            <Button
+                                variant="default"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={handleApprove}
+                            >
+                                <Check className="mr-2 size-4" />
+                                Setujui
+                            </Button>
+                        )}
+                        {(!transaction.status || transaction.status === 'pending') && (
+                            <>
+                                <Button
+                                    variant="default"
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                    onClick={() => setReviseDialogOpen(true)}
+                                >
+                                    <Edit className="mr-2 size-4" />
+                                    Revisi
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setRejectDialogOpen(true)}
+                                >
+                                    <X className="mr-2 size-4" />
+                                    Tolak
+                                </Button>
+                            </>
+                        )}
                         <Button
-                            variant="destructive"
+                            variant="outline"
+                            className="border-red-200 text-red-600 hover:bg-red-50"
                             onClick={handleDelete}
                         >
                             <Trash className="mr-2 size-4" />
@@ -174,6 +290,77 @@ export default function Show({ transaction }: TransactionShowProps) {
                                             <p className="text-sm">
                                                 {transaction.keterangan}
                                             </p>
+                                        </div>
+                                    </>
+                                )}
+                                
+                                {/* Approval Information */}
+                                {transaction.status && transaction.status !== 'pending' && (
+                                    <>
+                                        <Separator className="my-4 border-t-2" />
+                                        <div className="pt-2">
+                                            <h4 className="font-semibold text-sm mb-3">Informasi Persetujuan:</h4>
+                                            
+                                            {transaction.status === 'approved' && transaction.approver && (
+                                                <>
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="text-muted-foreground">Disetujui oleh:</span>
+                                                        <span className="font-medium">{transaction.approver.name}</span>
+                                                    </div>
+                                                    {transaction.approved_at && (
+                                                        <div className="flex justify-between">
+                                                            <span className="text-muted-foreground">Tanggal:</span>
+                                                            <span className="font-medium">{formatDateTime(transaction.approved_at)}</span>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                            
+                                            {transaction.status === 'rejected' && transaction.rejector && (
+                                                <>
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="text-muted-foreground">Ditolak oleh:</span>
+                                                        <span className="font-medium">{transaction.rejector.name}</span>
+                                                    </div>
+                                                    {transaction.rejected_at && (
+                                                        <div className="flex justify-between mb-2">
+                                                            <span className="text-muted-foreground">Tanggal:</span>
+                                                            <span className="font-medium">{formatDateTime(transaction.rejected_at)}</span>
+                                                        </div>
+                                                    )}
+                                                    {transaction.rejection_reason && (
+                                                        <div className="mt-3">
+                                                            <span className="text-muted-foreground block mb-1">Alasan Penolakan:</span>
+                                                            <p className="text-sm bg-red-50 p-3 rounded border border-red-200">
+                                                                {transaction.rejection_reason}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                            
+                                            {transaction.status === 'revised' && transaction.revisor && (
+                                                <>
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="text-muted-foreground">Diminta revisi oleh:</span>
+                                                        <span className="font-medium">{transaction.revisor.name}</span>
+                                                    </div>
+                                                    {transaction.revised_at && (
+                                                        <div className="flex justify-between mb-2">
+                                                            <span className="text-muted-foreground">Tanggal:</span>
+                                                            <span className="font-medium">{formatDateTime(transaction.revised_at)}</span>
+                                                        </div>
+                                                    )}
+                                                    {transaction.revision_notes && (
+                                                        <div className="mt-3">
+                                                            <span className="text-muted-foreground block mb-1">Catatan Revisi:</span>
+                                                            <p className="text-sm bg-blue-50 p-3 rounded border border-blue-200">
+                                                                {transaction.revision_notes}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
                                         </div>
                                     </>
                                 )}
@@ -283,7 +470,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                                 <td className="py-4">
                                                     <code className="rounded bg-muted px-2 py-1 text-sm">
                                                         {item.barang
-                                                            ?.kode_barang || '-'}
+                                                            ?.kode || '-'}
                                                     </code>
                                                 </td>
                                                 <td className="py-4 font-medium">
@@ -379,6 +566,98 @@ export default function Show({ transaction }: TransactionShowProps) {
                         </Card>
                     )}
             </div>
+
+            {/* Reject Dialog */}
+            <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Tolak Transaksi</DialogTitle>
+                        <DialogDescription>
+                            Tuliskan alasan penolakan transaksi ini. Alasan minimal 10 karakter.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="rejection_reason">Alasan Penolakan *</Label>
+                            <Textarea
+                                id="rejection_reason"
+                                placeholder="Contoh: Stok tidak mencukupi untuk permintaan ini..."
+                                value={rejectForm.data.rejection_reason}
+                                onChange={(e) => rejectForm.setData('rejection_reason', e.target.value)}
+                                rows={4}
+                                className={rejectForm.errors.rejection_reason ? 'border-red-500' : ''}
+                            />
+                            {rejectForm.errors.rejection_reason && (
+                                <p className="text-sm text-red-600">{rejectForm.errors.rejection_reason}</p>
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setRejectDialogOpen(false)}
+                            disabled={rejectForm.processing}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleReject}
+                            disabled={rejectForm.processing || rejectForm.data.rejection_reason.length < 10}
+                        >
+                            {rejectForm.processing ? 'Memproses...' : 'Tolak Transaksi'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Revise Dialog */}
+            <Dialog open={reviseDialogOpen} onOpenChange={setReviseDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Minta Revisi Transaksi</DialogTitle>
+                        <DialogDescription>
+                            Tuliskan catatan revisi untuk transaksi ini. Catatan minimal 10 karakter.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="revision_notes">Catatan Revisi *</Label>
+                            <Textarea
+                                id="revision_notes"
+                                placeholder="Contoh: Mohon perbaiki jumlah barang yang diminta..."
+                                value={reviseForm.data.revision_notes}
+                                onChange={(e) => reviseForm.setData('revision_notes', e.target.value)}
+                                rows={4}
+                                className={reviseForm.errors.revision_notes ? 'border-red-500' : ''}
+                            />
+                            {reviseForm.errors.revision_notes && (
+                                <p className="text-sm text-red-600">{reviseForm.errors.revision_notes}</p>
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setReviseDialogOpen(false)}
+                            disabled={reviseForm.processing}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            type="button"
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={handleRevise}
+                            disabled={reviseForm.processing || reviseForm.data.revision_notes.length < 10}
+                        >
+                            {reviseForm.processing ? 'Memproses...' : 'Kirim Revisi'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

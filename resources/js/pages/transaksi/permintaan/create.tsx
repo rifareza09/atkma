@@ -48,12 +48,12 @@ export default function PermintaanCreate({ barangs, ruangans }: PermintaanCreate
 
     const ruanganOptions: SelectOption[] = ruangans.map((r) => ({
         value: r.id.toString(),
-        label: `${r.kode_ruangan} - ${r.nama_ruangan}`,
+        label: `${r.kode} - ${r.nama}`,
     }));
 
     const barangOptions: SelectOption[] = barangs.map((b) => ({
         value: b.id.toString(),
-        label: `${b.kode_barang} - ${b.nama_barang} (Stok: ${b.stok})`,
+        label: `${b.kode} - ${b.nama} (Stok: ${b.stok})`,
     }));
 
     const addItem = () => {

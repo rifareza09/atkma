@@ -124,4 +124,25 @@ class BarangController extends Controller
         return redirect()->route('barang.index')
             ->with('success', 'Barang berhasil dinonaktifkan');
     }
+
+    /**
+     * Get items with low stock
+     */
+    public function getLowStockItems()
+    {
+        $lowStockItems = Barang::where('is_active', true)
+            ->whereRaw('stok <= stok_minimum')
+            ->select('id', 'kode', 'nama', 'satuan', 'stok', 'stok_minimum')
+            ->selectRaw('(stok * 100.0 / stok_minimum) as stock_percentage')
+            ->orderByRaw('(stok * 100.0 / stok_minimum) ASC')
+            ->limit(20)
+            ->get()
+            ->map(function ($item) {
+                $item->stock_percentage = round($item->stock_percentage, 2);
+                $item->critical = $item->stok == 0;
+                return $item;
+            });
+
+        return response()->json($lowStockItems);
+    }
 }

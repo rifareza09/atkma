@@ -18,14 +18,26 @@ class Transaction extends Model
         'ruangan_id',
         'user_id',
         'type',
+        'status',
         'tanggal',
         'keterangan',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
+        'revised_by',
+        'revised_at',
+        'revision_notes',
     ];
 
     protected function casts(): array
     {
         return [
             'tanggal' => 'date',
+            'approved_at' => 'datetime',
+            'rejected_at' => 'datetime',
+            'revised_at' => 'datetime',
             'type' => TransactionType::class,
         ];
     }
@@ -97,5 +109,53 @@ class Transaction extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    /**
+     * Get user who approved the transaction
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get user who rejected the transaction
+     */
+    public function rejector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /**
+     * Get user who revised the transaction
+     */
+    public function revisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revised_by');
+    }
+
+    /**
+     * Check if transaction can be approved
+     */
+    public function canBeApproved(): bool
+    {
+        return in_array($this->status, ['pending', 'revised']);
+    }
+
+    /**
+     * Check if transaction can be rejected
+     */
+    public function canBeRejected(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if transaction can be revised
+     */
+    public function canBeRevised(): bool
+    {
+        return $this->status === 'pending';
     }
 }
