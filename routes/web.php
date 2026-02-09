@@ -39,14 +39,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Inventory reports
         Route::get('/inventory/pdf', [ReportController::class, 'exportInventoryPdf'])->name('reports.inventory.pdf');
         Route::get('/inventory/excel', [ReportController::class, 'exportInventoryExcel'])->name('reports.inventory.excel');
-        
+
         // Kartu stok per barang
         Route::get('/kartu-stok/{barang}', [ReportController::class, 'kartuStokPdf'])->name('reports.kartu-stok');
-        
+
         // Transaction reports
         Route::get('/transactions/pdf', [ReportController::class, 'exportTransactionPdf'])->name('reports.transactions.pdf');
         Route::get('/transactions/excel', [ReportController::class, 'exportTransactionExcel'])->name('reports.transactions.excel');
-        
+
         // Stock movement reports
         Route::get('/stock-movements/excel', [ReportController::class, 'exportStockMovementExcel'])->name('reports.stock-movements.excel');
     });

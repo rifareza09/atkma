@@ -28,6 +28,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { UserMenuContent } from '@/components/user-menu-content';
+import { NotificationDropdown } from '@/components/notification-dropdown';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn, toUrl } from '@/lib/utils';
@@ -66,7 +67,7 @@ const activeItemStyles =
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage<SharedData>();
-    const { auth } = page.props;
+    const { auth, notifications, unread_notifications_count } = page.props;
     const getInitials = useInitials();
     const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
     return (
@@ -215,6 +216,13 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 ))}
                             </div>
                         </div>
+                        
+                        {/* Notification Dropdown */}
+                        <NotificationDropdown 
+                            notifications={notifications || []} 
+                            unreadCount={unread_notifications_count || 0} 
+                        />
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button

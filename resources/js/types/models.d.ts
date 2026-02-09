@@ -18,12 +18,22 @@ export type StockMovementType = 'penambahan' | 'pengurangan' | 'penyesuaian';
 export interface User {
     id: number;
     name: string;
+    username: string;
     email: string;
     role: Role;
+    is_active: boolean;
     email_verified_at: string | null;
     two_factor_confirmed_at: string | null;
     created_at: string;
     updated_at: string;
+    // Relations (optional, loaded via eager loading)
+    transactions?: Transaction[];
+    transactions_count?: number;
+}
+
+export interface RoleOption {
+    value: Role;
+    label: string;
 }
 
 export interface Barang {
@@ -282,6 +292,8 @@ export interface SharedProps {
         user: User;
     };
     flash: FlashMessages;
+    notifications?: Notification[];
+    unread_notifications_count?: number;
     ziggy?: {
         url: string;
         port: number | null;
@@ -292,3 +304,135 @@ export interface SharedProps {
 
 // Helper type untuk page props
 export type PageProps<T = Record<string, unknown>> = T & SharedProps;
+
+// ==================== USER MANAGEMENT PROPS ====================
+
+export interface UserIndexProps {
+    users: PaginatedData<User>;
+    filters: {
+        search?: string;
+        role?: Role;
+        status?: boolean;
+    };
+    roles: RoleOption[];
+}
+
+export interface UserCreateProps {
+    roles: RoleOption[];
+}
+
+export interface UserEditProps {
+    user: User;
+    roles: RoleOption[];
+}
+
+export interface UserShowProps {
+    user: User & {
+        transactions?: Transaction[];
+    };
+}
+
+export interface UserFormData {
+    name: string;
+    username: string;
+    email: string;
+    password?: string;
+    password_confirmation?: string;
+    role: Role | '';
+    is_active: boolean;
+}
+
+// ==================== SETTINGS PROPS ====================
+
+export interface SettingItem {
+    key: string;
+    value: string;
+    description?: string;
+}
+
+export interface SettingsIndexProps {
+    general: {
+        app_name: string;
+        app_url: string;
+        timezone: string;
+        date_format: string;
+    };
+    email: {
+        mail_from_address: string;
+        mail_from_name: string;
+    };
+    backup: {
+        backup_schedule: string;
+        backup_retention_days: number;
+    };
+    audit: {
+        enable_audit_log: boolean;
+        audit_retention_days: number;
+    };
+}
+
+export interface SettingsFormData {
+    // General
+    app_name?: string;
+    app_url?: string;
+    timezone?: string;
+    date_format?: string;
+    // Email
+    mail_from_address?: string;
+    mail_from_name?: string;
+    // Backup
+    backup_schedule?: string;
+    backup_retention_days?: number;
+    // Audit
+    enable_audit_log?: boolean;
+    audit_retention_days?: number;
+}
+
+// ==================== NOTIFICATION PROPS ====================
+
+export interface Notification {
+    id: number;
+    user_id: number;
+    type: string;
+    title: string;
+    message: string;
+    data?: Record<string, any>;
+    read_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface NotificationIndexProps {
+    notifications: PaginatedData<Notification>;
+    unread_count: number;
+}
+
+// ==================== AUDIT LOG PROPS ====================
+
+export interface AuditLog {
+    id: number;
+    user_id: number;
+    user: User;
+    action: 'created' | 'updated' | 'deleted';
+    model: string;
+    model_id: number;
+    old_value: string | null; // JSON string
+    new_value: string | null; // JSON string
+    description: string;
+    ip_address: string;
+    user_agent: string;
+    created_at: string;
+}
+
+export interface AuditLogIndexProps extends PageProps {
+    auditLogs: PaginatedData<AuditLog>;
+    filters: {
+        search?: string;
+        user_id?: string | number;
+        action?: string;
+        model?: string;
+        date_from?: string;
+        date_to?: string;
+    };
+    users: Array<{ id: number; name: string; username: string }>;
+}
