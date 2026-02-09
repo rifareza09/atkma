@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\StockReconciliationController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,6 +21,8 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('api/dashboard/low-stock', [DashboardController::class, 'getLowStockData'])->name('api.dashboard.low-stock');
+    Route::get('api/dashboard/stock-movements/today', [DashboardController::class, 'getTodayStockMovements'])->name('api.dashboard.stock-movements.today');
 
     // Inventory - Card based selection page
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
@@ -36,6 +39,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Transaction routes - Admin can create/delete, Pengawas can only view
     Route::prefix('transaksi')->group(function () {
         Route::resource('permintaan', TransactionController::class);
+        
+        // Transaction approval routes - Admin only
+        Route::post('permintaan/{transaction}/approve', [TransactionController::class, 'approve'])
+            ->name('permintaan.approve');
+        Route::post('permintaan/{transaction}/reject', [TransactionController::class, 'reject'])
+            ->name('permintaan.reject');
+        Route::post('permintaan/{transaction}/revise', [TransactionController::class, 'revise'])
+            ->name('permintaan.revise');
+    });
+
+    // Stock Reconciliation routes - Admin only
+    Route::prefix('stok')->group(function () {
+        Route::resource('rekonsiliasi', StockReconciliationController::class)->except(['edit', 'update']);
     });
 
     // Laporan Pages - View reports with filters

@@ -162,4 +162,106 @@ class TransactionService
             ->latest('created_at')
             ->paginate(10);
     }
+
+    /**
+     * Approve a transaction
+     *
+     * @param Transaction $transaction
+     * @param User $approver
+     * @return Transaction
+     * @throws \Exception
+     */
+    public function approveTransaction(Transaction $transaction, User $approver): Transaction
+    {
+        if (!$transaction->canBeApproved()) {
+            throw new \Exception("Transaksi dengan status {$transaction->status} tidak dapat disetujui");
+        }
+
+        return DB::transaction(function () use ($transaction, $approver) {
+            // Update transaction status
+            $transaction->update([
+                'status' => 'approved',
+                'approved_by' => $approver->id,
+                'approved_at' => now(),
+            ]);
+
+            // If this is an outgoing transaction and stock hasn't been reduced yet
+            // (for transactions that were created as 'pending' status)
+            // Note: Based on current implementation, stock is already reduced on creation
+            // But this is here for future flexibility if workflow changes
+
+            return $transaction->fresh(['approver', 'ruangan', 'user', 'items.barang']);
+        });
+    }
+
+    /**
+     * Reject a transaction
+     *
+     * @param Transaction $transaction
+     * @param User $rejector
+     * @param string $reason
+     * @return Transaction
+     * @throws \Exception
+     */
+    public function rejectTransaction(Transaction $transaction, User $rejector, string $reason): Transaction
+    {
+        if (!$transaction->canBeRejected()) {
+            throw new \Exception("Transaksi dengan status {$transaction->status} tidak dapat ditolak");
+        }
+
+        return DB::transaction(function () use ($transaction, $rejector, $reason) {
+            // Rollback stock if transaction type is KELUAR and status was pending
+            // (stock might have been reduced on creation)
+            if ($transaction->type === TransactionType::KELUAR && $transaction->status === 'pending') {
+                foreach ($transaction->items as $item) {
+                    // Add back the stock that was reduced
+                    $this->stockService->addStock(
+                        barang: $item->barang,
+                        qty: $item->jumlah,
+                        user: $rejector,
+                        keterangan: "Rollback - Transaksi {$transaction->kode_transaksi} ditolak: {$reason}",
+                        transaction: $transaction
+                    );
+                }
+            }
+
+            // Update transaction status
+            $transaction->update([
+                'status' => 'rejected',
+                'rejected_by' => $rejector->id,
+                'rejected_at' => now(),
+                'rejection_reason' => $reason,
+            ]);
+
+            return $transaction->fresh(['rejector', 'ruangan', 'user', 'items.barang']);
+        });
+    }
+
+    /**
+     * Revise a transaction
+     *
+     * @param Transaction $transaction
+     * @param User $revisor
+     * @param string $notes
+     * @return Transaction
+     * @throws \Exception
+     */
+    public function reviseTransaction(Transaction $transaction, User $revisor, string $notes): Transaction
+    {
+        if (!$transaction->canBeRevised()) {
+            throw new \Exception("Transaksi dengan status {$transaction->status} tidak dapat direvisi");
+        }
+
+        return DB::transaction(function () use ($transaction, $revisor, $notes) {
+            // Update transaction status
+            $transaction->update([
+                'status' => 'revised',
+                'revised_by' => $revisor->id,
+                'revised_at' => now(),
+                'revision_notes' => $notes,
+            ]);
+
+            return $transaction->fresh(['revisor', 'ruangan', 'user', 'items.barang']);
+        });
+    }
 }

@@ -62,6 +62,15 @@ export interface Transaction {
     type: TransactionType;
     tanggal: string; // Format: YYYY-MM-DD
     keterangan: string | null;
+    status?: 'pending' | 'approved' | 'rejected' | 'revised';
+    approved_by?: number | null;
+    approved_at?: string | null;
+    rejected_by?: number | null;
+    rejected_at?: string | null;
+    rejection_reason?: string | null;
+    revised_by?: number | null;
+    revised_at?: string | null;
+    revision_notes?: string | null;
     created_at: string;
     updated_at: string;
     // Relationships (optional, tergantung eager loading)
@@ -69,6 +78,9 @@ export interface Transaction {
     user?: User;
     items?: TransactionItem[];
     stockMovements?: StockMovement[];
+    approver?: User;
+    rejector?: User;
+    revisor?: User;
 }
 
 export interface TransactionItem {
@@ -98,6 +110,38 @@ export interface StockMovement {
     barang?: Barang;
     user?: User;
     transaction?: Transaction;
+}
+
+export interface StockReconciliation {
+    id: number;
+    user_id: number;
+    reconciliation_date: string;
+    notes: string | null;
+    created_at: string;
+    updated_at: string;
+    // Relationships
+    user?: User;
+    items?: StockReconciliationItem[];
+    // Computed attributes
+    total_items?: number;
+    discrepancies?: StockReconciliationItem[];
+    total_discrepancies?: number;
+}
+
+export interface StockReconciliationItem {
+    id: number;
+    stock_reconciliation_id: number;
+    barang_id: number;
+    system_stock: number;
+    physical_stock: number;
+    difference: number;
+    created_at: string;
+    updated_at: string;
+    // Relationships
+    barang?: Barang;
+    stock_reconciliation?: StockReconciliation;
+    // Computed attributes
+    discrepancy_type?: 'surplus' | 'shortage' | 'match';
 }
 
 // ==================== PAGINATION ====================
@@ -221,6 +265,33 @@ export interface KartuStokProps {
     filters: {
         date_from?: string;
         date_to?: string;
+    };
+}
+
+// Stock Reconciliation Index
+export interface StockReconciliationIndexProps {
+    reconciliations: PaginatedData<StockReconciliation>;
+    filters: {
+        date_from?: string;
+        date_to?: string;
+    };
+}
+
+// Stock Reconciliation Create
+export interface StockReconciliationCreateProps {
+    barangs: Barang[]; // All active barangs with current stock
+}
+
+// Stock Reconciliation Show
+export interface StockReconciliationShowProps {
+    reconciliation: StockReconciliation;
+    matched_items: StockReconciliationItem[];
+    discrepancies: StockReconciliationItem[];
+    stats: {
+        total: number;
+        matched: number;
+        surplus: number;
+        shortage: number;
     };
 }
 

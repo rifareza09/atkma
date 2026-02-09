@@ -8,7 +8,10 @@ import {
     Download,
     CheckCheck,
     Info,
+    TrendingDown,
+    RefreshCw,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,6 +71,42 @@ export default function Dashboard({
     low_stock_items,
     workflow_stats,
 }: DashboardProps) {
+    const [lowStockData, setLowStockData] = useState<any>(null);
+    const [stockMovements, setStockMovements] = useState<any[]>([]);
+    const [loadingLowStock, setLoadingLowStock] = useState(false);
+    const [loadingMovements, setLoadingMovements] = useState(false);
+
+    const fetchLowStockData = async () => {
+        setLoadingLowStock(true);
+        try {
+            const response = await fetch('/api/dashboard/low-stock');
+            const data = await response.json();
+            setLowStockData(data);
+        } catch (error) {
+            console.error('Error fetching low stock data:', error);
+        } finally {
+            setLoadingLowStock(false);
+        }
+    };
+
+    const fetchStockMovements = async () => {
+        setLoadingMovements(true);
+        try {
+            const response = await fetch('/api/dashboard/stock-movements/today');
+            const data = await response.json();
+            setStockMovements(data);
+        } catch (error) {
+            console.error('Error fetching stock movements:', error);
+        } finally {
+            setLoadingMovements(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLowStockData();
+        fetchStockMovements();
+    }, []);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -299,38 +338,131 @@ export default function Dashboard({
 
                     {/* Right Column - Low Stock Alert & Workflow Tip */}
                     <div className="flex flex-col gap-6">
-                        {/* Low Stock Alert */}
+                        {/* Low Stock Alert - Enhanced with API Data */}
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-4">
-                                <CardTitle className="text-lg">Low Stock Alert</CardTitle>
-                                <Badge variant="destructive" className="bg-red-600">
-                                    Action Needed
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-lg">Low Stock Alert</CardTitle>
+                                    {lowStockData && (
+                                        <Badge className="bg-red-600">
+                                            {lowStockData.critical_count} Critical
+                                        </Badge>
+                                    )}
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={fetchLowStockData}
+                                    disabled={loadingLowStock}
+                                >
+                                    <RefreshCw className={`size-4 ${loadingLowStock ? 'animate-spin' : ''}`} />
+                                </Button>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {low_stock_items.map((item) => (
-                                    <div key={item.id} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <AlertCircle className="h-5 w-5 text-orange-500" />
-                                            <div>
-                                                <p className="font-semibold text-sm">{item.name}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {item.remaining} {item.unit} {item.status !== 'Critical' ? item.status : ''}
-                                                    {item.status === 'Critical' && (
-                                                        <span className="text-red-600 font-semibold"> ({item.status})</span>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Badge variant="outline" className="text-blue-600 border-blue-600">
-                                            Restock
-                                        </Badge>
+                                {loadingLowStock ? (
+                                    <div className="text-center py-8">
+                                        <RefreshCw className="size-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+                                        <p className="text-sm text-muted-foreground">Memuat data...</p>
                                     </div>
-                                ))}
-                                {low_stock_items.length === 0 && (
-                                    <p className="py-4 text-center text-sm text-muted-foreground">
-                                        All stock levels are healthy
-                                    </p>
+                                ) : lowStockData && lowStockData.items.length > 0 ? (
+                                    <>
+                                        {lowStockData.items.map((item: any) => (
+                                            <div key={item.id} className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`flex h-2 w-2 rounded-full ${item.critical ? 'bg-red-600' : 'bg-orange-500'}`} />
+                                                        <div>
+                                                            <p className="font-semibold text-sm">{item.nama}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {item.stok} / {item.stok_minimum} {item.satuan}
+                                                                {item.critical && (
+                                                                    <span className="text-red-600 font-semibold ml-1">(Habis!)</span>
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <Badge variant="outline" className={`${item.critical ? 'text-red-600 border-red-600' : 'text-orange-600 border-orange-600'}`}>
+                                                        {item.stock_percentage.toFixed(0)}%
+                                                    </Badge>
+                                                </div>
+                                                <Progress 
+                                                    value={item.stock_percentage} 
+                                                    className="h-2"
+                                                    indicatorClassName={item.critical ? 'bg-red-600' : 'bg-orange-500'}
+                                                />
+                                            </div>
+                                        ))}
+                                        <div className="pt-2 border-t">
+                                            <p className="text-xs text-muted-foreground">
+                                                Total {lowStockData.total_count} barang low stock
+                                            </p>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <CheckCheck className="size-12 text-green-600 mx-auto mb-2" />
+                                        <p className="text-sm text-muted-foreground">
+                                            Semua stok dalam kondisi baik
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Today's Stock Movements */}
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between pb-4">
+                                <CardTitle className="text-lg">Aktivitas Stok Hari Ini</CardTitle>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={fetchStockMovements}
+                                    disabled={loadingMovements}
+                                >
+                                    <RefreshCw className={`size-4 ${loadingMovements ? 'animate-spin' : ''}`} />
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {loadingMovements ? (
+                                    <div className="text-center py-4">
+                                        <RefreshCw className="size-6 text-muted-foreground mx-auto mb-2 animate-spin" />
+                                        <p className="text-xs text-muted-foreground">Memuat...</p>
+                                    </div>
+                                ) : stockMovements.length > 0 ? (
+                                    <>
+                                        {stockMovements.map((movement: any) => (
+                                            <div key={movement.id} className="flex items-start gap-3 pb-3 border-b last:border-0">
+                                                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                                                    movement.type === 'penambahan' ? 'bg-green-100' : 'bg-red-100'
+                                                }`}>
+                                                    {movement.type === 'penambahan' ? (
+                                                        <TrendingDown className="h-4 w-4 text-green-600 rotate-180" />
+                                                    ) : (
+                                                        <TrendingDown className="h-4 w-4 text-red-600" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">{movement.barang?.nama}</p>
+                                                    <p className="text-xs text-muted-foreground truncate">
+                                                        {movement.keterangan || '-'}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        oleh {movement.user?.name}
+                                                    </p>
+                                                </div>
+                                                <Badge variant={movement.type === 'penambahan' ? 'default' : 'destructive'} className="shrink-0">
+                                                    {movement.type === 'penambahan' ? '+' : '-'}{movement.jumlah}
+                                                </Badge>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <Info className="size-8 text-muted-foreground mx-auto mb-2" />
+                                        <p className="text-xs text-muted-foreground">
+                                            Belum ada aktivitas hari ini
+                                        </p>
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>

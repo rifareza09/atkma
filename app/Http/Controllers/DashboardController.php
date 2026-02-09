@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\Ruangan;
+use App\Models\StockMovement;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -93,5 +94,51 @@ class DashboardController extends Controller
             'low_stock_items' => $lowStockItems,
             'workflow_stats' => $workflowStats,
         ]);
+    }
+
+    /**
+     * Get detailed low stock items data
+     */
+    public function getLowStockData()
+    {
+        $lowStockItems = Barang::where('is_active', true)
+            ->whereRaw('stok <= stok_minimum')
+            ->select('id', 'kode', 'nama', 'satuan', 'stok', 'stok_minimum')
+            ->selectRaw('(stok * 100.0 / NULLIF(stok_minimum, 0)) as stock_percentage')
+            ->orderByRaw('(stok * 100.0 / NULLIF(stok_minimum, 0)) ASC, stok ASC')
+            ->limit(10)
+            ->get()
+            ->map(function ($item) {
+                $item->stock_percentage = $item->stok_minimum > 0 
+                    ? round(($item->stok / $item->stok_minimum) * 100, 2) 
+                    : 0;
+                $item->critical = $item->stok == 0;
+                $item->shortage = max(0, $item->stok_minimum - $item->stok);
+                return $item;
+            });
+
+        return response()->json([
+            'items' => $lowStockItems,
+            'total_count' => Barang::where('is_active', true)
+                ->whereRaw('stok <= stok_minimum')
+                ->count(),
+            'critical_count' => Barang::where('is_active', true)
+                ->where('stok', 0)
+                ->count(),
+        ]);
+    }
+
+    /**
+     * Get stock movements today
+     */
+    public function getTodayStockMovements()
+    {
+        $movements = StockMovement::with(['barang', 'user'])
+            ->whereDate('created_at', today())
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return response()->json($movements);
     }
 }
