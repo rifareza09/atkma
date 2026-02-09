@@ -174,26 +174,22 @@ class UserController extends Controller
     }
 
     /**
-     * Toggle user activation status
+     * Toggle user active status
      */
-    public function toggleActivation(User $user): RedirectResponse
+    public function toggleStatus(User $user): RedirectResponse
     {
-        $this->authorize('update', $user);
+        $this->authorize('toggleActivation', $user);
 
-        // Prevent deactivating own account
+        // Prevent toggling own account status
         if ($user->id === auth()->id()) {
             return back()->withErrors([
-                'error' => 'Anda tidak dapat menonaktifkan akun Anda sendiri'
+                'error' => 'Anda tidak dapat mengubah status akun Anda sendiri'
             ]);
         }
 
-        if ($user->email_verified_at) {
-            $user->update(['email_verified_at' => null]);
-            $message = 'Pengguna berhasil dinonaktifkan';
-        } else {
-            $user->update(['email_verified_at' => now()]);
-            $message = 'Pengguna berhasil diaktifkan';
-        }
+        $user->update(['is_active' => !$user->is_active]);
+
+        $message = $user->is_active ? 'Pengguna berhasil diaktifkan' : 'Pengguna berhasil dinonaktifkan';
 
         return back()->with('success', $message);
     }

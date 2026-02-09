@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
+import { show as transaksiPermintaanShow } from '@/routes/permintaan';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,39 +38,61 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface DashboardProps {
     stats: {
-        total_items: number;
-        low_stock: number;
-        pending_review: number;
-        monthly_quota_percentage: number;
+        total_barang: number;
+        total_ruangan: number;
+        total_transaksi_hari_ini: number;
+        total_transaksi_bulan_ini: number;
+        total_barang_stok_rendah: number;
     };
-    pending_approvals: Array<{
-        id: number;
-        date: string;
-        requester_room: string;
-        items: string[];
-        items_count: number;
-        status: string;
-    }>;
-    low_stock_items: Array<{
-        id: number;
-        name: string;
-        remaining: number;
-        unit: string;
-        status: string;
-    }>;
-    workflow_stats: {
-        approved: number;
-        rejected: number;
-        revised: number;
-        pending: number;
+    chart_data?: {
+        transaksi_7_hari: Array<{
+            tanggal: string;
+            total: number;
+        }>;
     };
+    top_barang?: Array<{
+        id: number;
+        nama: string;
+        total_permintaan: number;
+    }>;
+    top_ruangan?: Array<{
+        id: number;
+        nama: string;
+        total_transaksi: number;
+    }>;
+    barang_stok_rendah?: Array<{
+        id: number;
+        kode: string;
+        nama: string;
+        stok: number;
+        stok_minimum: number;
+        satuan: string;
+    }>;
+    transaksi_terbaru?: Array<{
+        id: number;
+        kode_transaksi: string;
+        tanggal_transaksi?: string;
+        created_at: string;
+        jenis_transaksi: string;
+        ruangan?: {
+            nama: string;
+        };
+    }>;
 }
 
 export default function Dashboard({
     stats,
+<<<<<<< HEAD
     pending_approvals,
     low_stock_items,
     workflow_stats,
+=======
+    chart_data,
+    top_barang = [],
+    top_ruangan = [],
+    barang_stok_rendah = [], 
+    transaksi_terbaru = []
+>>>>>>> 4016ad9 (Add user management (migration, controller, userpolicy. routes), Setting management backend(migrations, seed, controller, routes, cache)
 }: DashboardProps) {
     const [lowStockData, setLowStockData] = useState<any>(null);
     const [stockMovements, setStockMovements] = useState<any[]>([]);
@@ -107,6 +130,27 @@ export default function Dashboard({
         fetchStockMovements();
     }, []);
 
+<<<<<<< HEAD
+=======
+    // Format data untuk line chart
+    const lineChartData = chart_data?.transaksi_7_hari?.filter(item => item?.tanggal).map(item => ({
+        date: new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
+        total: item.total || 0
+    })) || [];
+
+    // Format data untuk top barang bar chart
+    const topBarangData = top_barang?.filter(item => item?.nama).map(item => ({
+        name: item.nama.length > 20 ? item.nama.substring(0, 20) + '...' : item.nama,
+        total: item.total_permintaan || 0
+    })) || [];
+
+    // Format data untuk top ruangan pie chart
+    const topRuanganData = top_ruangan?.filter(item => item?.nama).map(item => ({
+        name: item.nama,
+        value: item.total_transaksi || 0
+    })) || [];
+
+>>>>>>> 4016ad9 (Add user management (migration, controller, userpolicy. routes), Setting management backend(migrations, seed, controller, routes, cache)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -117,10 +161,133 @@ export default function Dashboard({
                     <h1 className="text-2xl font-bold text-gray-900">Admin Inventory Dashboard Overview</h1>
                 </div>
 
+<<<<<<< HEAD
                 {/* Stats Cards and Monthly Quota */}
+=======
+                {/* Statistics Cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    <StatCard
+                        title="Total Barang"
+                        value={stats.total_barang}
+                        icon={<Package className="size-4" />}
+                        description="Jenis barang terdaftar"
+                    />
+                    <StatCard
+                        title="Total Ruangan"
+                        value={stats.total_ruangan}
+                        icon={<Building2 className="size-4" />}
+                        description="Ruangan aktif"
+                    />
+                    <StatCard
+                        title="Transaksi Hari Ini"
+                        value={stats.total_transaksi_hari_ini}
+                        icon={<ArrowRightLeft className="size-4" />}
+                        description="Transaksi hari ini"
+                    />
+                    <StatCard
+                        title="Transaksi Bulan Ini"
+                        value={stats.total_transaksi_bulan_ini}
+                        icon={<TrendingUp className="size-4" />}
+                        description="Total bulan ini"
+                    />
+                    <StatCard
+                        title="Stok Rendah"
+                        value={stats.total_barang_stok_rendah}
+                        icon={<AlertCircle className="size-4 text-destructive" />}
+                        description="Barang perlu restok"
+                    />
+                </div>
+
+                {/* Charts Row */}
+                <div className="grid gap-4 md:grid-cols-2">
+                    {/* Line Chart - Transaksi 7 Hari */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <TrendingUp className="size-5 text-blue-600" />
+                                Tren Transaksi 7 Hari Terakhir
+                            </CardTitle>
+                            <CardDescription>
+                                Grafik jumlah transaksi harian
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {lineChartData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <LineChart data={lineChartData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis 
+                                            dataKey="date" 
+                                            fontSize={12}
+                                        />
+                                        <YAxis fontSize={12} />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Line 
+                                            type="monotone" 
+                                            dataKey="total" 
+                                            stroke="#2563eb" 
+                                            strokeWidth={2}
+                                            name="Jumlah Transaksi"
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <p className="py-12 text-center text-sm text-muted-foreground">
+                                    Belum ada data transaksi
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Bar Chart - Top 5 Barang */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <BarChart3 className="size-5 text-green-600" />
+                                Top 5 Barang Paling Diminta
+                            </CardTitle>
+                            <CardDescription>
+                                Barang dengan permintaan tertinggi
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {topBarangData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <BarChart data={topBarangData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis 
+                                            dataKey="name" 
+                                            fontSize={11}
+                                            angle={-45}
+                                            textAnchor="end"
+                                            height={80}
+                                        />
+                                        <YAxis fontSize={12} />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar 
+                                            dataKey="total" 
+                                            fill="#16a34a"
+                                            name="Total Permintaan"
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <p className="py-12 text-center text-sm text-muted-foreground">
+                                    Belum ada data permintaan barang
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Pie Chart & Stats Row */}
+>>>>>>> 4016ad9 (Add user management (migration, controller, userpolicy. routes), Setting management backend(migrations, seed, controller, routes, cache)
                 <div className="grid gap-4 md:grid-cols-3">
                     {/* Total Items Card */}
                     <Card>
+<<<<<<< HEAD
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -131,6 +298,43 @@ export default function Dashboard({
                                     <Package2 className="h-6 w-6 text-blue-600" />
                                 </div>
                             </div>
+=======
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="size-5 text-purple-600" />
+                                Top 5 Ruangan Aktif
+                            </CardTitle>
+                            <CardDescription>
+                                Ruangan dengan transaksi terbanyak
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {topRuanganData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <PieChart>
+                                        <Pie
+                                            data={topRuanganData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={(entry) => entry?.name && entry?.value ? `${entry.name}: ${entry.value}` : ''}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                        >
+                                            {topRuanganData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <p className="py-12 text-center text-sm text-muted-foreground">
+                                    Belum ada data ruangan
+                                </p>
+                            )}
+>>>>>>> 4016ad9 (Add user management (migration, controller, userpolicy. routes), Setting management backend(migrations, seed, controller, routes, cache)
                         </CardContent>
                     </Card>
 
@@ -210,6 +414,7 @@ export default function Dashboard({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
+<<<<<<< HEAD
                                         {pending_approvals.map((approval) => (
                                             <TableRow key={approval.id}>
                                                 <TableCell className="font-medium">{approval.date}</TableCell>
@@ -484,6 +689,128 @@ export default function Dashboard({
                         </Card>
                     </div>
                 </div>
+=======
+                                        {barang_stok_rendah.filter(barang => barang?.kode && barang?.nama).map((barang) => {
+                                            const selisih = (barang.stok_minimum || 0) - (barang.stok || 0);
+                                            return (
+                                                <TableRow key={barang.id}>
+                                                    <TableCell className="font-medium">
+                                                        {barang.kode}
+                                                    </TableCell>
+                                                    <TableCell>{barang.nama}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Badge variant="destructive">
+                                                            {barang.stok} {barang.satuan}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-muted-foreground">
+                                                        {barang.stok_minimum} {barang.satuan}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <span className="text-sm text-destructive font-medium">
+                                                            Kurang {selisih} {barang.satuan}
+                                                        </span>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <>
+                                    <p className="py-4 text-center text-sm text-muted-foreground">
+                                        ✓ Semua barang stok aman
+                                    </p>
+                                    <Button variant="secondary" size="sm" className="w-full">
+                                        <Info className="mr-2 h-4 w-4" />
+                                        Learn More
+                                    </Button>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Transaksi Terbaru */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <ArrowRightLeft className="size-5" />
+                            Transaksi Terbaru
+                        </CardTitle>
+                        <CardDescription>
+                            10 transaksi terakhir yang tercatat
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {transaksi_terbaru.length > 0 ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Kode Transaksi</TableHead>
+                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Ruangan</TableHead>
+                                        <TableHead className="text-right">Aksi</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {transaksi_terbaru.filter(transaksi => transaksi?.id && transaksi?.kode_transaksi).map((transaksi) => (
+                                        <TableRow key={transaksi.id}>
+                                            <TableCell className="font-medium">
+                                                {transaksi.kode_transaksi}
+                                            </TableCell>
+                                            <TableCell>
+                                                {new Date(
+                                                    transaksi.tanggal_transaksi || transaksi.created_at,
+                                                ).toLocaleDateString('id-ID', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={
+                                                        transaksi.jenis_transaksi === 'masuk'
+                                                            ? 'default'
+                                                            : 'secondary'
+                                                    }
+                                                >
+                                                    {transaksi.jenis_transaksi}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {transaksi.ruangan?.nama || '-'}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={transaksiPermintaanShow(
+                                                            transaksi.id,
+                                                        ).url}
+                                                    >
+                                                        <Eye className="mr-2 size-4" />
+                                                        Detail
+                                                    </Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                            <p className="py-8 text-center text-sm text-muted-foreground">
+                                Belum ada transaksi tercatat
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+>>>>>>> 4016ad9 (Add user management (migration, controller, userpolicy. routes), Setting management backend(migrations, seed, controller, routes, cache)
             </div>
         </AppLayout>
     );

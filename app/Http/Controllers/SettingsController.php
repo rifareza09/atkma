@@ -6,6 +6,7 @@ use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -115,5 +116,34 @@ class SettingsController extends Controller
             'app_name' => Setting::get('app_name', 'ATK Mahkamah Agung'),
             'app_description' => Setting::get('app_description', 'Sistem Manajemen Alat Tulis Kantor'),
         ];
+    }
+
+    /**
+     * Test email configuration
+     */
+    public function testEmail(Request $request): RedirectResponse
+    {
+        $this->authorize('update', Setting::class);
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            Mail::raw('Ini adalah email test dari Sistem Inventaris ATK Mahkamah Agung RI.', function ($message) use ($request) {
+                $message->to($request->email)
+                    ->subject('Test Email - Sistem Inventaris ATK');
+            });
+
+            return back()->with('success', 'Email test berhasil dikirim ke ' . $request->email);
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'email' => 'Gagal mengirim email: ' . $e->getMessage()
+            ]);
+        }
     }
 }

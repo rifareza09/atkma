@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->string('type')->default('string'); // string, number, boolean, json
+            $table->string('group')->default('general'); // general, email, backup, audit
+            $table->text('description')->nullable();
             $table->timestamps();
+            
+            $table->index(['group', 'key']);
         });
     }
 

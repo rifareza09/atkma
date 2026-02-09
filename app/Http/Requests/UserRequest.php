@@ -47,6 +47,10 @@ class UserRequest extends FormRequest
                 'required',
                 Rule::enum(Role::class),
             ],
+            'is_active' => [
+                'sometimes',
+                'boolean',
+            ],
         ];
 
         // Password rules

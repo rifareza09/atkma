@@ -85,13 +85,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/', [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/clear-cache', [SettingsController::class, 'clearCache'])->name('settings.clear-cache');
+        Route::post('/test-email', [SettingsController::class, 'testEmail'])->name('settings.test-email');
         
         // User Management
         Route::resource('users', UserController::class);
         
         // Additional user actions
-        Route::post('users/{user}/toggle-activation', [UserController::class, 'toggleActivation'])
-            ->name('users.toggle-activation');
+        Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+            ->name('users.toggle-status');
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])
             ->name('users.reset-password');
     });

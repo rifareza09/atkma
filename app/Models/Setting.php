@@ -12,15 +12,36 @@ class Setting extends Model
     protected $fillable = [
         'key',
         'value',
+        'type',
+        'group',
+        'description',
     ];
 
     /**
-     * Get setting value by key
+     * Get the attributes that should be cast.
+     */
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * Get setting value by key with type casting
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = static::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
+        $setting = cache()->remember("setting.{$key}", 3600, function () use ($key) {
+            return static::where('key', $key)->first();
+        });
+
+        if (!$setting) {
+            return $default;
+        }
+
+        return static::castValue($setting->value, $setting->type);
     }
 
     /**
@@ -28,9 +49,24 @@ class Setting extends Model
      */
     public static function set(string $key, mixed $value): void
     {
-        static::updateOrCreate(
+        $setting = static::updateOrCreate(
             ['key' => $key],
-            ['value' => $value]
+            ['value' => is_array($value) ? json_encode($value) : $value]
         );
+
+        cache()->forget("setting.{$key}");
+    }
+
+    /**
+     * Cast value based on type
+     */
+    protected static function castValue(mixed $value, string $type): mixed
+    {
+        return match ($type) {
+            'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            'number' => is_numeric($value) ? (float) $value : $value,
+            'json' => json_decode($value, true),
+            default => $value,
+        };
     }
 }
