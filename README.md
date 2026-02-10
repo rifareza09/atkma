@@ -168,8 +168,12 @@ resources/js/
 
 ## 📚 Documentation
 
+**📖 Complete Documentation Index**: [docs/INDEX.md](docs/INDEX.md) - Lihat semua dokumentasi
+
+**Quick Access:**
 - [Development Guide](docs/DEVELOPMENT_GUIDE.md)
 - [Login Username Guide](docs/LOGIN_USERNAME_GUIDE.md)
+- [Task Distribution](docs/TASK_DISTRIBUTION.md)
 - [Silabus Magang](SILABUS_JAM_KERJA_MAGANG.md)
 
 ## 🔐 Authorization
@@ -194,7 +198,12 @@ php artisan route:list
 
 ## 🤝 Contributing
 
-Lihat [Git Collaboration Guide](docs/GIT_COLLABORATION_GUIDE.md)
+**Cara kerja bareng dengan tim?** Baca [CARA_KERJA_TIM.md](CARA_KERJA_TIM.md) dulu!
+
+Lihat juga:
+- [Git Collaboration Guide](docs/GIT_COLLABORATION_GUIDE.md) - Panduan lengkap
+- [Git Cheatsheet](docs/GIT_CHEATSHEET.md) - Quick reference
+- [Documentation Index](docs/INDEX.md) - Semua dokumentasi
 
 ## 📄 License
 
