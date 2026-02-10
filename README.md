@@ -2,6 +2,24 @@
 
 Sistem Alat Tulis Kantor (ATK) untuk Mahkamah Agung - Laravel 12 + React + TypeScript + Inertia.js
 
+## 🤝 Untuk Tim: Cara Kerja Bareng
+
+**PERTANYAAN:** "Bagaimana cara kerja secara bersamaan tanpa harus menunggu pekerjaan teman selesai?"
+
+**JAWABAN:** Gunakan **Git Branching**! Setiap orang bekerja di branch sendiri, lalu di-merge setelah selesai.
+
+📖 **Panduan Lengkap**: [CARA_KERJA_TIM.md](CARA_KERJA_TIM.md) ⭐ **Baca ini dulu!**
+
+**Panduan Tambahan:**
+- [Git Cheatsheet](docs/GIT_CHEATSHEET.md) - Quick reference (print & tempel!)
+- [Quick Start Git](docs/QUICK_START_GIT.md) - Perintah Git yang sering dipakai
+- [Git Collaboration Guide](docs/GIT_COLLABORATION_GUIDE.md) - Panduan lengkap kolaborasi
+- [Visual Git Guide](docs/VISUAL_GIT_GUIDE.md) - Panduan dengan diagram visual
+- [Parallel Workflow](docs/PARALLEL_WORKFLOW.md) - Cara FE & BE kerja paralel
+- [Team Workflow Diagrams](docs/diagrams/team-workflow.md) - Diagram visual alur kerja
+
+---
+
 ## 🚀 Tech Stack
 
 **Backend:**
