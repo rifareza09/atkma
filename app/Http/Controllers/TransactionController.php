@@ -132,8 +132,10 @@ class TransactionController extends Controller
      */
     public function edit(Transaction $transaction): Response
     {
-        // Note: Editing transactions is typically not allowed for audit trail
-        // But we include it for completeness. Consider disabling in production.
+        // Prevent editing of completed transactions
+        if (in_array($transaction->status, ['approved', 'rejected'])) {
+            abort(403, 'Transaksi yang sudah ' . $transaction->status . ' tidak dapat diedit');
+        }
 
         abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
     }
@@ -143,6 +145,11 @@ class TransactionController extends Controller
      */
     public function update(Request $request, Transaction $transaction)
     {
+        // Prevent editing of completed transactions
+        if (in_array($transaction->status, ['approved', 'rejected'])) {
+            abort(403, 'Transaksi yang sudah ' . $transaction->status . ' tidak dapat diedit');
+        }
+
         // Transactions should not be editable for audit trail integrity
         abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
     }
@@ -152,8 +159,10 @@ class TransactionController extends Controller
      */
     public function destroy(Transaction $transaction)
     {
-        // Note: Deleting transactions affects stock movements
-        // Consider soft deletes or disabling deletion in production
+        // Prevent deletion of completed transactions
+        if (in_array($transaction->status, ['approved', 'rejected'])) {
+            abort(403, 'Transaksi yang sudah ' . $transaction->status . ' tidak dapat dihapus');
+        }
 
         try {
             $transaction->delete();

@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SettingsController;
@@ -25,6 +27,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('api/dashboard/low-stock', [DashboardController::class, 'getLowStockData'])->name('api.dashboard.low-stock');
     Route::get('api/dashboard/stock-movements/today', [DashboardController::class, 'getTodayStockMovements'])->name('api.dashboard.stock-movements.today');
+
+    // Notifications
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+        Route::delete('/read/all', [NotificationController::class, 'destroyRead'])->name('notifications.destroy-read');
+    });
 
     // Inventory - Card based selection page
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
@@ -95,6 +107,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('users.toggle-status');
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])
             ->name('users.reset-password');
+    });
+
+    // Audit Logs - Admin only
+    Route::prefix('audit-logs')->group(function () {
+        Route::get('/', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('/export', [AuditLogController::class, 'export'])->name('audit-logs.export');
+        Route::get('/{auditLog}', [AuditLogController::class, 'show'])->name('audit-logs.show');
+        Route::get('/model/{model}/{id}', [AuditLogController::class, 'forModel'])->name('audit-logs.for-model');
     });
 });
 

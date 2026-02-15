@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\TransactionCreated;
+use App\Events\TransactionStatusChanged;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\User;
@@ -36,6 +38,9 @@ class TransactionService
 
             // Process items
             $this->processItems($transaction, $data['items']);
+
+            // Trigger TransactionCreated event
+            event(new TransactionCreated($transaction));
 
             return $transaction->load(['items.barang', 'ruangan', 'user']);
         });
@@ -178,12 +183,17 @@ class TransactionService
         }
 
         return DB::transaction(function () use ($transaction, $approver) {
+            $oldStatus = $transaction->status;
+            
             // Update transaction status
             $transaction->update([
                 'status' => 'approved',
                 'approved_by' => $approver->id,
                 'approved_at' => now(),
             ]);
+
+            // Trigger TransactionStatusChanged event
+            event(new TransactionStatusChanged($transaction, $oldStatus, 'approved'));
 
             // If this is an outgoing transaction and stock hasn't been reduced yet
             // (for transactions that were created as 'pending' status)
@@ -210,6 +220,8 @@ class TransactionService
         }
 
         return DB::transaction(function () use ($transaction, $rejector, $reason) {
+            $oldStatus = $transaction->status;
+            
             // Rollback stock if transaction type is KELUAR and status was pending
             // (stock might have been reduced on creation)
             if ($transaction->type === TransactionType::KELUAR && $transaction->status === 'pending') {
@@ -233,6 +245,9 @@ class TransactionService
                 'rejection_reason' => $reason,
             ]);
 
+            // Trigger TransactionStatusChanged event
+            event(new TransactionStatusChanged($transaction, $oldStatus, 'rejected'));
+
             return $transaction->fresh(['rejector', 'ruangan', 'user', 'items.barang']);
         });
     }
@@ -253,6 +268,8 @@ class TransactionService
         }
 
         return DB::transaction(function () use ($transaction, $revisor, $notes) {
+            $oldStatus = $transaction->status;
+            
             // Update transaction status
             $transaction->update([
                 'status' => 'revised',
@@ -260,6 +277,9 @@ class TransactionService
                 'revised_at' => now(),
                 'revision_notes' => $notes,
             ]);
+
+            // Trigger TransactionStatusChanged event
+            event(new TransactionStatusChanged($transaction, $oldStatus, 'revised'));
 
             return $transaction->fresh(['revisor', 'ruangan', 'user', 'items.barang']);
         });

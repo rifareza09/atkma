@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\LowStockDetected;
+use App\Events\StockReplenished;
 use App\Models\Barang;
 use App\Models\StockMovement;
 use App\Models\Transaction;
@@ -38,7 +40,7 @@ class StockService
             $stokSesudah = $barang->stok;
 
             // Create stock movement record
-            return StockMovement::create([
+            $stockMovement = StockMovement::create([
                 'barang_id' => $barang->id,
                 'user_id' => $user->id,
                 'transaction_id' => $transaction?->id,
@@ -48,6 +50,11 @@ class StockService
                 'stok_sesudah' => $stokSesudah,
                 'keterangan' => $keterangan ?? 'Penambahan stok',
             ]);
+
+            // Trigger StockReplenished event
+            event(new StockReplenished($stockMovement, $barang));
+
+            return $stockMovement;
         });
     }
 
@@ -84,7 +91,7 @@ class StockService
             $stokSesudah = $barang->stok;
 
             // Create stock movement record
-            return StockMovement::create([
+            $stockMovement = StockMovement::create([
                 'barang_id' => $barang->id,
                 'user_id' => $user->id,
                 'transaction_id' => $transaction->id,
@@ -94,6 +101,13 @@ class StockService
                 'stok_sesudah' => $stokSesudah,
                 'keterangan' => $keterangan ?? 'Pengurangan stok - permintaan barang',
             ]);
+
+            // Check if stock is now low and trigger event
+            if ($barang->isLowStock()) {
+                event(new LowStockDetected($barang));
+            }
+
+            return $stockMovement;
         });
     }
 
@@ -123,7 +137,7 @@ class StockService
             $stokSesudah = $barang->stok;
 
             // Create stock movement record
-            return StockMovement::create([
+            $stockMovement = StockMovement::create([
                 'barang_id' => $barang->id,
                 'user_id' => $user->id,
                 'transaction_id' => null,
@@ -133,6 +147,13 @@ class StockService
                 'stok_sesudah' => $stokSesudah,
                 'keterangan' => $keterangan,
             ]);
+
+            // Check if stock is now low and trigger event
+            if ($barang->isLowStock()) {
+                event(new LowStockDetected($barang));
+            }
+
+            return $stockMovement;
         });
     }
 

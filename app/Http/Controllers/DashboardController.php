@@ -20,15 +20,46 @@ class DashboardController extends Controller
     {
         // Stats cards
         $totalBarang = Barang::active()->count();
-        $totalBarangStokRendah = Barang::active()
+        $totalStock = Barang::active()->sum('stok');
+        $lowStockCount = Barang::active()
             ->whereRaw('stok < stok_minimum')
             ->count();
+        $totalRuangan = Ruangan::where('is_active', true)->count();
+        $totalTransactions = Transaction::count();
 
         // Pending review - transactions awaiting approval
         $pendingReview = Transaction::where('status', 'pending')->count();
 
-        // Monthly quota status (simulated - 75% used)
-        $monthlyQuotaPercentage = 75;
+        // Chart Data - Last 7 days stock in/out
+        $chartData = $this->getLast7DaysStockMovement();
+
+        // Top 5 Barang by quantity
+        $topBarang = Barang::active()
+            ->orderBy('stok', 'desc')
+            ->limit(5)
+            ->get(['id', 'kode', 'nama', 'stok', 'satuan'])
+            ->map(function ($barang) {
+                return [
+                    'id' => $barang->id,
+                    'nama' => $barang->nama,
+                    'stok' => $barang->stok,
+                    'satuan' => $barang->satuan,
+                ];
+            });
+
+        // Top 5 Ruangan by transaction count
+        $topRuangan = Ruangan::where('is_active', true)
+            ->withCount('transactions')
+            ->orderBy('transactions_count', 'desc')
+            ->limit(5)
+            ->get(['id', 'nama', 'transactions_count'])
+            ->map(function ($ruangan) {
+                return [
+                    'id' => $ruangan->id,
+                    'nama' => $ruangan->nama,
+                    'total' => $ruangan->transactions_count,
+                ];
+            });
 
         // Pending Approvals with details
         $pendingApprovals = Transaction::with(['ruangan', 'items.barang'])
@@ -49,28 +80,29 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Low stock alert items
+        // Low stock alert items (for table)
         $lowStockItems = Barang::active()
             ->whereRaw('stok < stok_minimum')
             ->orderBy('stok')
-            ->limit(3)
+            ->limit(10)
             ->get()
             ->map(function ($barang) {
                 $remaining = $barang->stok;
-                $unit = $remaining == 2 ? 'units' : ($remaining == 5 ? 'rooms' : 'pcs');
-                $status = $remaining <= 2 ? 'Critical' : 'remaining';
+                $status = $remaining == 0 ? 'Critical' : 'Low';
 
                 return [
                     'id' => $barang->id,
+                    'kode' => $barang->kode,
                     'name' => $barang->nama,
                     'remaining' => $remaining,
-                    'unit' => $unit,
+                    'minimum' => $barang->stok_minimum,
+                    'unit' => $barang->satuan,
                     'status' => $status,
+                    'shortage' => max(0, $barang->stok_minimum - $remaining),
                 ];
             });
 
         // Workflow statistics
-        $totalTransactions = Transaction::count();
         $approvedCount = Transaction::where('status', 'approved')->count();
         $rejectedCount = Transaction::where('status', 'rejected')->count();
         $revisedCount = Transaction::where('status', 'revised')->count();
@@ -83,17 +115,60 @@ class DashboardController extends Controller
             'pending' => $totalTransactions > 0 ? round(($pendingCount / $totalTransactions) * 100) : 0,
         ];
 
-        return Inertia::render('dashboard', [
-            'stats' => [
-                'total_items' => $totalBarang,
-                'low_stock' => $totalBarangStokRendah,
-                'pending_review' => $pendingReview,
-                'monthly_quota_percentage' => $monthlyQuotaPercentage,
-            ],
-            'pending_approvals' => $pendingApprovals,
-            'low_stock_items' => $lowStockItems,
-            'workflow_stats' => $workflowStats,
-        ]);
+        // Cache the response for 5 minutes
+        $data = cache()->remember('dashboard-data', 300, function () use (
+            $totalBarang, $totalStock, $lowStockCount, $totalRuangan, $totalTransactions,
+            $pendingReview, $chartData, $topBarang, $topRuangan, $pendingApprovals,
+            $lowStockItems, $workflowStats
+        ) {
+            return [
+                'stats' => [
+                    'total_barang' => $totalBarang,
+                    'total_stock' => $totalStock,
+                    'low_stock_count' => $lowStockCount,
+                    'total_ruangan' => $totalRuangan,
+                    'total_transactions' => $totalTransactions,
+                    'pending_review' => $pendingReview,
+                ],
+                'chart_data' => $chartData,
+                'top_barang' => $topBarang,
+                'top_ruangan' => $topRuangan,
+                'pending_approvals' => $pendingApprovals,
+                'low_stock_items' => $lowStockItems,
+                'workflow_stats' => $workflowStats,
+            ];
+        });
+
+        return Inertia::render('dashboard', $data);
+    }
+
+    /**
+     * Get last 7 days stock movement data
+     */
+    private function getLast7DaysStockMovement(): array
+    {
+        $last7Days = collect();
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->startOfDay();
+            
+            $stockIn = StockMovement::whereDate('created_at', $date)
+                ->where('type', 'penambahan')
+                ->sum('jumlah');
+            
+            $stockOut = StockMovement::whereDate('created_at', $date)
+                ->where('type', 'pengurangan')
+                ->sum('jumlah');
+            
+            $last7Days->push([
+                'date' => $date->format('Y-m-d'),
+                'label' => $date->format('d M'),
+                'stock_in' => $stockIn,
+                'stock_out' => $stockOut,
+            ]);
+        }
+
+        return $last7Days->toArray();
     }
 
     /**
