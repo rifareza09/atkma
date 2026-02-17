@@ -102,6 +102,15 @@ export default function Dashboard({
     const [loadingLowStock, setLoadingLowStock] = useState(false);
     const [loadingMovements, setLoadingMovements] = useState(false);
 
+    // Ensure stats object has all required properties with defaults
+    const safeStats = {
+        total_barang: stats?.total_barang ?? 0,
+        total_ruangan: stats?.total_ruangan ?? 0,
+        total_transaksi_hari_ini: stats?.total_transaksi_hari_ini ?? 0,
+        total_transaksi_bulan_ini: stats?.total_transaksi_bulan_ini ?? 0,
+        total_barang_stok_rendah: stats?.total_barang_stok_rendah ?? 0,
+    };
+
     const fetchLowStockData = async () => {
         setLoadingLowStock(true);
         try {
@@ -165,31 +174,31 @@ export default function Dashboard({
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <StatCard
                         title="Total Barang"
-                        value={stats.total_barang}
+                        value={safeStats.total_barang}
                         icon={<Package className="size-4" />}
                         description="Jenis barang terdaftar"
                     />
                     <StatCard
                         title="Total Ruangan"
-                        value={stats.total_ruangan}
+                        value={safeStats.total_ruangan}
                         icon={<Building2 className="size-4" />}
                         description="Ruangan aktif"
                     />
                     <StatCard
                         title="Transaksi Hari Ini"
-                        value={stats.total_transaksi_hari_ini}
+                        value={safeStats.total_transaksi_hari_ini}
                         icon={<ArrowRightLeft className="size-4" />}
                         description="Transaksi hari ini"
                     />
                     <StatCard
                         title="Transaksi Bulan Ini"
-                        value={stats.total_transaksi_bulan_ini}
+                        value={safeStats.total_transaksi_bulan_ini}
                         icon={<TrendingUp className="size-4" />}
                         description="Total bulan ini"
                     />
                     <StatCard
                         title="Stok Rendah"
-                        value={stats.total_barang_stok_rendah}
+                        value={safeStats.total_barang_stok_rendah}
                         icon={<AlertCircle className="size-4 text-destructive" />}
                         description="Barang perlu restok"
                     />
