@@ -419,7 +419,7 @@ export default function Dashboard({
                                             </TableCell>
                                             <TableCell>
                                                 {new Date(
-                                                    transaksi.tanggal_transaksi || transaksi.created_at,
+                                                    transaksi.tanggal || transaksi.created_at,
                                                 ).toLocaleDateString('id-ID', {
                                                     day: 'numeric',
                                                     month: 'short',
@@ -438,7 +438,7 @@ export default function Dashboard({
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                {transaksi.ruangan_nama || '-'}
+                                                {transaksi.ruangan?.nama || '-'}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button
