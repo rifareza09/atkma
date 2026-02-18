@@ -24,7 +24,7 @@ class TransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ruangan_id' => ['required', 'integer', 'exists:ruangans,id'],
+            'ruangan_nama' => ['required', 'string', 'max:100'],
             'type' => ['required', Rule::enum(TransactionType::class)],
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:500'],
@@ -42,7 +42,7 @@ class TransactionRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'ruangan_id' => 'ruangan',
+            'ruangan_nama' => 'nama ruangan',
             'type' => 'tipe transaksi',
             'tanggal' => 'tanggal transaksi',
             'keterangan' => 'keterangan',

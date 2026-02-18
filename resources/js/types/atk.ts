@@ -60,7 +60,7 @@ export interface Transaction extends Record<string, unknown> {
     nomor_transaksi: string;
     tanggal_transaksi: string;
     jenis_transaksi: TransactionType;
-    ruangan_id?: number;
+    ruangan_nama?: string;
     ruangan?: Ruangan;
     pemohon: string;
     keterangan?: string;
@@ -144,7 +144,7 @@ export interface RuanganFormData {
 export interface TransactionFormData {
     tanggal_transaksi: string;
     jenis_transaksi: TransactionType;
-    ruangan_id?: number;
+    ruangan_nama?: string;
     keterangan?: string;
     items: TransactionItemFormData[];
 }
@@ -226,7 +226,7 @@ export interface TransactionFilter {
     search?: string;
     jenis_transaksi?: TransactionType;
     status?: TransactionStatus;
-    ruangan_id?: number;
+    ruangan_nama?: string;
     tanggal_dari?: string;
     tanggal_sampai?: string;
 }

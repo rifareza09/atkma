@@ -199,7 +199,7 @@ export default function Show({ user }: UserShowProps) {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        {transaction.ruangan?.nama || '-'}
+                                                        {transaction.ruangan_nama || '-'}
                                                     </TableCell>
                                                     <TableCell>
                                                         {new Date(transaction.tanggal).toLocaleDateString('id-ID', {

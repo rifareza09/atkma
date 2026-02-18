@@ -62,7 +62,7 @@ class DashboardController extends Controller
             });
 
         // Pending Approvals with details
-        $pendingApprovals = Transaction::with(['ruangan', 'items.barang'])
+        $pendingApprovals = Transaction::with(['items.barang'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->limit(4)
@@ -71,7 +71,7 @@ class DashboardController extends Controller
                 return [
                     'id' => $transaction->id,
                     'date' => $transaction->created_at->format('d/m/Y'),
-                    'requester_room' => $transaction->ruangan->nama ?? '-',
+                    'requester_room' => $transaction->ruangan_nama ?? '-',
                     'items' => $transaction->items->map(function ($item) {
                         return $item->barang->nama ?? 'Unknown';
                     })->take(2)->toArray(),

@@ -92,7 +92,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                 <Separator />
                                 <div className="flex justify-between py-2">
                                     <span className="text-sm font-medium text-muted-foreground uppercase">Ruangan</span>
-                                    <span className="text-sm font-medium">{transaction.ruangan?.nama}</span>
+                                    <span className="text-sm font-medium">{transaction.ruangan_nama}</span>
                                 </div>
                             </div>
 
@@ -247,10 +247,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Ruangan
                                     </p>
-                                    <p className="text-lg">{transaction.ruangan?.nama}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {transaction.ruangan?.kode}
-                                    </p>
+                                    <p className="text-lg">{transaction.ruangan_nama}</p>
                                 </div>
                             </div>
 

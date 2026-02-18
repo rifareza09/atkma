@@ -21,7 +21,7 @@ interface PermintaanItem {
 }
 
 interface PermintaanFormData {
-    ruangan_id: number;
+    ruangan_nama: string;
     pemohon: string;
     tanggal_transaksi: string;
     keterangan: string;
@@ -39,17 +39,15 @@ export default function PermintaanCreate({ barangs, ruangans }: PermintaanCreate
     ];
 
     const { data, setData, post, processing, errors } = useForm<PermintaanFormData>({
-        ruangan_id: 0,
+        ruangan_nama: '',
         pemohon: '',
         tanggal_transaksi: new Date().toISOString().split('T')[0],
         keterangan: '',
         items: [{ barang_id: 0, jumlah: 1, keterangan: '' }],
     });
 
-    const ruanganOptions: SelectOption[] = ruangans.map((r) => ({
-        value: r.id.toString(),
-        label: `${r.kode} - ${r.nama}`,
-    }));
+    // Get ruangan names for autocomplete suggestions
+    const ruanganNames = ruangans.map((r) => r.nama);
 
     const barangOptions: SelectOption[] = barangs.map((b) => ({
         value: b.id.toString(),
@@ -121,16 +119,36 @@ export default function PermintaanCreate({ barangs, ruangans }: PermintaanCreate
                         </CardHeader>
                         <CardContent>
                             <div className="grid gap-6 md:grid-cols-2">
-                                <SelectWithLabel
-                                    label="Ruangan"
-                                    value={data.ruangan_id.toString()}
-                                    onValueChange={(value) =>
-                                        setData('ruangan_id', parseInt(value))
-                                    }
-                                    options={ruanganOptions}
-                                    error={errors.ruangan_id}
-                                    required
-                                />
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="ruangan_nama" className="text-sm font-medium">
+                                        Ruangan / Unit Kerja <span className="text-destructive">*</span>
+                                    </label>
+                                    <input
+                                        id="ruangan_nama"
+                                        type="text"
+                                        list="ruangan-suggestions"
+                                        value={data.ruangan_nama}
+                                        onChange={(e) => setData('ruangan_nama', e.target.value)}
+                                        placeholder="Ketik atau pilih nama ruangan/unit kerja"
+                                        className={`flex h-10 w-full rounded-md border ${
+                                            errors.ruangan_nama 
+                                                ? 'border-destructive' 
+                                                : 'border-input'
+                                        } bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
+                                        required
+                                    />
+                                    <datalist id="ruangan-suggestions">
+                                        {ruanganNames.map((nama, index) => (
+                                            <option key={index} value={nama} />
+                                        ))}
+                                    </datalist>
+                                    {errors.ruangan_nama && (
+                                        <p className="text-sm text-destructive">{errors.ruangan_nama}</p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground">
+                                        Anda bisa memilih dari daftar atau mengetik manual
+                                    </p>
+                                </div>
 
                                 <InputWithLabel
                                     label="Pemohon"

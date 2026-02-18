@@ -26,7 +26,7 @@ class TransactionController extends Controller
      */
     public function index(Request $request): Response
     {
-        $filters = $request->only(['search', 'type', 'ruangan_id', 'barang_id', 'from_date', 'to_date']);
+        $filters = $request->only(['search', 'type', 'ruangan_nama', 'barang_id', 'from_date', 'to_date']);
 
         $transactions = $this->transactionService->getTransactions($filters);
 

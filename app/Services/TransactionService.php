@@ -29,7 +29,7 @@ class TransactionService
         return DB::transaction(function () use ($data, $user) {
             // Create transaction
             $transaction = Transaction::create([
-                'ruangan_id' => $data['ruangan_id'],
+                'ruangan_nama' => $data['ruangan_nama'],
                 'user_id' => $user->id,
                 'type' => $data['type'],
                 'tanggal' => $data['tanggal'],
@@ -42,7 +42,7 @@ class TransactionService
             // Trigger TransactionCreated event
             event(new TransactionCreated($transaction));
 
-            return $transaction->load(['items.barang', 'ruangan', 'user']);
+            return $transaction->load(['items.barang', 'user']);
         });
     }
 
@@ -75,7 +75,7 @@ class TransactionService
                     qty: $jumlah,
                     user: $transaction->user,
                     transaction: $transaction,
-                    keterangan: "Permintaan dari {$transaction->ruangan->nama}"
+                    keterangan: "Permintaan dari {$transaction->ruangan_nama}"
                 );
             } elseif ($transaction->type === TransactionType::MASUK) {
                 // Add stock for incoming transaction
@@ -83,7 +83,7 @@ class TransactionService
                     barang: $barang,
                     qty: $jumlah,
                     user: $transaction->user,
-                    keterangan: "Barang masuk ke {$transaction->ruangan->nama}",
+                    keterangan: "Barang masuk ke {$transaction->ruangan_nama}",
                     transaction: $transaction
                 );
             }
@@ -130,7 +130,7 @@ class TransactionService
      */
     public function getTransactions(array $filters = [])
     {
-        $query = Transaction::with(['ruangan', 'user', 'items.barang']);
+        $query = Transaction::with(['user', 'items.barang']);
 
         // Filter by date range
         if (!empty($filters['from_date'])) {
@@ -142,8 +142,8 @@ class TransactionService
         }
 
         // Filter by ruangan
-        if (!empty($filters['ruangan_id'])) {
-            $query->where('ruangan_id', $filters['ruangan_id']);
+        if (!empty($filters['ruangan_nama'])) {
+            $query->where('ruangan_nama', $filters['ruangan_nama']);
         }
 
         // Filter by type
@@ -151,9 +151,12 @@ class TransactionService
             $query->where('type', $filters['type']);
         }
 
-        // Search by kode_transaksi
+        // Search by kode_transaksi or ruangan_nama
         if (!empty($filters['search'])) {
-            $query->where('kode_transaksi', 'like', '%' . $filters['search'] . '%');
+            $query->where(function ($q) use ($filters) {
+                $q->where('kode_transaksi', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('ruangan_nama', 'like', '%' . $filters['search'] . '%');
+            });
         }
 
         // Filter by barang (has transaction item with specific barang)

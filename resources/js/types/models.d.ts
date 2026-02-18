@@ -18,11 +18,7 @@ export type StockMovementType = 'penambahan' | 'pengurangan' | 'penyesuaian';
 export interface User {
     id: number;
     name: string;
-<<<<<<< HEAD
-    username: string;
-=======
     username?: string;
->>>>>>> e17f940f4abeb85d5fdeb0028eb150f400b3edd1
     email: string;
     avatar?: string;
     role: Role;
@@ -70,7 +66,7 @@ export interface Ruangan {
 export interface Transaction {
     id: number;
     kode_transaksi: string;
-    ruangan_id: number;
+    ruangan_nama: string;
     user_id: number;
     type: TransactionType;
     tanggal: string; // Format: YYYY-MM-DD
@@ -87,7 +83,6 @@ export interface Transaction {
     created_at: string;
     updated_at: string;
     // Relationships (optional, tergantung eager loading)
-    ruangan?: Ruangan;
     user?: User;
     items?: TransactionItem[];
     stockMovements?: StockMovement[];
@@ -249,7 +244,7 @@ export interface TransactionIndexProps {
     transactions: PaginatedData<Transaction>;
     filters: {
         search?: string;
-        ruangan_id?: number;
+        ruangan_nama?: string;
         type?: TransactionType;
         date_from?: string;
         date_to?: string;
@@ -329,7 +324,7 @@ export interface RuanganFormData {
 
 export interface TransactionFormData {
     type: TransactionType;
-    ruangan_id: number | '';
+    ruangan_nama: string;
     tanggal: string;
     keterangan: string;
     items: TransactionItemFormData[];

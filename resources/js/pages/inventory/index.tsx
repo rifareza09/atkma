@@ -49,10 +49,13 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const [activeCategory, setActiveCategory] = useState('all');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [formData, setFormData] = useState({
-        ruangan_id: '',
+        ruangan_nama: '',
         nama_peminta: '',
         keperluan: '',
     });
+
+    // Get ruangan names for autocomplete suggestions
+    const ruanganNames = ruangans.map((r) => r.nama);
 
     const quotaPercentage = 85;
 
@@ -99,10 +102,10 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleSubmit = () => {
-        if (!formData.ruangan_id) {
+        if (!formData.ruangan_nama) {
             toast({
                 title: 'Perhatian',
-                description: 'Pilih ruangan terlebih dahulu',
+                description: 'Masukkan nama ruangan terlebih dahulu',
                 variant: 'destructive',
             });
             return;
@@ -361,30 +364,27 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="ruangan">
+                                    <Label htmlFor="ruangan_nama">
                                         Ruangan / Unit Kerja
                                         <span className="text-red-500">*</span>
                                     </Label>
-                                    <Select
-                                        value={formData.ruangan_id}
-                                        onValueChange={(value) =>
-                                            setFormData({ ...formData, ruangan_id: value })
+                                    <Input
+                                        id="ruangan_nama"
+                                        list="ruangan-suggestions"
+                                        value={formData.ruangan_nama}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, ruangan_nama: e.target.value })
                                         }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Pilih Unit Kerja..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {ruangans.map((ruangan) => (
-                                                <SelectItem
-                                                    key={ruangan.id}
-                                                    value={ruangan.id.toString()}
-                                                >
-                                                    {ruangan.nama}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        placeholder="Ketik atau pilih nama ruangan/unit kerja"
+                                    />
+                                    <datalist id="ruangan-suggestions">
+                                        {ruanganNames.map((nama, index) => (
+                                            <option key={index} value={nama} />
+                                        ))}
+                                    </datalist>
+                                    <p className="text-xs text-muted-foreground">
+                                        Anda bisa memilih dari daftar atau mengetik manual
+                                    </p>
                                 </div>
 
                                 <div className="space-y-2">

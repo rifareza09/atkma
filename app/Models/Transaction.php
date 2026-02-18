@@ -16,7 +16,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'kode_transaksi',
-        'ruangan_id',
+        'ruangan_nama',
         'user_id',
         'type',
         'status',
@@ -86,14 +86,6 @@ class Transaction extends Model
     public function items(): HasMany
     {
         return $this->hasMany(TransactionItem::class);
-    }
-
-    /**
-     * Get ruangan
-     */
-    public function ruangan(): BelongsTo
-    {
-        return $this->belongsTo(Ruangan::class);
     }
 
     /**

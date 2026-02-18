@@ -271,7 +271,7 @@ export default function Index({
                                                             Ruangan:
                                                         </span>
                                                         <span className="ml-2 font-medium">
-                                                            {transaction.ruangan
+                                                            {transaction.ruangan_nama
                                                                 ?.nama || '-'}
                                                         </span>
                                                     </div>

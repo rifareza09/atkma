@@ -24,15 +24,15 @@ class TransactionExport implements FromCollection, WithHeadings, WithMapping, Wi
      */
     public function collection()
     {
-        $query = Transaction::with(['ruangan', 'user', 'items.barang']);
+        $query = Transaction::with(['user', 'items.barang']);
 
         // Apply filters
         if (isset($this->filters['type']) && $this->filters['type']) {
             $query->where('type', $this->filters['type']);
         }
 
-        if (isset($this->filters['ruangan_id']) && $this->filters['ruangan_id']) {
-            $query->where('ruangan_id', $this->filters['ruangan_id']);
+        if (isset($this->filters['ruangan_nama']) && $this->filters['ruangan_nama']) {
+            $query->where('ruangan_nama', $this->filters['ruangan_nama']);
         }
 
         if (isset($this->filters['date_from']) && $this->filters['date_from']) {
