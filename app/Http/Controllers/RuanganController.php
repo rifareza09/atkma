@@ -38,7 +38,11 @@ class RuanganController extends Controller
             $query->where('is_active', $request->status);
         }
 
-        $ruangans = $query->withCount('transactions')
+        // Add transaction count manually since we use ruangan_nama now
+        $ruangans = $query->addSelect([
+                'transactions_count' => \App\Models\Transaction::selectRaw('count(*)')
+                    ->whereColumn('transactions.ruangan_nama', 'ruangans.nama')
+            ])
             ->latest()
             ->paginate(10)
             ->withQueryString();

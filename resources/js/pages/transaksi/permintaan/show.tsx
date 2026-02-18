@@ -17,11 +17,20 @@ interface PermintaanShowProps {
 export default function PermintaanShow({ transaction }: PermintaanShowProps) {
     const { flash } = usePage<{ flash: { success?: string } }>().props;
     const isNewRequest = !!flash?.success;
+
+    // Debug
+    console.log('=== TRANSACTION DEBUG ===');
+    console.log('Full transaction:', JSON.stringify(transaction, null, 2));
+    console.log('kode_transaksi:', transaction.kode_transaksi);
+    console.log('user:', transaction.user);
+    console.log('items:', transaction.items);
+    console.log('items length:', transaction.items?.length);
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
         { title: 'Transaksi', href: '#' },
         { title: 'Permintaan Barang', href: permintaanIndex() },
-        { title: transaction.nomor_transaksi, href: '#' },
+        { title: transaction.kode_transaksi, href: '#' },
     ];
 
     const getStatusIcon = (status: Transaction['status']) => {
@@ -48,7 +57,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Permintaan ${transaction.nomor_transaksi}`} />
+            <Head title={`Permintaan ${transaction.kode_transaksi}`} />
 
             {isNewRequest ? (
                 // Success View - New Request
@@ -75,7 +84,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                 <div className="flex justify-between py-2">
                                     <span className="text-sm font-medium text-muted-foreground uppercase">ID Transaksi</span>
                                     <span className="text-sm font-semibold text-blue-600">
-                                        {transaction.nomor_transaksi}
+                                        {transaction.kode_transaksi}
                                     </span>
                                 </div>
                                 <Separator />
@@ -164,8 +173,8 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
 
                             {/* Action Buttons */}
                             <div className="space-y-3">
-                                <Button 
-                                    variant="outline" 
+                                <Button
+                                    variant="outline"
                                     className="w-full"
                                     onClick={() => window.open(`/reports/permintaan/${transaction.id}/pdf`, '_blank')}
                                 >
@@ -197,10 +206,10 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold">{transaction.nomor_transaksi}</h1>
+                            <h1 className="text-3xl font-bold">{transaction.kode_transaksi}</h1>
                             <Badge variant={getStatusVariant(transaction.status)} className="gap-1">
                                 {getStatusIcon(transaction.status)}
-                                {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                                {transaction.status?.charAt(0).toUpperCase() + transaction.status?.slice(1) || 'Pending'}
                             </Badge>
                         </div>
                         <p className="text-muted-foreground">
@@ -220,28 +229,28 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                     <Card className="md:col-span-2">
                         <CardHeader>
                             <CardTitle>Informasi Permintaan</CardTitle>
-                        </CardHeader>
+                        </CardHeader>   
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Nomor Transaksi
                                     </p>
-                                    <p className="text-lg font-semibold">{transaction.nomor_transaksi}</p>
+                                    <p className="text-lg font-semibold">{transaction.kode_transaksi}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Tanggal Permintaan
                                     </p>
                                     <p className="text-lg font-semibold">
-                                        {new Date(transaction.tanggal_transaksi).toLocaleDateString('id-ID')}
+                                        {new Date(transaction.tanggal).toLocaleDateString('id-ID')}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
                                         Pemohon
                                     </p>
-                                    <p className="text-lg">{transaction.pemohon}</p>
+                                    <p className="text-lg">{transaction.user?.name || 'N/A'}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">
@@ -295,9 +304,9 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                     </span>
                                 </p>
                             </div>
-                            
+
                             <Separator />
-                            
+
                             <div>
                                 <p className="text-sm text-muted-foreground">Total Jumlah</p>
                                 <p className="text-xl font-semibold">

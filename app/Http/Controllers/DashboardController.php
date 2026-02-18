@@ -48,16 +48,16 @@ class DashboardController extends Controller
             });
 
         // Top 5 Ruangan by transaction count
-        $topRuangan = Ruangan::where('is_active', true)
-            ->withCount('transactions')
-            ->orderBy('transactions_count', 'desc')
+        $topRuangan = DB::table('transactions')
+            ->select('ruangan_nama as nama', DB::raw('COUNT(*) as total'))
+            ->groupBy('ruangan_nama')
+            ->orderBy('total', 'desc')
             ->limit(5)
-            ->get(['id', 'nama', 'transactions_count'])
-            ->map(function ($ruangan) {
+            ->get()
+            ->map(function ($item) {
                 return [
-                    'id' => $ruangan->id,
-                    'nama' => $ruangan->nama,
-                    'total' => $ruangan->transactions_count,
+                    'nama' => $item->nama,
+                    'total' => $item->total,
                 ];
             });
 

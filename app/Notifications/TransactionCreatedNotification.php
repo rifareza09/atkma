@@ -32,7 +32,7 @@ class TransactionCreatedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $itemsCount = $this->transaction->items->count();
-        $ruanganNama = $this->transaction->ruangan->nama ?? '-';
+        $ruanganNama = $this->transaction->ruangan_nama ?? '-';
         
         return (new MailMessage)
             ->subject('📋 Permintaan Barang Baru: ' . $this->transaction->kode_transaksi)
@@ -61,7 +61,7 @@ class TransactionCreatedNotification extends Notification implements ShouldQueue
             'message' => "Transaksi {$this->transaction->kode_transaksi} menunggu persetujuan",
             'transaction_id' => $this->transaction->id,
             'transaction_code' => $this->transaction->kode_transaksi,
-            'ruangan_nama' => $this->transaction->ruangan->nama ?? '-',
+            'ruangan_nama' => $this->transaction->ruangan_nama ?? '-',
             'user_name' => $this->transaction->user->name,
             'items_count' => $this->transaction->items->count(),
             'status' => $this->transaction->status,

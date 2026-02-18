@@ -1,7 +1,6 @@
 import { usePage } from '@inertiajs/react';
-import { Bell, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenuContent } from '@/components/user-menu-content';
+import { NotificationDropdown } from '@/components/notification-dropdown';
 import type { BreadcrumbItem as BreadcrumbItemType, SharedData } from '@/types';
 
 export function AppSidebarHeader({
@@ -36,10 +36,7 @@ export function AppSidebarHeader({
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-                </Button>
+                <NotificationDropdown />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors">

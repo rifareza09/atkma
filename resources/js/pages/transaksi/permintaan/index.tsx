@@ -119,8 +119,51 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
     };
 
     const handleExport = (type: 'pdf' | 'excel') => {
-        // TODO: Implement export functionality
-        console.log(`Export as ${type}`);
+        const params = new URLSearchParams();
+        
+        if (filterForm.search) params.append('search', filterForm.search);
+        if (filterForm.ruangan_id !== 'all') params.append('ruangan_id', filterForm.ruangan_id);
+        if (filterForm.status.length > 0) {
+            filterForm.status.forEach(status => params.append('status[]', status));
+        }
+        if (filterForm.from_date) params.append('from_date', filterForm.from_date);
+        if (filterForm.to_date) params.append('to_date', filterForm.to_date);
+
+        const url = type === 'pdf' 
+            ? `/transaksi/permintaan-export/pdf?${params.toString()}`
+            : `/transaksi/permintaan-export/excel?${params.toString()}`;
+
+        window.location.href = url;
+    };
+
+    const handleRefresh = () => {
+        router.reload({
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleQuickApprove = (transactionId: number) => {
+        if (!confirm('Apakah Anda yakin ingin menyetujui permintaan ini?')) {
+            return;
+        }
+
+        router.post(
+            `/transaksi/permintaan/${transactionId}/approve`,
+            {},
+            {
+                preserveState: false,
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Refresh the page
+                    router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Error approving transaction:', errors);
+                    alert('Gagal menyetujui permintaan. ' + (Object.values(errors)[0] || ''));
+                },
+            }
+        );
     };
 
     return (
@@ -368,6 +411,8 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                                                                onClick={handleRefresh}
+                                                                title="Refresh Data"
                                                             >
                                                                 <RefreshCw className="h-4 w-4" />
                                                             </Button>
@@ -385,6 +430,9 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                                                                onClick={() => handleQuickApprove(transaction.id)}
+                                                                title="Approve Permintaan"
+                                                                disabled={transaction.status !== 'pending'}
                                                             >
                                                                 <CheckCircle className="h-4 w-4" />
                                                             </Button>

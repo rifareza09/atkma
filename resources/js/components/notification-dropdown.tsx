@@ -22,16 +22,24 @@ interface NotificationDropdownProps {
 export function NotificationDropdown({ notifications = [], unreadCount = 0 }: NotificationDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
 
+    // Debug logs
+    console.log('NotificationDropdown rendered', { 
+        notificationsCount: notifications.length, 
+        unreadCount 
+    });
+
     const handleMarkAsRead = (notificationId: number) => {
+        console.log('Mark as read:', notificationId);
         router.post(`/notifications/${notificationId}/read`, {}, {
             preserveScroll: true,
             onSuccess: () => {
-                // Notification marked as read
+                console.log('Marked as read successfully');
             }
         });
     };
 
     const handleMarkAllRead = () => {
+        console.log('Mark all as read');
         router.post('/notifications/read-all', {}, {
             preserveScroll: true,
             onSuccess: () => {
@@ -41,6 +49,7 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
     };
 
     const handleDelete = (notificationId: number) => {
+        console.log('Delete notification:', notificationId);
         router.delete(`/notifications/${notificationId}`, {
             preserveScroll: true,
         });
@@ -85,9 +94,17 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
     };
 
     return (
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenu open={isOpen} onOpenChange={(open) => {
+            console.log('Dropdown state changed:', open);
+            setIsOpen(open);
+        }}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="relative"
+                    onClick={() => console.log('Bell button clicked!')}
+                >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <Badge 

@@ -27,20 +27,31 @@ class TransactionExport implements FromCollection, WithHeadings, WithMapping, Wi
         $query = Transaction::with(['user', 'items.barang']);
 
         // Apply filters
+        if (!empty($this->filters['search'])) {
+            $query->where('kode_transaksi', 'like', '%' . $this->filters['search'] . '%');
+        }
+
         if (isset($this->filters['type']) && $this->filters['type']) {
             $query->where('type', $this->filters['type']);
         }
 
-        if (isset($this->filters['ruangan_nama']) && $this->filters['ruangan_nama']) {
-            $query->where('ruangan_nama', $this->filters['ruangan_nama']);
+        if (!empty($this->filters['ruangan_id']) && $this->filters['ruangan_id'] !== 'all') {
+            $ruangan = \App\Models\Ruangan::find($this->filters['ruangan_id']);
+            if ($ruangan) {
+                $query->where('ruangan_nama', $ruangan->nama);
+            }
         }
 
-        if (isset($this->filters['date_from']) && $this->filters['date_from']) {
-            $query->whereDate('tanggal', '>=', $this->filters['date_from']);
+        if (!empty($this->filters['status']) && is_array($this->filters['status'])) {
+            $query->whereIn('status', $this->filters['status']);
         }
 
-        if (isset($this->filters['date_to']) && $this->filters['date_to']) {
-            $query->whereDate('tanggal', '<=', $this->filters['date_to']);
+        if (isset($this->filters['from_date']) && $this->filters['from_date']) {
+            $query->whereDate('tanggal', '>=', $this->filters['from_date']);
+        }
+
+        if (isset($this->filters['to_date']) && $this->filters['to_date']) {
+            $query->whereDate('tanggal', '<=', $this->filters['to_date']);
         }
 
         return $query->orderBy('tanggal', 'desc')->get();
@@ -56,7 +67,7 @@ class TransactionExport implements FromCollection, WithHeadings, WithMapping, Wi
             'Tanggal',
             'Jenis',
             'Ruangan',
-            'Penanggung Jawab',
+            'Status',
             'Total Item',
             'Keterangan',
             'Dibuat Oleh',
@@ -68,12 +79,20 @@ class TransactionExport implements FromCollection, WithHeadings, WithMapping, Wi
      */
     public function map($transaction): array
     {
+        $statusLabel = match($transaction->status) {
+            'pending' => 'Diproses',
+            'approved' => 'Diterima',
+            'rejected' => 'Ditolak',
+            'revised' => 'Direvisi',
+            default => $transaction->status
+        };
+
         return [
             $transaction->kode_transaksi,
             $transaction->tanggal->format('d/m/Y'),
             strtoupper($transaction->type->value),
-            $transaction->ruangan->nama ?? '-',
-            $transaction->ruangan->penanggung_jawab ?? '-',
+            $transaction->ruangan_nama ?? '-',
+            $statusLabel,
             $transaction->items->count(),
             $transaction->keterangan ?? '-',
             $transaction->user->name ?? '-',

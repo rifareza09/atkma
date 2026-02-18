@@ -24,7 +24,7 @@ class TransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ruangan_nama' => ['required', 'string', 'max:100'],
+            'ruangan_nama' => ['required_if:type,keluar', 'nullable', 'string', 'max:100'],
             'type' => ['required', Rule::enum(TransactionType::class)],
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:500'],

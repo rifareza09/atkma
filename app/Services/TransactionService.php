@@ -141,9 +141,22 @@ class TransactionService
             $query->where('tanggal', '<=', $filters['to_date']);
         }
 
-        // Filter by ruangan
+        // Filter by ruangan_id (convert to ruangan_nama)
+        if (!empty($filters['ruangan_id']) && $filters['ruangan_id'] !== 'all') {
+            $ruangan = \App\Models\Ruangan::find($filters['ruangan_id']);
+            if ($ruangan) {
+                $query->where('ruangan_nama', $ruangan->nama);
+            }
+        }
+
+        // Filter by ruangan_nama (direct)
         if (!empty($filters['ruangan_nama'])) {
             $query->where('ruangan_nama', $filters['ruangan_nama']);
+        }
+
+        // Filter by status
+        if (!empty($filters['status']) && is_array($filters['status'])) {
+            $query->whereIn('status', $filters['status']);
         }
 
         // Filter by type
@@ -203,7 +216,7 @@ class TransactionService
             // Note: Based on current implementation, stock is already reduced on creation
             // But this is here for future flexibility if workflow changes
 
-            return $transaction->fresh(['approver', 'ruangan', 'user', 'items.barang']);
+            return $transaction->fresh(['approver', 'user', 'items.barang']);
         });
     }
 
@@ -251,7 +264,7 @@ class TransactionService
             // Trigger TransactionStatusChanged event
             event(new TransactionStatusChanged($transaction, $oldStatus, 'rejected'));
 
-            return $transaction->fresh(['rejector', 'ruangan', 'user', 'items.barang']);
+            return $transaction->fresh(['rejector', 'user', 'items.barang']);
         });
     }
 
@@ -284,7 +297,7 @@ class TransactionService
             // Trigger TransactionStatusChanged event
             event(new TransactionStatusChanged($transaction, $oldStatus, 'revised'));
 
-            return $transaction->fresh(['revisor', 'ruangan', 'user', 'items.barang']);
+            return $transaction->fresh(['revisor', 'user', 'items.barang']);
         });
     }
 }

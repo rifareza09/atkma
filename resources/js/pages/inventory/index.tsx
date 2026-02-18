@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Crown, Search, Plus, Minus, Camera, ArrowRight, PackagePlus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,6 +48,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     const [cart, setCart] = useState<CartItem[]>([]);
+    const [transactionMode, setTransactionMode] = useState<'masuk' | 'keluar'>('keluar'); // 'masuk' = Tambah Stock, 'keluar' = Pinjam Barang
     const [formData, setFormData] = useState({
         ruangan_nama: '',
         nama_peminta: '',
@@ -56,6 +57,15 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
 
     // Get ruangan names for autocomplete suggestions
     const ruanganNames = ruangans.map((r) => r.nama);
+
+    // Clear form data when transaction mode changes
+    useEffect(() => {
+        setFormData({
+            ruangan_nama: '',
+            nama_peminta: '',
+            keperluan: '',
+        });
+    }, [transactionMode]);
 
     const quotaPercentage = 85;
 
@@ -102,19 +112,11 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleSubmit = () => {
-        if (!formData.ruangan_nama) {
+        // Validation untuk mode Pinjam Barang (keluar)
+        if (transactionMode === 'keluar' && !formData.ruangan_nama) {
             toast({
                 title: 'Perhatian',
                 description: 'Masukkan nama ruangan terlebih dahulu',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        if (!formData.nama_peminta) {
-            toast({
-                title: 'Perhatian',
-                description: 'Masukkan nama peminta',
                 variant: 'destructive',
             });
             return;
@@ -130,15 +132,38 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         }
 
         // Submit the request
-        router.post('/transaksi/permintaan', {
-            ...formData,
-            type: 'keluar',
+        const requestData: any = {
+            type: transactionMode,
             tanggal: new Date().toISOString().split('T')[0],
+            keterangan: formData.keperluan || (transactionMode === 'masuk' ? 'Penambahan stock gudang' : ''),
             items: cart.map((item) => ({
                 barang_id: item.id,
                 jumlah: item.quantity,
-                keterangan: '',
             })),
+        };
+
+        // Hanya kirim ruangan jika mode keluar (pinjam barang)
+        if (transactionMode === 'keluar') {
+            requestData.ruangan_nama = formData.ruangan_nama;
+        } else {
+            requestData.ruangan_nama = 'Gudang'; // Default untuk transaksi masuk
+        }
+
+        router.post('/transaksi/permintaan', requestData, {
+            onSuccess: () => {
+                toast({
+                    title: 'Berhasil',
+                    description: 'Permintaan barang berhasil dibuat',
+                });
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                toast({
+                    title: 'Error',
+                    description: Object.values(errors).flat().join(', '),
+                    variant: 'destructive',
+                });
+            },
         });
     };
 
@@ -299,23 +324,30 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                                         }
                                                         className="h-8 w-8 p-0 border-blue-600 text-blue-600"
                                                         disabled={
-                                                            inCart.quantity >= barang.stok
+                                                            transactionMode === 'keluar' && inCart.quantity >= barang.stok
                                                         }
                                                     >
                                                         <Plus className="h-4 w-4" />
                                                     </Button>
                                                 </div>
                                             ) : (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => addToCart(barang)}
-                                                    className="w-full"
-                                                    disabled={barang.stok === 0}
-                                                >
-                                                    <Plus className="h-4 w-4 mr-2" />
-                                                    Tambah
-                                                </Button>
+                                                <>
+                                                    {transactionMode === 'keluar' && barang.stok === 0 ? (
+                                                        <div className="w-full text-center py-2 text-sm text-red-500 font-medium">
+                                                            Stok Habis
+                                                        </div>
+                                                    ) : (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => addToCart(barang)}
+                                                            className="w-full"
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" />
+                                                            Tambah
+                                                        </Button>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </CardContent>
@@ -338,75 +370,106 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                         <CardContent className="p-6 space-y-4">
                             <div className="flex items-center gap-2">
                                 <Crown className="h-5 w-5 text-yellow-500" />
-                                <h3 className="font-bold text-lg">Ringkasan Permintaan</h3>
+                                <h3 className="font-bold text-lg">
+                                    {transactionMode === 'masuk' ? 'Ringkasan Tambah Stock' : 'Ringkasan Permintaan'}
+                                </h3>
                             </div>
 
-                            {/* Quota Progress */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="font-semibold text-gray-700">
-                                        SISA KUOTA RUANGAN
-                                    </span>
-                                    <span className="font-bold text-blue-600">
-                                        {quotaPercentage}%
-                                    </span>
-                                </div>
-                                <Progress value={quotaPercentage} className="h-2" />
-                                <p className="text-xs text-muted-foreground">
-                                    Bagian Hukum & Humas
-                                </p>
+                            {/* Mode Selector */}
+                            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                                <Button
+                                    type="button"
+                                    variant={transactionMode === 'masuk' ? 'default' : 'ghost'}
+                                    className="flex-1"
+                                    onClick={() => setTransactionMode('masuk')}
+                                >
+                                    📦 Tambah Stock Gudang
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={transactionMode === 'keluar' ? 'default' : 'ghost'}
+                                    className="flex-1"
+                                    onClick={() => setTransactionMode('keluar')}
+                                >
+                                    🏢 Pinjam Barang
+                                </Button>
                             </div>
+
+                            {/* Quota Progress - Only show for 'keluar' mode */}
+                            {transactionMode === 'keluar' && (
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="font-semibold text-gray-700">
+                                            SISA KUOTA RUANGAN
+                                        </span>
+                                        <span className="font-bold text-blue-600">
+                                            {quotaPercentage}%
+                                        </span>
+                                    </div>
+                                    <Progress value={quotaPercentage} className="h-2" />
+                                    <p className="text-xs text-muted-foreground">
+                                        Bagian Hukum & Humas
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Form */}
                             <div className="space-y-4 pt-4 border-t">
                                 <div className="space-y-2">
-                                    <Label className="font-semibold">Informasi Pemohon</Label>
+                                    <Label className="font-semibold">
+                                        {transactionMode === 'masuk' ? 'Informasi Stock' : 'Informasi Pemohon'}
+                                    </Label>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="ruangan_nama">
-                                        Ruangan / Unit Kerja
-                                        <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                        id="ruangan_nama"
-                                        list="ruangan-suggestions"
-                                        value={formData.ruangan_nama}
-                                        onChange={(e) =>
-                                            setFormData({ ...formData, ruangan_nama: e.target.value })
-                                        }
-                                        placeholder="Ketik atau pilih nama ruangan/unit kerja"
-                                    />
-                                    <datalist id="ruangan-suggestions">
-                                        {ruanganNames.map((nama, index) => (
-                                            <option key={index} value={nama} />
-                                        ))}
-                                    </datalist>
-                                    <p className="text-xs text-muted-foreground">
-                                        Anda bisa memilih dari daftar atau mengetik manual
-                                    </p>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="nama_peminta">
-                                        Nama Peminta
-                                        <span className="text-red-500">*</span>
-                                    </Label>
-                                    <div className="relative">
+                                {/* Ruangan field - Only show for 'keluar' mode */}
+                                {transactionMode === 'keluar' && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="ruangan_nama">
+                                            Ruangan / Unit Kerja
+                                            <span className="text-red-500">*</span>
+                                        </Label>
                                         <Input
-                                            id="nama_peminta"
-                                            value={formData.nama_peminta}
+                                            id="ruangan_nama"
+                                            list="ruangan-suggestions"
+                                            value={formData.ruangan_nama}
                                             onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    nama_peminta: e.target.value,
-                                                })
+                                                setFormData({ ...formData, ruangan_nama: e.target.value })
                                             }
-                                            placeholder="Nama Lengkap"
+                                            placeholder="Ketik atau pilih nama ruangan/unit kerja"
                                         />
-                                        <Camera className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <datalist id="ruangan-suggestions">
+                                            {ruanganNames.map((nama, index) => (
+                                                <option key={index} value={nama} />
+                                            ))}
+                                        </datalist>
+                                        <p className="text-xs text-muted-foreground">
+                                            Anda bisa memilih dari daftar atau mengetik manual
+                                        </p>
                                     </div>
-                                </div>
+                                )}
+
+                                {/* Nama Peminta - Only show for 'keluar' mode */}
+                                {transactionMode === 'keluar' && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="nama_peminta">
+                                            Nama Peminta
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="nama_peminta"
+                                                value={formData.nama_peminta}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        nama_peminta: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Nama Lengkap"
+                                            />
+                                            <Camera className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="space-y-2">
                                     <Label htmlFor="keperluan">Keperluan / Keterangan</Label>
@@ -419,7 +482,11 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                                 keperluan: e.target.value,
                                             })
                                         }
-                                        placeholder="Contoh: Untuk kegiatan rapat bulanan..."
+                                        placeholder={
+                                            transactionMode === 'masuk'
+                                                ? 'Contoh: Pembelian rutin bulanan, penerimaan dari supplier...'
+                                                : 'Contoh: Untuk kegiatan rapat bulanan...'
+                                        }
                                         rows={3}
                                     />
                                 </div>
@@ -454,28 +521,36 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-2">
+                                                    <Input
+                                                        type="number"
+                                                        min="1"
+                                                        max={transactionMode === 'keluar' ? item.stok : undefined}
+                                                        value={item.quantity}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value) || 1;
+                                                            setCart(prev => 
+                                                                prev.map(cartItem => 
+                                                                    cartItem.id === item.id 
+                                                                        ? { 
+                                                                            ...cartItem, 
+                                                                            quantity: transactionMode === 'keluar' 
+                                                                                ? Math.min(val, item.stok) 
+                                                                                : val 
+                                                                        }
+                                                                        : cartItem
+                                                                )
+                                                            );
+                                                        }}
+                                                        className="h-8 w-16 text-center"
+                                                    />
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        onClick={() =>
-                                                            updateQuantity(item.id, -1)
-                                                        }
-                                                        className="h-6 w-6 p-0"
+                                                        onClick={() => removeFromCart(item.id)}
+                                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                        title="Hapus"
                                                     >
-                                                        <Minus className="h-3 w-3" />
-                                                    </Button>
-                                                    <span className="text-sm font-semibold w-6 text-center">
-                                                        {item.quantity}
-                                                    </span>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() =>
-                                                            updateQuantity(item.id, 1)
-                                                        }
-                                                        className="h-6 w-6 p-0"
-                                                    >
-                                                        <Plus className="h-3 w-3" />
+                                                        <Minus className="h-4 w-4" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -496,12 +571,14 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                     className="w-full bg-blue-600 hover:bg-blue-700"
                                     disabled={cart.length === 0}
                                 >
-                                    Proses Permintaan
+                                    {transactionMode === 'masuk' ? 'Tambah ke Stock Gudang' : 'Proses Permintaan'}
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
 
                                 <p className="text-xs text-center text-muted-foreground">
-                                    Menunggu persetujuan Kesekbag
+                                    {transactionMode === 'masuk'
+                                        ? 'Barang akan ditambahkan ke stock gudang'
+                                        : 'Menunggu persetujuan Kesekbag'}
                                 </p>
                             </div>
                         </CardContent>

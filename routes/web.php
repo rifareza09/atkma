@@ -21,8 +21,48 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Test route untuk debug notifications
+Route::get('/test-notifications', function () {
+    $authUser = auth()->user();
+    $user1 = \App\Models\User::find(1);
+    
+    return response()->json([
+        'auth_user' => $authUser ? [
+            'id' => $authUser->id,
+            'name' => $authUser->name,
+            'notifications_count' => $authUser->notifications()->count(),
+            'unread_count' => $authUser->unreadNotifications()->count(),
+        ] : null,
+        'user_1' => $user1 ? [
+            'id' => $user1->id,
+            'name' => $user1->name,
+            'notifications_count' => $user1->notifications()->count(),
+            'unread_count' => $user1->unreadNotifications()->count(),
+        ] : null,
+    ]);
+});
+
 // Protected routes with authentication
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Test notifikasi (authenticated)
+    Route::get('test-notifications-auth', function () {
+        $user = auth()->user();
+        
+        return response()->json([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'notifications_count' => $user->notifications()->count(),
+            'unread_count' => $user->unreadNotifications()->count(),
+            'notifications' => $user->notifications()->orderBy('created_at', 'desc')->limit(5)->get(),
+        ]);
+    });
+    
+    // Test transaction data
+    Route::get('test-transaction/{id}', function ($id) {
+        $transaction = \App\Models\Transaction::with(['user', 'items.barang'])->find($id);
+        return response()->json($transaction);
+    });
+    
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('api/dashboard/low-stock', [DashboardController::class, 'getLowStockData'])->name('api.dashboard.low-stock');
@@ -53,6 +93,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Transaction routes - Admin can create/delete, Pengawas can only view
     Route::prefix('transaksi')->group(function () {
         Route::resource('permintaan', TransactionController::class);
+
+        // Export routes
+        Route::get('permintaan-export/excel', [TransactionController::class, 'exportExcel'])
+            ->name('permintaan.export.excel');
+        Route::get('permintaan-export/pdf', [TransactionController::class, 'exportPdf'])
+            ->name('permintaan.export.pdf');
 
         // Transaction approval routes - Admin only
         Route::post('permintaan/{transaction}/approve', [TransactionController::class, 'approve'])
