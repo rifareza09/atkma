@@ -192,18 +192,18 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pilih Barang - Inventory" />
 
-            <div className="flex h-full flex-1 gap-6 p-6">
+            <div className="flex flex-col lg:flex-row h-full flex-1 gap-4 lg:gap-6 p-3 sm:p-6">
                 {/* Main Content */}
-                <div className="flex-1 space-y-6">
+                <div className="flex-1 space-y-4 lg:space-y-6">
                     {/* Header */}
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
                         <div>
-                            <h1 className="text-3xl font-bold">Pilih Barang</h1>
-                            <p className="text-muted-foreground mt-1">
+                            <h1 className="text-2xl sm:text-3xl font-bold">Pilih Barang</h1>
+                            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                                 Silakan pilih item ATK yang dibutuhkan untuk ruangan Anda.
                             </p>
                         </div>
-                        <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                        <Button asChild className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                             <Link href={barangCreate()}>
                                 <PackagePlus className="mr-2 h-4 w-4" />
                                 Tambah Barang
@@ -223,8 +223,8 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                             />
                         </div>
 
-                        <div className="flex items-center justify-between">
-                            <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                 {categories.map((cat) => (
                                     <Button
                                         key={cat.value}
@@ -237,8 +237,8 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                         onClick={() => setActiveCategory(cat.value)}
                                         className={
                                             activeCategory === cat.value
-                                                ? 'bg-black text-white hover:bg-black/90'
-                                                : ''
+                                                ? 'bg-black text-white hover:bg-black/90 whitespace-nowrap'
+                                                : 'whitespace-nowrap'
                                         }
                                     >
                                         {cat.label}
@@ -364,10 +364,10 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                 </div>
 
                 {/* Right Sidebar */}
-                <div className="w-96 space-y-4">
+                <div className="w-full lg:w-96 space-y-4 lg:sticky lg:top-6 lg:h-fit">
                     {/* Summary Card */}
                     <Card>
-                        <CardContent className="p-6 space-y-4">
+                        <CardContent className="p-4 sm:p-6 space-y-4">
                             <div className="flex items-center gap-2">
                                 <Crown className="h-5 w-5 text-yellow-500" />
                                 <h3 className="font-bold text-lg">
@@ -528,14 +528,14 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                                         value={item.quantity}
                                                         onChange={(e) => {
                                                             const val = parseInt(e.target.value) || 1;
-                                                            setCart(prev => 
-                                                                prev.map(cartItem => 
-                                                                    cartItem.id === item.id 
-                                                                        ? { 
-                                                                            ...cartItem, 
-                                                                            quantity: transactionMode === 'keluar' 
-                                                                                ? Math.min(val, item.stok) 
-                                                                                : val 
+                                                            setCart(prev =>
+                                                                prev.map(cartItem =>
+                                                                    cartItem.id === item.id
+                                                                        ? {
+                                                                            ...cartItem,
+                                                                            quantity: transactionMode === 'keluar'
+                                                                                ? Math.min(val, item.stok)
+                                                                                : val
                                                                         }
                                                                         : cartItem
                                                                 )

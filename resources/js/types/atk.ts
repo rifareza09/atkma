@@ -1,6 +1,6 @@
 /**
  * ATK Domain Types
- * 
+ *
  * Type definitions untuk domain Alat Tulis Kantor (ATK)
  * Mahkamah Agung Republik Indonesia
  */

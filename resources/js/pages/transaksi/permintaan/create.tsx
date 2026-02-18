@@ -30,7 +30,7 @@ interface PermintaanFormData {
 
 export default function PermintaanCreate({ barangs, ruangans }: PermintaanCreateProps) {
     const { toast } = useToast();
-    
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
         { title: 'Transaksi', href: '#' },
@@ -72,7 +72,7 @@ export default function PermintaanCreate({ barangs, ruangans }: PermintaanCreate
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         post('/transaksi/permintaan', {
             onSuccess: () => {
                 toast({
@@ -131,8 +131,8 @@ export default function PermintaanCreate({ barangs, ruangans }: PermintaanCreate
                                         onChange={(e) => setData('ruangan_nama', e.target.value)}
                                         placeholder="Ketik atau pilih nama ruangan/unit kerja"
                                         className={`flex h-10 w-full rounded-md border ${
-                                            errors.ruangan_nama 
-                                                ? 'border-destructive' 
+                                            errors.ruangan_nama
+                                                ? 'border-destructive'
                                                 : 'border-input'
                                         } bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
                                         required

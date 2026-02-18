@@ -25,7 +25,7 @@ Route::get('/', function () {
 Route::get('/test-notifications', function () {
     $authUser = auth()->user();
     $user1 = \App\Models\User::find(1);
-    
+
     return response()->json([
         'auth_user' => $authUser ? [
             'id' => $authUser->id,
@@ -47,7 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Test notifikasi (authenticated)
     Route::get('test-notifications-auth', function () {
         $user = auth()->user();
-        
+
         return response()->json([
             'user_id' => $user->id,
             'user_name' => $user->name,
@@ -56,13 +56,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'notifications' => $user->notifications()->orderBy('created_at', 'desc')->limit(5)->get(),
         ]);
     });
-    
+
     // Test transaction data
     Route::get('test-transaction/{id}', function ($id) {
         $transaction = \App\Models\Transaction::with(['user', 'items.barang'])->find($id);
         return response()->json($transaction);
     });
-    
+
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('api/dashboard/low-stock', [DashboardController::class, 'getLowStockData'])->name('api.dashboard.low-stock');

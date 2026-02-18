@@ -33,7 +33,7 @@ class TransactionCreatedNotification extends Notification implements ShouldQueue
     {
         $itemsCount = $this->transaction->items->count();
         $ruanganNama = $this->transaction->ruangan_nama ?? '-';
-        
+
         return (new MailMessage)
             ->subject('📋 Permintaan Barang Baru: ' . $this->transaction->kode_transaksi)
             ->line('Permintaan barang baru telah dibuat dan menunggu persetujuan:')

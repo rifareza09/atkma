@@ -5,11 +5,11 @@ use App\Models\User;
 
 Route::get('/test-notifications', function () {
     $user = User::find(1);
-    
+
     if (!$user) {
         return response()->json(['error' => 'User not found']);
     }
-    
+
     $notifications = $user->notifications()
         ->orderBy('created_at', 'desc')
         ->limit(10)
@@ -24,7 +24,7 @@ Route::get('/test-notifications', function () {
             'created_at' => $notification->created_at,
             'data' => $notification->data,
         ]);
-    
+
     return response()->json([
         'user_id' => $user->id,
         'user_name' => $user->name,

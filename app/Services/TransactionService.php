@@ -200,7 +200,7 @@ class TransactionService
 
         return DB::transaction(function () use ($transaction, $approver) {
             $oldStatus = $transaction->status;
-            
+
             // Update transaction status
             $transaction->update([
                 'status' => 'approved',
@@ -237,7 +237,7 @@ class TransactionService
 
         return DB::transaction(function () use ($transaction, $rejector, $reason) {
             $oldStatus = $transaction->status;
-            
+
             // Rollback stock if transaction type is KELUAR and status was pending
             // (stock might have been reduced on creation)
             if ($transaction->type === TransactionType::KELUAR && $transaction->status === 'pending') {
@@ -285,7 +285,7 @@ class TransactionService
 
         return DB::transaction(function () use ($transaction, $revisor, $notes) {
             $oldStatus = $transaction->status;
-            
+
             // Update transaction status
             $transaction->update([
                 'status' => 'revised',

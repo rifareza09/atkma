@@ -34,7 +34,7 @@ class DashboardController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $total = Transaction::whereDate('created_at', $date)->count();
-            
+
             $transaksi7Hari->push([
                 'tanggal' => $date->format('Y-m-d'),
                 'total' => $total,

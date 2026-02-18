@@ -18,7 +18,7 @@ export function AppSidebarHeader({
 }) {
     const { auth } = usePage<SharedData>().props;
     const user = auth?.user;
-    
+
     // Get initials from user name
     const getInitials = (name: string) => {
         return name

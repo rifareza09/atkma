@@ -280,9 +280,9 @@ class TransactionController extends Controller
     public function exportExcel(Request $request)
     {
         $filters = $request->only(['search', 'type', 'ruangan_id', 'status', 'from_date', 'to_date']);
-        
+
         $filename = 'transactions_' . now()->format('Y-m-d_His') . '.xlsx';
-        
+
         return Excel::download(new TransactionExport($filters), $filename);
     }
 
@@ -292,7 +292,7 @@ class TransactionController extends Controller
     public function exportPdf(Request $request)
     {
         $filters = $request->only(['search', 'type', 'ruangan_id', 'status', 'from_date', 'to_date']);
-        
+
         $query = Transaction::with(['user', 'items.barang']);
 
         // Apply filters
