@@ -40,6 +40,30 @@ class Barang extends Model
     }
 
     /**
+     * Generate unique kode barang
+     */
+    public static function generateKode(): string
+    {
+        $date = date('Ymd');
+        $prefix = "BRG-{$date}-";
+        
+        // Get last kode for today
+        $lastBarang = static::where('kode', 'like', "{$prefix}%")
+            ->orderBy('kode', 'desc')
+            ->first();
+        
+        if ($lastBarang) {
+            // Extract number and increment
+            $lastNumber = (int) substr($lastBarang->kode, -3);
+            $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        } else {
+            $newNumber = '001';
+        }
+        
+        return $prefix . $newNumber;
+    }
+
+    /**
      * Add stock
      */
     public function addStock(int $qty): void

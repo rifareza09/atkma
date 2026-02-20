@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { 
-    Package2, 
+import {
+    Package2,
     AlertCircle,
     FileCheck,
     Eye,
@@ -89,12 +89,12 @@ interface DashboardProps {
 // Warna untuk charts
 const COLORS = ['#2563eb', '#16a34a', '#ea580c', '#ca8a04', '#7c3aed'];
 
-export default function Dashboard({ 
+export default function Dashboard({
     stats,
     chart_data,
     top_barang = [],
     top_ruangan = [],
-    barang_stok_rendah = [], 
+    barang_stok_rendah = [],
     transaksi_terbaru = []
 }: DashboardProps) {
     const [lowStockData, setLowStockData] = useState<any>(null);
@@ -154,7 +154,7 @@ export default function Dashboard({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            
+
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 {/* Page Header with Animation */}
                 <div className="flex items-center justify-between animate-fade-in-up">
@@ -228,17 +228,17 @@ export default function Dashboard({
                                 <ResponsiveContainer width="100%" height={250}>
                                     <LineChart data={lineChartData}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis 
-                                            dataKey="date" 
+                                        <XAxis
+                                            dataKey="date"
                                             fontSize={12}
                                         />
                                         <YAxis fontSize={12} />
                                         <Tooltip />
                                         <Legend />
-                                        <Line 
-                                            type="monotone" 
-                                            dataKey="total" 
-                                            stroke="#2563eb" 
+                                        <Line
+                                            type="monotone"
+                                            dataKey="total"
+                                            stroke="#2563eb"
                                             strokeWidth={2}
                                             name="Jumlah Transaksi"
                                         />
@@ -268,8 +268,8 @@ export default function Dashboard({
                                 <ResponsiveContainer width="100%" height={250}>
                                     <BarChart data={topBarangData}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis 
-                                            dataKey="name" 
+                                        <XAxis
+                                            dataKey="name"
                                             fontSize={11}
                                             angle={-45}
                                             textAnchor="end"
@@ -278,8 +278,8 @@ export default function Dashboard({
                                         <YAxis fontSize={12} />
                                         <Tooltip />
                                         <Legend />
-                                        <Bar 
-                                            dataKey="total" 
+                                        <Bar
+                                            dataKey="total"
                                             fill="#16a34a"
                                             name="Total Permintaan"
                                         />

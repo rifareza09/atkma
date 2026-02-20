@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     ArrowDown,
@@ -30,7 +30,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { BreadcrumbItem, TransactionIndexProps } from '@/types';
+import type { BreadcrumbItem, TransactionIndexProps, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -46,6 +46,10 @@ export default function Index({
     barangs,
     transactionTypes,
 }: TransactionIndexProps) {
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
+
     const [search, setSearch] = useState(filters.search || '');
     const [type, setType] = useState(filters.type || 'all');
     const [ruanganId, setRuanganId] = useState(
@@ -117,12 +121,14 @@ export default function Index({
                             Kelola transaksi barang masuk dan keluar
                         </p>
                     </div>
-                    <Link href="/transactions/create">
-                        <Button>
-                            <Plus className="mr-2 size-4" />
-                            Tambah Transaksi
-                        </Button>
-                    </Link>
+                    {!isSuperadmin && (
+                        <Link href="/transactions/create">
+                            <Button>
+                                <Plus className="mr-2 size-4" />
+                                Tambah Transaksi
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Filter Section */}

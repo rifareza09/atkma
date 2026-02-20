@@ -110,6 +110,16 @@ export function AppSidebar() {
                 icon: Package,
             },
             {
+                title: 'Master Barang',
+                href: barangIndex(),
+                icon: Box,
+            },
+            {
+                title: 'Barang Masuk Admin',
+                href: barangMasukIndex(),
+                icon: TrendingUp,
+            },
+            {
                 title: 'Requests',
                 href: transaksiPermintaanIndex(),
                 icon: FileCheck,

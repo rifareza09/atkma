@@ -35,10 +35,11 @@ export const transaksiMasukIndex = () => '/transaksi/masuk';
 export const transaksiMasukCreate = () => '/transaksi/masuk/create';
 export const transaksiMasukShow = (id: number) => `/transaksi/masuk/${id}`;
 
-// Aliases for barang masuk
-export const barangMasukIndex = () => '/transaksi/barang-masuk';
-export const barangMasukCreate = () => '/transaksi/barang-masuk/create';
-export const barangMasukShow = (id: number) => `/transaksi/barang-masuk/${id}`;
+// Barang Masuk (Stock Incoming) Routes - Under stok prefix
+export const barangMasukIndex = () => '/stok/barang-masuk';
+export const barangMasukCreate = () => '/stok/barang-masuk/create';
+export const barangMasukShow = (id: number) => `/stok/barang-masuk/${id}`;
+export const barangMasukEdit = (id: number) => `/stok/barang-masuk/${id}/edit`;
 
 // Report Routes
 export const laporanInventaris = () => '/laporan/inventaris';

@@ -207,19 +207,10 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                 Silakan pilih item ATK yang dibutuhkan untuk ruangan Anda.
                             </p>
                         </div>
-                        {!isSuperadmin && (
-                            <Button asChild className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                                <Link href={barangCreate()}>
-                                    <PackagePlus className="mr-2 h-4 w-4" />
-                                    Tambah Barang
-                                </Link>
-                            </Button>
-                        )}
                     </div>
 
                     {/* Search & Filters */}
-                    <div className="space-y-4">
-                        <div className="relative">
+                    <div className="space-y-4">\n                        <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                 placeholder="Cari nama barang, kode, atau kategori"

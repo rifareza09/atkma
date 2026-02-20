@@ -152,6 +152,26 @@ export interface StockReconciliationItem {
     discrepancy_type?: 'surplus' | 'shortage' | 'match';
 }
 
+export interface IncomingStock {
+    id: number;
+    kode_barang_masuk: string;
+    barang_id: number;
+    user_id: number;
+    jumlah: number;
+    tanggal_masuk: string;
+    sumber: string | null;
+    nomor_dokumen: string | null;
+    keterangan: string | null;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+    updated_at: string;
+    // Relationships
+    barang?: Barang;
+    user?: User;
+    // Computed
+    formatted_date?: string;
+}
+
 // ==================== PAGINATION ====================
 
 export interface PaginationLink {
@@ -528,4 +548,44 @@ export interface AuditLogIndexProps extends PageProps {
         date_to?: string;
     };
     users: Array<{ id: number; name: string; username: string }>;
+}
+
+// ==================== INCOMING STOCK PROPS ====================
+
+export interface IncomingStockIndexProps extends PageProps {
+    incomingStocks: PaginatedData<IncomingStock>;
+    filters: {
+        search?: string;
+        status?: string;
+        start_date?: string;
+        end_date?: string;
+        barang_id?: number;
+    };
+    barangs: Array<{ id: number; kode: string; nama: string }>;
+}
+
+export interface IncomingStockCreateProps extends PageProps {
+    barangs: Array<{
+        id: number;
+        kode: string;
+        nama: string;
+        satuan: string;
+        stok: number;
+    }>;
+}
+
+export interface IncomingStockShowProps extends PageProps {
+    incomingStock: IncomingStock;
+    stockMovement?: StockMovement;
+}
+
+export interface IncomingStockEditProps extends PageProps {
+    incomingStock: IncomingStock;
+    barangs: Array<{
+        id: number;
+        kode: string;
+        nama: string;
+        satuan: string;
+        stok: number;
+    }>;
 }

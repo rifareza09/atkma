@@ -12,9 +12,19 @@ use App\Listeners\SendTransactionCreatedNotification;
 use App\Listeners\SendTransactionStatusNotification;
 use App\Listeners\UpdateLastLogin;
 use App\Models\AuditLog;
+use App\Models\Barang;
+use App\Models\IncomingStock;
+use App\Models\Ruangan;
 use App\Models\Setting;
+use App\Models\Transaction;
+use App\Models\User;
 use App\Policies\AuditLogPolicy;
+use App\Policies\BarangPolicy;
+use App\Policies\IncomingStockPolicy;
+use App\Policies\RuanganPolicy;
 use App\Policies\SettingPolicy;
+use App\Policies\TransactionPolicy;
+use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Date;
@@ -67,6 +77,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Setting::class, SettingPolicy::class);
         Gate::policy(AuditLog::class, AuditLogPolicy::class);
+        Gate::policy(Barang::class, BarangPolicy::class);
+        Gate::policy(IncomingStock::class, IncomingStockPolicy::class);
+        Gate::policy(Transaction::class, TransactionPolicy::class);
+        Gate::policy(Ruangan::class, RuanganPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
     }
 
     protected function registerEventListeners(): void

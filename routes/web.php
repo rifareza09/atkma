@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IncomingStockController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProsesPermintaanController;
@@ -110,9 +111,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('permintaan.revise');
     });
 
-    // Stock Reconciliation routes - Admin only
+    // Stock Management routes
     Route::prefix('stok')->group(function () {
+        // Stock Reconciliation - Admin only
         Route::resource('rekonsiliasi', StockReconciliationController::class)->except(['edit', 'update']);
+        
+        // Incoming Stock (Barang Masuk) - Admin can CRUD, Super Admin read-only
+        Route::resource('barang-masuk', IncomingStockController::class)->parameters([
+            'barang-masuk' => 'barangMasuk'
+        ]);
+        Route::get('barang-masuk/export', [IncomingStockController::class, 'export'])
+            ->name('barang-masuk.export');
     });
 
     // Laporan Pages - View reports with filters
