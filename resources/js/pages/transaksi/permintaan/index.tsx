@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Plus,
     Search,
@@ -34,7 +34,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { permintaanCreate, permintaanShow } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { Transaction, Ruangan, BreadcrumbItem, PaginatedResponse } from '@/types';
+import type { Transaction, Ruangan, BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
 
 interface PermintaanIndexProps {
     transactions: PaginatedResponse<Transaction>;
@@ -56,6 +56,10 @@ const statusOptions = [
 ];
 
 export default function PermintaanIndex({ transactions, ruangans, filters }: PermintaanIndexProps) {
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
+    
     const [filterForm, setFilterForm] = useState({
         search: filters.search || '',
         ruangan_id: filters.ruangan_id || 'all',
@@ -326,13 +330,15 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                     <FileText className="mr-2 h-4 w-4" />
                                     Excel
                                 </Button>
-                                <Button asChild className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none">
-                                    <Link href={permintaanCreate()}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        <span className="hidden sm:inline">Input Permintaan Baru</span>
-                                        <span className="sm:hidden">Baru</span>
-                                    </Link>
-                                </Button>
+                                {!isSuperadmin && (
+                                    <Button asChild className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none">
+                                        <Link href={permintaanCreate()}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            <span className="hidden sm:inline">Input Permintaan Baru</span>
+                                            <span className="sm:hidden">Baru</span>
+                                        </Link>
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -429,16 +435,18 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                                     <Eye className="h-4 w-4" />
                                                                 </Link>
                                                             </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
-                                                                onClick={() => handleQuickApprove(transaction.id)}
-                                                                title="Approve Permintaan"
-                                                                disabled={transaction.status !== 'pending'}
-                                                            >
-                                                                <CheckCircle className="h-4 w-4" />
-                                                            </Button>
+                                                            {isSuperadmin && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                                                                    onClick={() => handleQuickApprove(transaction.id)}
+                                                                    title="Approve Permintaan"
+                                                                    disabled={transaction.status !== 'pending'}
+                                                                >
+                                                                    <CheckCircle className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>

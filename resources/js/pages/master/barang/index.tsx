@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Plus, Pencil, Eye, Trash2, FileText, Download } from 'lucide-react';
 import { useState } from 'react';
 import type { Column } from '@/components/data-table';
@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { barangCreate, barangEdit, barangShow, barangIndex } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { Barang, BreadcrumbItem, PaginatedResponse } from '@/types';
+import type { Barang, BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -43,6 +43,10 @@ const stockOptions: FilterOption[] = [
 
 export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
     const { toast } = useToast();
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
+
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleSearch = (search: string) => {
@@ -147,18 +151,22 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                             <Eye className="size-4" />
                         </Link>
                     </Button>
-                    <Button size="sm" variant="ghost" asChild>
-                        <Link href={barangEdit(item.id)}>
-                            <Pencil className="size-4" />
-                        </Link>
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeleteId(item.id)}
-                    >
-                        <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                    {!isSuperadmin && (
+                        <>
+                            <Button size="sm" variant="ghost" asChild>
+                                <Link href={barangEdit(item.id)}>
+                                    <Pencil className="size-4" />
+                                </Link>
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setDeleteId(item.id)}
+                            >
+                                <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                        </>
+                    )}
                 </div>
             ),
             className: 'text-right',
@@ -195,12 +203,14 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                             <Download className="mr-2 h-4 w-4" />
                             Excel
                         </Button>
-                        <Button asChild>
-                            <Link href={barangCreate()}>
-                                <Plus className="mr-2 size-4" />
-                                Tambah Barang
-                            </Link>
-                        </Button>
+                        {!isSuperadmin && (
+                            <Button asChild>
+                                <Link href={barangCreate()}>
+                                    <Plus className="mr-2 size-4" />
+                                    Tambah Barang
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 

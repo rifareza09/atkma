@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Crown, Search, Plus, Minus, Camera, ArrowRight, PackagePlus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { barangIndex, barangCreate } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { Barang, Ruangan, BreadcrumbItem } from '@/types';
+import type { Barang, Ruangan, BreadcrumbItem, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -45,6 +45,10 @@ const categories = [
 
 export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProps) {
     const { toast } = useToast();
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
+
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     const [cart, setCart] = useState<CartItem[]>([]);
@@ -203,12 +207,14 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                 Silakan pilih item ATK yang dibutuhkan untuk ruangan Anda.
                             </p>
                         </div>
-                        <Button asChild className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                            <Link href={barangCreate()}>
-                                <PackagePlus className="mr-2 h-4 w-4" />
-                                Tambah Barang
-                            </Link>
-                        </Button>
+                        {!isSuperadmin && (
+                            <Button asChild className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                                <Link href={barangCreate()}>
+                                    <PackagePlus className="mr-2 h-4 w-4" />
+                                    Tambah Barang
+                                </Link>
+                            </Button>
+                        )}
                     </div>
 
                     {/* Search & Filters */}
@@ -301,51 +307,59 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                         </div>
 
                                         <div className="flex items-center justify-between">
-                                            {inCart ? (
-                                                <div className="flex items-center gap-2 w-full">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            updateQuantity(barang.id, -1)
-                                                        }
-                                                        className="h-8 w-8 p-0"
-                                                    >
-                                                        <Minus className="h-4 w-4" />
-                                                    </Button>
-                                                    <span className="flex-1 text-center font-semibold">
-                                                        {inCart.quantity}
-                                                    </span>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            updateQuantity(barang.id, 1)
-                                                        }
-                                                        className="h-8 w-8 p-0 border-blue-600 text-blue-600"
-                                                        disabled={
-                                                            transactionMode === 'keluar' && inCart.quantity >= barang.stok
-                                                        }
-                                                    >
-                                                        <Plus className="h-4 w-4" />
-                                                    </Button>
+                                            {isSuperadmin ? (
+                                                <div className="w-full text-center py-2 text-sm text-muted-foreground font-medium">
+                                                    View Only - Monitoring
                                                 </div>
                                             ) : (
                                                 <>
-                                                    {transactionMode === 'keluar' && barang.stok === 0 ? (
-                                                        <div className="w-full text-center py-2 text-sm text-red-500 font-medium">
-                                                            Stok Habis
+                                                    {inCart ? (
+                                                        <div className="flex items-center gap-2 w-full">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    updateQuantity(barang.id, -1)
+                                                                }
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <Minus className="h-4 w-4" />
+                                                            </Button>
+                                                            <span className="flex-1 text-center font-semibold">
+                                                                {inCart.quantity}
+                                                            </span>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    updateQuantity(barang.id, 1)
+                                                                }
+                                                                className="h-8 w-8 p-0 border-blue-600 text-blue-600"
+                                                                disabled={
+                                                                    transactionMode === 'keluar' && inCart.quantity >= barang.stok
+                                                                }
+                                                            >
+                                                                <Plus className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
                                                     ) : (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => addToCart(barang)}
-                                                            className="w-full"
-                                                        >
-                                                            <Plus className="h-4 w-4 mr-2" />
-                                                            Tambah
-                                                        </Button>
+                                                        <>
+                                                            {transactionMode === 'keluar' && barang.stok === 0 ? (
+                                                                <div className="w-full text-center py-2 text-sm text-red-500 font-medium">
+                                                                    Stok Habis
+                                                                </div>
+                                                            ) : (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => addToCart(barang)}
+                                                                    className="w-full"
+                                                                >
+                                                                    <Plus className="h-4 w-4 mr-2" />
+                                                                    Tambah
+                                                                </Button>
+                                                            )}
+                                                        </>
                                                     )}
                                                 </>
                                             )}
@@ -363,7 +377,8 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                     )}
                 </div>
 
-                {/* Right Sidebar */}
+                {/* Right Sidebar - Hidden for Superadmin */}
+                {!isSuperadmin && (
                 <div className="w-full lg:w-96 space-y-4 lg:sticky lg:top-6 lg:h-fit">
                     {/* Summary Card */}
                     <Card>
@@ -584,6 +599,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                         </CardContent>
                     </Card>
                 </div>
+                )}
             </div>
         </AppLayout>
     );

@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ArrowDown, ArrowLeft, ArrowUp, Check, Package, Trash, X, Edit } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import type { BreadcrumbItem, TransactionShowProps } from '@/types';
+import type { BreadcrumbItem, TransactionShowProps, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -36,6 +36,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Show({ transaction }: TransactionShowProps) {
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
+    
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
     const [reviseDialogOpen, setReviseDialogOpen] = useState(false);
 
@@ -187,7 +191,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                 Kembali
                             </Button>
                         </Link>
-                        {(!transaction.status || transaction.status === 'pending' || transaction.status === 'revised') && (
+                        {isSuperadmin && (!transaction.status || transaction.status === 'pending' || transaction.status === 'revised') && (
                             <Button
                                 variant="default"
                                 className="bg-green-600 hover:bg-green-700"
@@ -197,7 +201,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                 Setujui
                             </Button>
                         )}
-                        {(!transaction.status || transaction.status === 'pending') && (
+                        {isSuperadmin && (!transaction.status || transaction.status === 'pending') && (
                             <>
                                 <Button
                                     variant="default"

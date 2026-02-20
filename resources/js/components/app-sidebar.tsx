@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid,
     Package,
@@ -8,6 +8,8 @@ import {
     FileText,
     Settings,
     ClipboardCheck,
+    Box,
+    TrendingUp,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -21,6 +23,7 @@ import {
 } from '@/components/ui/sidebar';
 import {
     barangIndex,
+    barangMasukIndex,
     inventoryIndex,
     ruanganIndex,
     transaksiPermintaanIndex,
@@ -28,41 +31,8 @@ import {
     laporanInventaris,
 } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import type { NavItem, SharedData } from '@/types';
 import AppLogo from './app-logo';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Inventory',
-        href: inventoryIndex(),
-        icon: Package,
-    },
-    {
-        title: 'Requests',
-        href: transaksiPermintaanIndex(),
-        icon: FileCheck,
-    },
-    {
-        title: 'Approval Management',
-        href: transaksiPermintaanIndex(),
-        icon: CheckSquare,
-    },
-    {
-        title: 'Rooms',
-        href: ruanganIndex(),
-        icon: Building2,
-    },
-    {
-        title: 'Reports',
-        href: laporanInventaris(),
-        icon: FileText,
-    },
-];
 
 const settingsNavItems: NavItem[] = [
     {
@@ -81,6 +51,82 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    
+    // Define menu items based on role
+    const getMainNavItems = (): NavItem[] => {
+        const baseItems: NavItem[] = [
+            {
+                title: 'Dashboard',
+                href: dashboard(),
+                icon: LayoutGrid,
+            },
+        ];
+        
+        if (userRole === 'superadmin') {
+            // Superadmin can view everything for monitoring, but CRUD buttons are hidden in pages
+            return [
+                ...baseItems,
+                {
+                    title: 'Inventory',
+                    href: inventoryIndex(),
+                    icon: Package,
+                },
+                {
+                    title: 'Master Barang',
+                    href: barangIndex(),
+                    icon: Box,
+                },
+                {
+                    title: 'Barang Masuk',
+                    href: barangMasukIndex(),
+                    icon: TrendingUp,
+                },
+                {
+                    title: 'Approval Management',
+                    href: transaksiPermintaanIndex(),
+                    icon: CheckSquare,
+                },
+                {
+                    title: 'Rooms',
+                    href: ruanganIndex(),
+                    icon: Building2,
+                },
+                {
+                    title: 'Reports',
+                    href: laporanInventaris(),
+                    icon: FileText,
+                },
+            ];
+        }
+        
+        // Admin and other roles see full menu
+        return [
+            ...baseItems,
+            {
+                title: 'Inventory',
+                href: inventoryIndex(),
+                icon: Package,
+            },
+            {
+                title: 'Requests',
+                href: transaksiPermintaanIndex(),
+                icon: FileCheck,
+            },
+            {
+                title: 'Rooms',
+                href: ruanganIndex(),
+                icon: Building2,
+            },
+            {
+                title: 'Reports',
+                href: laporanInventaris(),
+                icon: FileText,
+            },
+        ];
+    };
+    
     return (
         <Sidebar 
             collapsible="icon" 
@@ -104,7 +150,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="gap-0">
-                <NavMain items={mainNavItems} />
+                <NavMain items={getMainNavItems()} />
             </SidebarContent>
 
             <SidebarFooter>

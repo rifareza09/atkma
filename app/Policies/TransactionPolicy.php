@@ -69,7 +69,7 @@ class TransactionPolicy
      */
     public function approve(User $user, Transaction $transaction): bool
     {
-        return $user->isAdmin() && $transaction->canBeApproved();
+        return $user->isSuperadmin() && $transaction->canBeApproved();
     }
 
     /**
@@ -77,7 +77,7 @@ class TransactionPolicy
      */
     public function reject(User $user, Transaction $transaction): bool
     {
-        return $user->isAdmin() && $transaction->canBeRejected();
+        return $user->isSuperadmin() && $transaction->canBeRejected();
     }
 
     /**
@@ -85,6 +85,6 @@ class TransactionPolicy
      */
     public function revise(User $user, Transaction $transaction): bool
     {
-        return $user->isAdmin() && $transaction->canBeRevised();
+        return $user->isSuperadmin() && $transaction->canBeRevised();
     }
 }

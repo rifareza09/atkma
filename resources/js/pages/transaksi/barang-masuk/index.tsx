@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Plus, Search, Eye, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { DataTable } from '@/components/data-table';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { barangMasukIndex, barangMasukCreate, barangMasukShow } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { StockMovement, PaginatedData, BreadcrumbItem, ColumnDef } from '@/types';
+import type { StockMovement, PaginatedData, BreadcrumbItem, ColumnDef, SharedData } from '@/types';
 
 interface BarangMasukIndexProps {
     movements: PaginatedData<StockMovement>;
@@ -20,6 +20,9 @@ interface BarangMasukIndexProps {
 
 export default function BarangMasukIndex({ movements, filters }: BarangMasukIndexProps) {
     const [search, setSearch] = useState(filters.search || '');
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
@@ -112,12 +115,14 @@ export default function BarangMasukIndex({ movements, filters }: BarangMasukInde
                             Kelola transaksi barang masuk ke gudang
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={barangMasukCreate()}>
-                            <Plus className="mr-2 size-4" />
-                            Tambah Barang Masuk
-                        </Link>
-                    </Button>
+                    {!isSuperadmin && (
+                        <Button asChild>
+                            <Link href={barangMasukCreate()}>
+                                <Plus className="mr-2 size-4" />
+                                Tambah Barang Masuk
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {/* Search */}

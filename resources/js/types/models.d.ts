@@ -7,7 +7,7 @@
 
 // ==================== ENUMS ====================
 
-export type Role = 'admin' | 'pengawas';
+export type Role = 'admin' | 'superadmin' | 'pengawas';
 
 export type TransactionType = 'masuk' | 'keluar';
 

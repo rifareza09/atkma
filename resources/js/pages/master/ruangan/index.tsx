@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Plus, Pencil, Eye, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Column } from '@/components/data-table';
@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { ruanganCreate, ruanganEdit, ruanganShow, ruanganIndex } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { Ruangan, BreadcrumbItem, PaginatedResponse } from '@/types';
+import type { Ruangan, BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -37,6 +37,10 @@ const statusOptions: FilterOption[] = [
 
 export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
     const { toast } = useToast();
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
+
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const handleSearch = (search: string) => {
@@ -132,18 +136,22 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                             <Eye className="size-4" />
                         </Link>
                     </Button>
-                    <Button size="sm" variant="ghost" asChild>
-                        <Link href={ruanganEdit(item.id)}>
-                            <Pencil className="size-4" />
-                        </Link>
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeleteId(item.id)}
-                    >
-                        <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                    {!isSuperadmin && (
+                        <>
+                            <Button size="sm" variant="ghost" asChild>
+                                <Link href={ruanganEdit(item.id)}>
+                                    <Pencil className="size-4" />
+                                </Link>
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setDeleteId(item.id)}
+                            >
+                                <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                        </>
+                    )}
                 </div>
             ),
             className: 'text-right',
@@ -163,12 +171,14 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                             Kelola data master ruangan
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={ruanganCreate()}>
-                            <Plus className="mr-2 size-4" />
-                            Tambah Ruangan
-                        </Link>
-                    </Button>
+                    {!isSuperadmin && (
+                        <Button asChild>
+                            <Link href={ruanganCreate()}>
+                                <Plus className="mr-2 size-4" />
+                                Tambah Ruangan
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {/* Search & Filter */}

@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { FileCheck, Eye, Plus, Calendar, Filter } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { BreadcrumbItem, StockReconciliationIndexProps } from '@/types';
+import type { BreadcrumbItem, StockReconciliationIndexProps, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -37,6 +37,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Index({ reconciliations, filters }: StockReconciliationIndexProps) {
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('id-ID', {
@@ -84,12 +87,14 @@ export default function Index({ reconciliations, filters }: StockReconciliationI
                             Kelola rekonsiliasi stok fisik dengan sistem
                         </p>
                     </div>
-                    <Link href="/stok/rekonsiliasi/create">
-                        <Button>
-                            <Plus className="mr-2 size-4" />
-                            Buat Rekonsiliasi Baru
-                        </Button>
-                    </Link>
+                    {!isSuperadmin && (
+                        <Link href="/stok/rekonsiliasi/create">
+                            <Button>
+                                <Plus className="mr-2 size-4" />
+                                Buat Rekonsiliasi Baru
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Filters */}

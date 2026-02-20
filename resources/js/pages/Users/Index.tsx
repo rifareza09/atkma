@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { UserIndexProps } from '@/types/models';
+import type { SharedData } from '@/types';
 import { Plus, Search, Edit, Trash2, Power, PowerOff } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
@@ -15,6 +16,9 @@ export default function Index({ users, filters, roles }: UserIndexProps) {
     const [search, setSearch] = useState(filters.search || '');
     const [role, setRole] = useState(filters.role || '');
     const [status, setStatus] = useState(filters.status !== undefined ? String(filters.status) : '');
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth?.user?.role;
+    const isSuperadmin = userRole === 'superadmin';
 
     const handleFilter = (e: FormEvent) => {
         e.preventDefault();
@@ -67,12 +71,14 @@ export default function Index({ users, filters, roles }: UserIndexProps) {
                             Kelola pengguna sistem dan hak akses
                         </p>
                     </div>
-                    <Link href="/users/create">
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah User
-                        </Button>
-                    </Link>
+                    {!isSuperadmin && (
+                        <Link href="/users/create">
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah User
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Filters */}
@@ -210,29 +216,33 @@ export default function Index({ users, filters, roles }: UserIndexProps) {
                                                             Detail
                                                         </Button>
                                                     </Link>
-                                                    <Link href={`/users/${user.id}/edit`}>
-                                                        <Button variant="ghost" size="sm">
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleToggleActive(user.id)}
-                                                    >
-                                                        {user.is_active ? (
-                                                            <PowerOff className="h-4 w-4 text-orange-600" />
-                                                        ) : (
-                                                            <Power className="h-4 w-4 text-green-600" />
-                                                        )}
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(user.id, user.name)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
+                                                    {!isSuperadmin && (
+                                                        <>
+                                                            <Link href={`/users/${user.id}/edit`}>
+                                                                <Button variant="ghost" size="sm">
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                            </Link>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleToggleActive(user.id)}
+                                                            >
+                                                                {user.is_active ? (
+                                                                    <PowerOff className="h-4 w-4 text-orange-600" />
+                                                                ) : (
+                                                                    <Power className="h-4 w-4 text-green-600" />
+                                                                )}
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleDelete(user.id, user.name)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
