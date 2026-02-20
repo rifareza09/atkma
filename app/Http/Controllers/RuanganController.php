@@ -28,8 +28,7 @@ class RuanganController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('kode', 'like', "%{$search}%")
-                    ->orWhere('nama', 'like', "%{$search}%")
-                    ->orWhere('penanggung_jawab', 'like', "%{$search}%");
+                    ->orWhere('nama', 'like', "%{$search}%");
             });
         }
 
@@ -43,9 +42,8 @@ class RuanganController extends Controller
                 'transactions_count' => \App\Models\Transaction::selectRaw('count(*)')
                     ->whereColumn('transactions.ruangan_nama', 'ruangans.nama')
             ])
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            ->orderBy('kode')
+            ->get();
 
         return Inertia::render('master/ruangan/index', [
             'ruangans' => $ruangans,

@@ -9,20 +9,19 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { barangMasukIndex, barangMasukCreate, barangMasukShow } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { StockMovement, PaginatedData, BreadcrumbItem, ColumnDef, SharedData } from '@/types';
+import type { IncomingStock, PaginatedData, BreadcrumbItem, ColumnDef, SharedData } from '@/types';
 
 interface BarangMasukIndexProps {
-    movements: PaginatedData<StockMovement>;
+    incomingStocks: PaginatedData<IncomingStock>;
     filters: {
         search?: string;
     };
 }
 
-export default function BarangMasukIndex({ movements, filters }: BarangMasukIndexProps) {
+export default function BarangMasukIndex({ incomingStocks, filters }: BarangMasukIndexProps) {
     const [search, setSearch] = useState(filters.search || '');
     const { auth } = usePage<SharedData>().props;
     const userRole = auth?.user?.role;
-    const isSuperadmin = userRole === 'superadmin';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
@@ -35,15 +34,15 @@ export default function BarangMasukIndex({ movements, filters }: BarangMasukInde
         router.get(barangMasukIndex(), { search }, { preserveState: true });
     };
 
-    const columns: ColumnDef<StockMovement>[] = [
+    const columns: ColumnDef<IncomingStock>[] = [
         {
-            key: 'nomor_referensi',
-            label: 'Nomor Referensi',
-            render: (movement) => (
+            key: 'kode_barang_masuk',
+            label: 'Kode Barang Masuk',
+            render: (stock) => (
                 <div>
-                    <p className="font-medium">{movement.nomor_referensi}</p>
+                    <p className="font-medium">{stock.kode_barang_masuk}</p>
                     <p className="text-xs text-muted-foreground">
-                        {new Date(movement.tanggal).toLocaleDateString('id-ID')}
+                        {new Date(stock.tanggal_masuk).toLocaleDateString('id-ID')}
                     </p>
                 </div>
             ),
@@ -51,48 +50,39 @@ export default function BarangMasukIndex({ movements, filters }: BarangMasukInde
         {
             key: 'barang',
             label: 'Barang',
-            render: (movement) => (
+            render: (stock) => (
                 <div>
-                    <p className="font-medium">{movement.barang?.nama}</p>
-                    <p className="text-xs text-muted-foreground">{movement.barang?.kode}</p>
+                    <p className="font-medium">{stock.barang?.nama}</p>
+                    <p className="text-xs text-muted-foreground">{stock.barang?.kode}</p>
                 </div>
             ),
         },
         {
             key: 'jumlah',
             label: 'Jumlah',
-            render: (movement) => (
+            render: (stock) => (
                 <div className="flex items-center gap-1">
                     <TrendingUp className="size-4 text-green-600" />
                     <p className="font-semibold text-green-600">
-                        +{movement.jumlah} {movement.barang?.satuan}
+                        +{stock.jumlah} {stock.barang?.satuan}
                     </p>
                 </div>
             ),
         },
         {
-            key: 'jenis',
-            label: 'Jenis',
-            render: (movement) => (
-                <Badge variant="default">
-                    {movement.jenis === 'in' ? 'Masuk' : 'Keluar'}
-                </Badge>
-            ),
-        },
-        {
-            key: 'sumber_tujuan',
+            key: 'sumber',
             label: 'Supplier/Sumber',
-            render: (movement) => (
-                <p className="text-sm">{movement.sumber_tujuan || '-'}</p>
+            render: (stock) => (
+                <p className="text-sm">{stock.sumber || '-'}</p>
             ),
         },
         {
             key: 'actions',
             label: 'Aksi',
-            render: (movement) => (
+            render: (stock) => (
                 <div className="flex gap-2">
                     <Button size="sm" variant="outline" asChild>
-                        <Link href={barangMasukShow(movement.id)}>
+                        <Link href={barangMasukShow(stock.id)}>
                             <Eye className="size-4 mr-1" />
                             Detail
                         </Link>
@@ -115,14 +105,12 @@ export default function BarangMasukIndex({ movements, filters }: BarangMasukInde
                             Kelola transaksi barang masuk ke gudang
                         </p>
                     </div>
-                    {!isSuperadmin && (
-                        <Button asChild>
-                            <Link href={barangMasukCreate()}>
-                                <Plus className="mr-2 size-4" />
-                                Tambah Barang Masuk
-                            </Link>
-                        </Button>
-                    )}
+                    <Button asChild>
+                        <Link href={barangMasukCreate()}>
+                            <Plus className="mr-2 size-4" />
+                            Tambah Barang Masuk
+                        </Link>
+                    </Button>
                 </div>
 
                 {/* Search */}
@@ -141,12 +129,12 @@ export default function BarangMasukIndex({ movements, filters }: BarangMasukInde
                 </form>
 
                 {/* Data Table */}
-                <DataTable<StockMovement> data={movements.data} columns={columns} />
+                <DataTable<IncomingStock> data={incomingStocks.data} columns={columns} />
 
                 {/* Pagination */}
-                {movements.data.length > 0 && (
+                {incomingStocks.data.length > 0 && (
                     <Pagination
-                        meta={movements.meta}
+                        meta={incomingStocks.meta}
                         onPageChange={(page) => {
                             router.get(barangMasukIndex(), { ...filters, page });
                         }}

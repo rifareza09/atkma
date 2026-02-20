@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import { show as transaksiPermintaanShow } from '@/routes/transactions';
+import { transaksiPermintaanShow } from '@/lib/atk-routes';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -453,7 +453,7 @@ export default function Dashboard({
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                {transaksi.ruangan_nama || '-'}
+                                                {transaksi.ruangan?.nama || '-'}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button
@@ -464,7 +464,7 @@ export default function Dashboard({
                                                     <Link
                                                         href={transaksiPermintaanShow(
                                                             transaksi.id,
-                                                        ).url}
+                                                        )}
                                                     >
                                                         <Eye className="mr-2 size-4" />
                                                         Detail

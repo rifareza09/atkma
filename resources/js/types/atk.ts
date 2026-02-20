@@ -36,13 +36,12 @@ export interface Barang extends Record<string, unknown> {
 
 /**
  * Ruangan Model - Matches database structure
- * Database fields: kode, nama, penanggung_jawab, deskripsi, is_active
+ * Database fields: kode, nama, deskripsi, is_active
  */
 export interface Ruangan extends Record<string, unknown> {
     id: number;
     kode: string;  // kode manual ruangan (e.g., "R-101")
     nama: string;  // nama ruangan
-    penanggung_jawab?: string;  // nama penanggung jawab
     deskripsi?: string;  // deskripsi/keterangan ruangan
     is_active: boolean;  // true/false, not 'aktif'/'tidak_aktif'
     created_at: string;
@@ -136,7 +135,6 @@ export interface BarangFormData {
 export interface RuanganFormData {
     kode: string;
     nama: string;
-    penanggung_jawab?: string;
     deskripsi?: string;
     is_active: boolean;
 }

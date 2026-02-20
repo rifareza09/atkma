@@ -64,27 +64,5 @@ class TransactionPolicy
         return false;
     }
 
-    /**
-     * Determine whether the user can approve the transaction.
-     */
-    public function approve(User $user, Transaction $transaction): bool
-    {
-        return $user->isSuperadmin() && $transaction->canBeApproved();
-    }
 
-    /**
-     * Determine whether the user can reject the transaction.
-     */
-    public function reject(User $user, Transaction $transaction): bool
-    {
-        return $user->isSuperadmin() && $transaction->canBeRejected();
-    }
-
-    /**
-     * Determine whether the user can revise the transaction.
-     */
-    public function revise(User $user, Transaction $transaction): bool
-    {
-        return $user->isSuperadmin() && $transaction->canBeRevised();
-    }
 }

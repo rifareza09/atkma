@@ -185,9 +185,8 @@
                 <th width="12%">Kode Transaksi</th>
                 <th width="8%">Tanggal</th>
                 <th width="7%">Jenis</th>
-                <th width="15%">Ruangan</th>
-                <th width="13%">Penanggung Jawab</th>
-                <th width="25%">Detail Item</th>
+                <th width="18%">Ruangan</th>
+                <th width="28%">Detail Item</th>
                 <th width="10%">User</th>
                 <th width="7%">Total Item</th>
             </tr>
@@ -206,7 +205,6 @@
                     @endif
                 </td>
                 <td>{{ $transaction->ruangan->nama ?? '-' }}</td>
-                <td>{{ $transaction->ruangan->penanggung_jawab ?? '-' }}</td>
                 <td>
                     <ul class="items-list">
                         @foreach($transaction->items as $item)

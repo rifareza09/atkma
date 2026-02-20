@@ -15,7 +15,6 @@ class Ruangan extends Model
     protected $fillable = [
         'kode',
         'nama',
-        'penanggung_jawab',
         'deskripsi',
         'is_active',
     ];

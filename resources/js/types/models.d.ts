@@ -7,7 +7,7 @@
 
 // ==================== ENUMS ====================
 
-export type Role = 'admin' | 'superadmin' | 'pengawas';
+export type Role = 'admin' | 'pengawas';
 
 export type TransactionType = 'masuk' | 'keluar';
 
@@ -56,7 +56,6 @@ export interface Ruangan {
     id: number;
     kode: string;
     nama: string;
-    penanggung_jawab: string | null;
     deskripsi: string | null;
     is_active: boolean;
     created_at: string;
@@ -71,24 +70,13 @@ export interface Transaction {
     type: TransactionType;
     tanggal: string; // Format: YYYY-MM-DD
     keterangan: string | null;
-    status?: 'pending' | 'approved' | 'rejected' | 'revised';
-    approved_by?: number | null;
-    approved_at?: string | null;
-    rejected_by?: number | null;
-    rejected_at?: string | null;
-    rejection_reason?: string | null;
-    revised_by?: number | null;
-    revised_at?: string | null;
-    revision_notes?: string | null;
+    status?: 'pending' | 'completed';
     created_at: string;
     updated_at: string;
     // Relationships (optional, tergantung eager loading)
     user?: User;
     items?: TransactionItem[];
     stockMovements?: StockMovement[];
-    approver?: User;
-    rejector?: User;
-    revisor?: User;
 }
 
 export interface TransactionItem {
@@ -338,7 +326,6 @@ export interface BarangFormData {
 export interface RuanganFormData {
     kode: string;
     nama: string;
-    penanggung_jawab: string;
     deskripsi: string;
 }
 

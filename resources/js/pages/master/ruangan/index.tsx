@@ -5,7 +5,6 @@ import type { Column } from '@/components/data-table';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { FilterSelect, type FilterOption } from '@/components/filter-select';
-import { Pagination } from '@/components/pagination';
 import { SearchInput } from '@/components/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { ruanganCreate, ruanganEdit, ruanganShow, ruanganIndex } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
-import type { Ruangan, BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
+import type { Ruangan, BreadcrumbItem, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -22,7 +21,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface RuanganIndexProps {
-    ruangans: PaginatedResponse<Ruangan>;
+    ruangans: Ruangan[];
     filters: {
         search?: string;
         status?: string;
@@ -39,7 +38,6 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
     const { toast } = useToast();
     const { auth } = usePage<SharedData>().props;
     const userRole = auth?.user?.role;
-    const isSuperadmin = userRole === 'superadmin';
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -99,15 +97,6 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
             label: 'Nama Ruangan',
         },
         {
-            key: 'penanggung_jawab',
-            label: 'Penanggung Jawab',
-            render: (item) => (
-                <span className="text-muted-foreground">
-                    {item.penanggung_jawab || '-'}
-                </span>
-            ),
-        },
-        {
             key: 'transactions_count',
             label: 'Total Transaksi',
             render: (item) => (
@@ -136,22 +125,18 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                             <Eye className="size-4" />
                         </Link>
                     </Button>
-                    {!isSuperadmin && (
-                        <>
-                            <Button size="sm" variant="ghost" asChild>
-                                <Link href={ruanganEdit(item.id)}>
-                                    <Pencil className="size-4" />
-                                </Link>
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setDeleteId(item.id)}
-                            >
-                                <Trash2 className="size-4 text-destructive" />
-                            </Button>
-                        </>
-                    )}
+                    <Button size="sm" variant="ghost" asChild>
+                        <Link href={ruanganEdit(item.id)}>
+                            <Pencil className="size-4" />
+                        </Link>
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleteId(item.id)}
+                    >
+                        <Trash2 className="size-4 text-destructive" />
+                    </Button>
                 </div>
             ),
             className: 'text-right',
@@ -171,14 +156,12 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                             Kelola data master ruangan
                         </p>
                     </div>
-                    {!isSuperadmin && (
-                        <Button asChild>
-                            <Link href={ruanganCreate()}>
-                                <Plus className="mr-2 size-4" />
-                                Tambah Ruangan
-                            </Link>
-                        </Button>
-                    )}
+                    <Button asChild>
+                        <Link href={ruanganCreate()}>
+                            <Plus className="mr-2 size-4" />
+                            Tambah Ruangan
+                        </Link>
+                    </Button>
                 </div>
 
                 {/* Search & Filter */}
@@ -200,26 +183,14 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                 {/* Data Table */}
                 <DataTable<Ruangan>
                     columns={columns}
-                    data={ruangans.data}
+                    data={ruangans}
                     keyField="id"
                 />
 
-                {/* Pagination */}
-                {ruangans.meta && (
-                    <Pagination
-                        meta={ruangans.meta}
-                        onPageChange={(page) => {
-                            router.get(
-                                ruanganIndex(),
-                                { ...filters, page },
-                                {
-                                    preserveState: true,
-                                    preserveScroll: true,
-                                },
-                            );
-                        }}
-                    />
-                )}
+                {/* Total count */}
+                <p className="text-sm text-muted-foreground">
+                    Menampilkan {ruangans.length} ruangan
+                </p>
             </div>
 
             {/* Delete Confirmation Dialog */}

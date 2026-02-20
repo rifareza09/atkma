@@ -83,14 +83,6 @@ export default function RuanganShow({ ruangan }: RuanganShowProps) {
                                         {ruangan.is_active ? 'Aktif' : 'Tidak Aktif'}
                                     </Badge>
                                 </div>
-                                {ruangan.penanggung_jawab && (
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">
-                                            Penanggung Jawab
-                                        </p>
-                                        <p className="text-lg">{ruangan.penanggung_jawab}</p>
-                                    </div>
-                                )}
                             </div>
 
                             {ruangan.deskripsi && (
@@ -144,20 +136,6 @@ export default function RuanganShow({ ruangan }: RuanganShowProps) {
                                 </div>
                             </CardContent>
                         </Card>
-
-                        {ruangan.penanggung_jawab && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Users className="size-5" />
-                                        Penanggung Jawab
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="font-medium">{ruangan.penanggung_jawab}</p>
-                                </CardContent>
-                            </Card>
-                        )}
                     </div>
                 </div>
             </div>

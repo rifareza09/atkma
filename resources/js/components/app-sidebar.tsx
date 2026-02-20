@@ -53,7 +53,7 @@ const footerNavItems: NavItem[] = [
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const userRole = auth?.user?.role;
-    
+
     // Define menu items based on role
     const getMainNavItems = (): NavItem[] => {
         const baseItems: NavItem[] = [
@@ -63,45 +63,8 @@ export function AppSidebar() {
                 icon: LayoutGrid,
             },
         ];
-        
-        if (userRole === 'superadmin') {
-            // Superadmin can view everything for monitoring, but CRUD buttons are hidden in pages
-            return [
-                ...baseItems,
-                {
-                    title: 'Inventory',
-                    href: inventoryIndex(),
-                    icon: Package,
-                },
-                {
-                    title: 'Master Barang',
-                    href: barangIndex(),
-                    icon: Box,
-                },
-                {
-                    title: 'Barang Masuk',
-                    href: barangMasukIndex(),
-                    icon: TrendingUp,
-                },
-                {
-                    title: 'Approval Management',
-                    href: transaksiPermintaanIndex(),
-                    icon: CheckSquare,
-                },
-                {
-                    title: 'Rooms',
-                    href: ruanganIndex(),
-                    icon: Building2,
-                },
-                {
-                    title: 'Reports',
-                    href: laporanInventaris(),
-                    icon: FileText,
-                },
-            ];
-        }
-        
-        // Admin and other roles see full menu
+
+        // All users see the same menu
         return [
             ...baseItems,
             {
@@ -115,7 +78,7 @@ export function AppSidebar() {
                 icon: Box,
             },
             {
-                title: 'Barang Masuk Admin',
+                title: 'Barang Masuk',
                 href: barangMasukIndex(),
                 icon: TrendingUp,
             },
@@ -136,19 +99,19 @@ export function AppSidebar() {
             },
         ];
     };
-    
+
     return (
-        <Sidebar 
-            collapsible="icon" 
-            variant="inset" 
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
             className="bg-[#2563eb] transition-smooth"
         >
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton 
-                            size="lg" 
-                            asChild 
+                        <SidebarMenuButton
+                            size="lg"
+                            asChild
                             className="hover:bg-white/10 transition-smooth group"
                         >
                             <Link href={dashboard()} prefetch className="flex items-center gap-3">

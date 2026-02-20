@@ -269,7 +269,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                 <div>
                                     <p className="text-muted-foreground">Dibuat pada</p>
                                     <p>
-                                        {transaction.created_at 
+                                        {transaction.created_at
                                             ? new Date(transaction.created_at).toLocaleString('id-ID')
                                             : '-'
                                         }
@@ -278,7 +278,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                 <div>
                                     <p className="text-muted-foreground">Terakhir diperbarui</p>
                                     <p>
-                                        {transaction.updated_at 
+                                        {transaction.updated_at
                                             ? new Date(transaction.updated_at).toLocaleString('id-ID')
                                             : '-'
                                         }

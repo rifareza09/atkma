@@ -24,16 +24,6 @@ class UserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        // Superadmin User
-        User::create([
-            'name' => 'Super Administrator',
-            'username' => 'superadmin',
-            'email' => 'superadmin@ma.go.id',
-            'password' => Hash::make('password'),
-            'role' => Role::SUPERADMIN,
-            'email_verified_at' => now(),
-        ]);
-
         // Pengawas User
         User::create([
             'name' => 'Pengawas',

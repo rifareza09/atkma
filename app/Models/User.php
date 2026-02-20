@@ -69,14 +69,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is superadmin
-     */
-    public function isSuperadmin(): bool
-    {
-        return $this->role === Role::SUPERADMIN;
-    }
-
-    /**
      * Check if user is pengawas
      */
     public function isPengawas(): bool

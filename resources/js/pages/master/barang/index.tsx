@@ -45,7 +45,6 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
     const { toast } = useToast();
     const { auth } = usePage<SharedData>().props;
     const userRole = auth?.user?.role;
-    const isSuperadmin = userRole === 'superadmin';
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -151,22 +150,18 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                             <Eye className="size-4" />
                         </Link>
                     </Button>
-                    {!isSuperadmin && (
-                        <>
-                            <Button size="sm" variant="ghost" asChild>
-                                <Link href={barangEdit(item.id)}>
-                                    <Pencil className="size-4" />
-                                </Link>
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setDeleteId(item.id)}
-                            >
-                                <Trash2 className="size-4 text-destructive" />
-                            </Button>
-                        </>
-                    )}
+                    <Button size="sm" variant="ghost" asChild>
+                        <Link href={barangEdit(item.id)}>
+                            <Pencil className="size-4" />
+                        </Link>
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleteId(item.id)}
+                    >
+                        <Trash2 className="size-4 text-destructive" />
+                    </Button>
                 </div>
             ),
             className: 'text-right',
@@ -203,14 +198,12 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                             <Download className="mr-2 h-4 w-4" />
                             Excel
                         </Button>
-                        {!isSuperadmin && (
-                            <Button asChild>
-                                <Link href={barangCreate()}>
-                                    <Plus className="mr-2 size-4" />
-                                    Tambah Barang
-                                </Link>
-                            </Button>
-                        )}
+                        <Button asChild>
+                            <Link href={barangCreate()}>
+                                <Plus className="mr-2 size-4" />
+                                Tambah Barang
+                            </Link>
+                        </Button>
                     </div>
                 </div>
 

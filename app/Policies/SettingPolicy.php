@@ -13,7 +13,7 @@ class SettingPolicy
     public function viewAny(User $user): bool
     {
         // Admin can view settings, pengawas cannot
-        return $user->role === Role::Admin;
+        return $user->role === Role::ADMIN;
     }
 
     /**
@@ -22,6 +22,6 @@ class SettingPolicy
     public function update(User $user): bool
     {
         // Only admin can update settings
-        return $user->role === Role::Admin;
+        return $user->role === Role::ADMIN;
     }
 }

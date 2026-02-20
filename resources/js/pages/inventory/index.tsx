@@ -20,6 +20,7 @@ import AppLayout from '@/layouts/app-layout';
 import { barangIndex, barangCreate } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
 import type { Barang, Ruangan, BreadcrumbItem, SharedData } from '@/types';
+import TransactionHistoryDialog from '@/components/transaction-history-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -52,12 +53,14 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     const [cart, setCart] = useState<CartItem[]>([]);
-    const [transactionMode, setTransactionMode] = useState<'masuk' | 'keluar'>('keluar'); // 'masuk' = Tambah Stock, 'keluar' = Pinjam Barang
+    const [transactionMode, setTransactionMode] = useState<'masuk' | 'keluar'>('keluar'); // 'masuk' = Tambah Stock, 'keluar' = Permintaan Barang
     const [formData, setFormData] = useState({
         ruangan_nama: '',
         nama_peminta: '',
         keperluan: '',
     });
+    const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+    const [selectedBarang, setSelectedBarang] = useState<{ id: number; nama: string } | null>(null);
 
     // Get ruangan names for autocomplete suggestions
     const ruanganNames = ruangans.map((r) => r.nama);
@@ -116,7 +119,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleSubmit = () => {
-        // Validation untuk mode Pinjam Barang (keluar)
+        // Validation untuk mode Permintaan Barang (keluar)
         if (transactionMode === 'keluar' && !formData.ruangan_nama) {
             toast({
                 title: 'Perhatian',
@@ -146,7 +149,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
             })),
         };
 
-        // Hanya kirim ruangan jika mode keluar (pinjam barang)
+        // Hanya kirim ruangan jika mode keluar (permintaan barang)
         if (transactionMode === 'keluar') {
             requestData.ruangan_nama = formData.ruangan_nama;
         } else {
@@ -270,7 +273,14 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                     key={barang.id}
                                     className="overflow-hidden hover:shadow-lg transition-shadow"
                                 >
-                                    <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                    <div
+                                        className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center cursor-pointer hover:from-gray-200 hover:to-gray-300 transition-colors"
+                                        onClick={() => {
+                                            setSelectedBarang({ id: barang.id, nama: barang.nama });
+                                            setHistoryDialogOpen(true);
+                                        }}
+                                        title="Klik untuk melihat riwayat permintaan"
+                                    >
                                         {getStockBadge(barang)}
                                         <div className="text-6xl text-gray-300">📦</div>
                                     </div>
@@ -397,7 +407,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                     className="flex-1"
                                     onClick={() => setTransactionMode('keluar')}
                                 >
-                                    🏢 Pinjam Barang
+                                    🏢 Permintaan Barang
                                 </Button>
                             </div>
 
@@ -592,6 +602,14 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                 </div>
                 )}
             </div>
+
+            {/* Transaction History Dialog */}
+            <TransactionHistoryDialog
+                barangId={selectedBarang?.id ?? null}
+                barangNama={selectedBarang?.nama ?? ''}
+                open={historyDialogOpen}
+                onOpenChange={setHistoryDialogOpen}
+            />
         </AppLayout>
     );
 }

@@ -53,7 +53,7 @@ class IncomingStockController extends Controller
         $incomingStocks = $query->paginate(15)
             ->withQueryString();
 
-        return Inertia::render('stok/barang-masuk/Index', [
+        return Inertia::render('transaksi/barang-masuk/index', [
             'incomingStocks' => $incomingStocks,
             'filters' => $request->only(['search', 'status', 'start_date', 'end_date', 'barang_id']),
             'barangs' => Barang::select('id', 'kode', 'nama')->where('is_active', true)->get(),
@@ -67,7 +67,7 @@ class IncomingStockController extends Controller
     {
         $this->authorize('create', IncomingStock::class);
 
-        return Inertia::render('stok/barang-masuk/Create');
+        return Inertia::render('transaksi/barang-masuk/create');
     }
 
     /**
@@ -126,9 +126,8 @@ class IncomingStockController extends Controller
             ->where('keterangan', 'like', "%{$barangMasuk->kode_barang_masuk}%")
             ->first();
 
-        return Inertia::render('stok/barang-masuk/Show', [
-            'incomingStock' => $barangMasuk,
-            'stockMovement' => $stockMovement,
+        return Inertia::render('transaksi/barang-masuk/show', [
+            'movement' => $barangMasuk,
         ]);
     }
 
@@ -207,7 +206,7 @@ class IncomingStockController extends Controller
 
         // Return as CSV or Excel based on request
         // Implementation depends on your export library (e.g., Laravel Excel)
-        
+
         return response()->json([
             'message' => 'Export feature coming soon',
             'data' => $data

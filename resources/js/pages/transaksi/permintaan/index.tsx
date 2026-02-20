@@ -3,7 +3,6 @@ import {
     Plus,
     Search,
     Eye,
-    CheckCircle,
     RefreshCw,
     FileText,
     ChevronDown,
@@ -13,7 +12,6 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -42,28 +40,17 @@ interface PermintaanIndexProps {
     filters: {
         search?: string;
         ruangan_id?: string;
-        status?: string[];
         from_date?: string;
         to_date?: string;
     };
 }
 
-const statusOptions = [
-    { value: 'pending', label: 'Diproses', color: 'bg-blue-500' },
-    { value: 'approved', label: 'Diterima', color: 'bg-green-500' },
-    { value: 'rejected', label: 'Ditolak', color: 'bg-red-500' },
-    { value: 'revised', label: 'Direvisi', color: 'bg-orange-500' },
-];
-
 export default function PermintaanIndex({ transactions, ruangans, filters }: PermintaanIndexProps) {
     const { auth } = usePage<SharedData>().props;
-    const userRole = auth?.user?.role;
-    const isSuperadmin = userRole === 'superadmin';
-    
+
     const [filterForm, setFilterForm] = useState({
         search: filters.search || '',
         ruangan_id: filters.ruangan_id || 'all',
-        status: filters.status || [],
         from_date: filters.from_date || '',
         to_date: filters.to_date || '',
     });
@@ -78,7 +65,6 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
 
         if (filterForm.search) params.search = filterForm.search;
         if (filterForm.ruangan_id !== 'all') params.ruangan_id = filterForm.ruangan_id;
-        if (filterForm.status.length > 0) params.status = filterForm.status;
         if (filterForm.from_date) params.from_date = filterForm.from_date;
         if (filterForm.to_date) params.to_date = filterForm.to_date;
 
@@ -92,7 +78,6 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
         setFilterForm({
             search: '',
             ruangan_id: 'all',
-            status: [],
             from_date: '',
             to_date: '',
         });
@@ -102,34 +87,11 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
         });
     };
 
-    const toggleStatus = (status: string) => {
-        setFilterForm((prev) => ({
-            ...prev,
-            status: prev.status.includes(status)
-                ? prev.status.filter((s) => s !== status)
-                : [...prev.status, status],
-        }));
-    };
-
-    const getStatusBadge = (status: string) => {
-        const statusConfig = statusOptions.find((s) => s.value === status);
-        if (!statusConfig) return null;
-
-        return (
-            <Badge className={`${statusConfig.color} text-white border-0`}>
-                {statusConfig.label}
-            </Badge>
-        );
-    };
-
     const handleExport = (type: 'pdf' | 'excel') => {
         const params = new URLSearchParams();
 
         if (filterForm.search) params.append('search', filterForm.search);
         if (filterForm.ruangan_id !== 'all') params.append('ruangan_id', filterForm.ruangan_id);
-        if (filterForm.status.length > 0) {
-            filterForm.status.forEach(status => params.append('status[]', status));
-        }
         if (filterForm.from_date) params.append('from_date', filterForm.from_date);
         if (filterForm.to_date) params.append('to_date', filterForm.to_date);
 
@@ -145,29 +107,6 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
             preserveState: true,
             preserveScroll: true,
         });
-    };
-
-    const handleQuickApprove = (transactionId: number) => {
-        if (!confirm('Apakah Anda yakin ingin menyetujui permintaan ini?')) {
-            return;
-        }
-
-        router.post(
-            `/transaksi/permintaan/${transactionId}/approve`,
-            {},
-            {
-                preserveState: false,
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Refresh the page
-                    router.reload();
-                },
-                onError: (errors) => {
-                    console.error('Error approving transaction:', errors);
-                    alert('Gagal menyetujui permintaan. ' + (Object.values(errors)[0] || ''));
-                },
-            }
-        );
     };
 
     return (
@@ -259,28 +198,6 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                             </Select>
                         </div>
 
-                        {/* Status Permintaan */}
-                        <div className="space-y-3">
-                            <Label className="text-xs font-bold text-gray-600">
-                                STATUS PERMINTAAN
-                            </Label>
-                            {statusOptions.map((status) => (
-                                <div key={status.value} className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id={status.value}
-                                        checked={filterForm.status.includes(status.value)}
-                                        onCheckedChange={() => toggleStatus(status.value)}
-                                    />
-                                    <label
-                                        htmlFor={status.value}
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                    >
-                                        {status.label}
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-
                         {/* Action Buttons */}
                         <div className="flex gap-2 pt-4">
                             <Button
@@ -330,15 +247,13 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                     <FileText className="mr-2 h-4 w-4" />
                                     Excel
                                 </Button>
-                                {!isSuperadmin && (
-                                    <Button asChild className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none">
-                                        <Link href={permintaanCreate()}>
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            <span className="hidden sm:inline">Input Permintaan Baru</span>
-                                            <span className="sm:hidden">Baru</span>
-                                        </Link>
-                                    </Button>
-                                )}
+                                <Button asChild className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none">
+                                    <Link href={permintaanCreate()}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        <span className="hidden sm:inline">Input Permintaan Baru</span>
+                                        <span className="sm:hidden">Baru</span>
+                                    </Link>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -374,7 +289,6 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                             <TableHead className="font-bold text-center">
                                                 JML ITEM
                                             </TableHead>
-                                            <TableHead className="font-bold">STATUS</TableHead>
                                             <TableHead className="font-bold text-center">
                                                 AKSI
                                             </TableHead>
@@ -412,9 +326,6 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                         {transaction.items?.length || 0}
                                                     </TableCell>
                                                     <TableCell>
-                                                        {getStatusBadge(transaction.status)}
-                                                    </TableCell>
-                                                    <TableCell>
                                                         <div className="flex items-center justify-center gap-2">
                                                             <Button
                                                                 variant="ghost"
@@ -435,18 +346,6 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                                     <Eye className="h-4 w-4" />
                                                                 </Link>
                                                             </Button>
-                                                            {isSuperadmin && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
-                                                                    onClick={() => handleQuickApprove(transaction.id)}
-                                                                    title="Approve Permintaan"
-                                                                    disabled={transaction.status !== 'pending'}
-                                                                >
-                                                                    <CheckCircle className="h-4 w-4" />
-                                                                </Button>
-                                                            )}
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>

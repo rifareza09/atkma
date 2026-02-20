@@ -27,7 +27,6 @@ export default function RuanganCreate() {
     const { data, setData, post, processing, errors } = useForm<RuanganFormData>({
         kode: '',
         nama: '',
-        penanggung_jawab: '',
         deskripsi: '',
         is_active: true,
     });
@@ -103,17 +102,6 @@ export default function RuanganCreate() {
                                     error={errors.nama}
                                     required
                                     placeholder="Contoh: Ruang Rapat A"
-                                />
-
-                                {/* Penanggung Jawab */}
-                                <InputWithLabel
-                                    label="Penanggung Jawab"
-                                    value={data.penanggung_jawab || ''}
-                                    onChange={(e) =>
-                                        setData('penanggung_jawab', e.target.value)
-                                    }
-                                    error={errors.penanggung_jawab}
-                                    placeholder="Nama penanggung jawab ruangan"
                                 />
 
                                 {/* Status */}

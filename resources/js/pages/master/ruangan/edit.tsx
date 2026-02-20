@@ -32,7 +32,6 @@ export default function RuanganEdit({ ruangan }: RuanganEditProps) {
     const { data, setData, put, processing, errors } = useForm<RuanganFormData>({
         kode: ruangan.kode,
         nama: ruangan.nama,
-        penanggung_jawab: ruangan.penanggung_jawab || '',
         deskripsi: ruangan.deskripsi || '',
         is_active: ruangan.is_active,
     });
@@ -108,17 +107,6 @@ export default function RuanganEdit({ ruangan }: RuanganEditProps) {
                                     error={errors.nama}
                                     required
                                     placeholder="Contoh: Ruang Rapat A"
-                                />
-
-                                {/* Penanggung Jawab */}
-                                <InputWithLabel
-                                    label="Penanggung Jawab"
-                                    value={data.penanggung_jawab || ''}
-                                    onChange={(e) =>
-                                        setData('penanggung_jawab', e.target.value)
-                                    }
-                                    error={errors.penanggung_jawab}
-                                    placeholder="Nama penanggung jawab ruangan"
                                 />
 
                                 {/* Status */}

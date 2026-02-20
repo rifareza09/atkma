@@ -32,7 +32,6 @@ class RuanganRequest extends FormRequest
                 Rule::unique('ruangans', 'kode')->ignore($ruanganId),
             ],
             'nama' => 'required|string|max:255',
-            'penanggung_jawab' => 'nullable|string|max:255',
             'deskripsi' => 'nullable|string',
             'is_active' => 'boolean',
         ];

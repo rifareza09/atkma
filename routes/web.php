@@ -87,6 +87,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('master')->group(function () {
         // Barang routes - Admin can create/update/delete, Pengawas can only view
         Route::resource('barang', controller: BarangController::class);
+        Route::get('barang/{barang}/transaction-history', [BarangController::class, 'transactionHistory'])->name('barang.transactionHistory');
+        Route::get('barang/{barang}/transaction-history/export', [BarangController::class, 'exportTransactionHistory'])->name('barang.transactionHistory.export');
 
         // Ruangan routes - Admin can create/update/delete, Pengawas can only view
         Route::resource('ruangan', RuanganController::class);
@@ -101,21 +103,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('permintaan.export.excel');
         Route::get('permintaan-export/pdf', [TransactionController::class, 'exportPdf'])
             ->name('permintaan.export.pdf');
-
-        // Transaction approval routes - Admin only
-        Route::post('permintaan/{transaction}/approve', [TransactionController::class, 'approve'])
-            ->name('permintaan.approve');
-        Route::post('permintaan/{transaction}/reject', [TransactionController::class, 'reject'])
-            ->name('permintaan.reject');
-        Route::post('permintaan/{transaction}/revise', [TransactionController::class, 'revise'])
-            ->name('permintaan.revise');
     });
 
     // Stock Management routes
     Route::prefix('stok')->group(function () {
         // Stock Reconciliation - Admin only
         Route::resource('rekonsiliasi', StockReconciliationController::class)->except(['edit', 'update']);
-        
+
         // Incoming Stock (Barang Masuk) - Admin can CRUD, Super Admin read-only
         Route::resource('barang-masuk', IncomingStockController::class)->parameters([
             'barang-masuk' => 'barangMasuk'
