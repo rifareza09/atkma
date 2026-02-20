@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProsesPermintaanController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SettingsController;
@@ -19,12 +22,62 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Test route untuk debug notifications
+Route::get('/test-notifications', function () {
+    $authUser = auth()->user();
+    $user1 = \App\Models\User::find(1);
+
+    return response()->json([
+        'auth_user' => $authUser ? [
+            'id' => $authUser->id,
+            'name' => $authUser->name,
+            'notifications_count' => $authUser->notifications()->count(),
+            'unread_count' => $authUser->unreadNotifications()->count(),
+        ] : null,
+        'user_1' => $user1 ? [
+            'id' => $user1->id,
+            'name' => $user1->name,
+            'notifications_count' => $user1->notifications()->count(),
+            'unread_count' => $user1->unreadNotifications()->count(),
+        ] : null,
+    ]);
+});
+
 // Protected routes with authentication
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Test notifikasi (authenticated)
+    Route::get('test-notifications-auth', function () {
+        $user = auth()->user();
+
+        return response()->json([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'notifications_count' => $user->notifications()->count(),
+            'unread_count' => $user->unreadNotifications()->count(),
+            'notifications' => $user->notifications()->orderBy('created_at', 'desc')->limit(5)->get(),
+        ]);
+    });
+
+    // Test transaction data
+    Route::get('test-transaction/{id}', function ($id) {
+        $transaction = \App\Models\Transaction::with(['user', 'items.barang'])->find($id);
+        return response()->json($transaction);
+    });
+
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('api/dashboard/low-stock', [DashboardController::class, 'getLowStockData'])->name('api.dashboard.low-stock');
     Route::get('api/dashboard/stock-movements/today', [DashboardController::class, 'getTodayStockMovements'])->name('api.dashboard.stock-movements.today');
+
+    // Notifications
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+        Route::delete('/read/all', [NotificationController::class, 'destroyRead'])->name('notifications.destroy-read');
+    });
 
     // Inventory - Card based selection page
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
@@ -41,6 +94,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Transaction routes - Admin can create/delete, Pengawas can only view
     Route::prefix('transaksi')->group(function () {
         Route::resource('permintaan', TransactionController::class);
+
+        // Export routes
+        Route::get('permintaan-export/excel', [TransactionController::class, 'exportExcel'])
+            ->name('permintaan.export.excel');
+        Route::get('permintaan-export/pdf', [TransactionController::class, 'exportPdf'])
+            ->name('permintaan.export.pdf');
 
         // Transaction approval routes - Admin only
         Route::post('permintaan/{transaction}/approve', [TransactionController::class, 'approve'])
@@ -86,15 +145,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/', [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/clear-cache', [SettingsController::class, 'clearCache'])->name('settings.clear-cache');
         Route::post('/test-email', [SettingsController::class, 'testEmail'])->name('settings.test-email');
-        
+
         // User Management
         Route::resource('users', UserController::class);
-        
+
         // Additional user actions
         Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
             ->name('users.toggle-status');
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])
             ->name('users.reset-password');
+    });
+
+    // Audit Logs - Admin only
+    Route::prefix('audit-logs')->group(function () {
+        Route::get('/', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('/export', [AuditLogController::class, 'export'])->name('audit-logs.export');
+        Route::get('/{auditLog}', [AuditLogController::class, 'show'])->name('audit-logs.show');
+        Route::get('/model/{model}/{id}', [AuditLogController::class, 'forModel'])->name('audit-logs.for-model');
     });
 });
 

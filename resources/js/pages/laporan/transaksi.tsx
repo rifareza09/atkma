@@ -355,7 +355,7 @@ export default function LaporanTransaksi({
                                                         {getTypeBadge(transaction.type)}
                                                     </TableCell>
                                                     <TableCell>
-                                                        {transaction.ruangan?.nama || '-'}
+                                                        {transaction.ruangan_nama || '-'}
                                                     </TableCell>
                                                     <TableCell className="text-center font-semibold">
                                                         {transaction.items?.length || 0}

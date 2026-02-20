@@ -268,7 +268,7 @@ export default function Show({ transaction }: TransactionShowProps) {
                                         Ruangan:
                                     </span>
                                     <span className="font-medium">
-                                        {transaction.ruangan?.nama || '-'}
+                                        {transaction.ruangan_nama || '-'}
                                     </span>
                                 </div>
                                 <Separator />

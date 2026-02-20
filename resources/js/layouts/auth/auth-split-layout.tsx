@@ -1,4 +1,4 @@
-import { Building2, LockKeyhole } from 'lucide-react';
+import { LockKeyhole } from 'lucide-react';
 import type { AuthLayoutProps } from '@/types';
 
 export default function AuthSplitLayout({
@@ -13,8 +13,12 @@ export default function AuthSplitLayout({
                 <div>
                     {/* Logo and Header */}
                     <div className="flex items-center gap-3 mb-16">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/10 backdrop-blur">
-                            <Building2 className="h-7 w-7" />
+                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-white p-2 shadow-lg">
+                            <img 
+                                src="/Logo_Mahkamah_Agung_RI-removebg-preview.png" 
+                                alt="Logo Mahkamah Agung RI" 
+                                className="w-full h-full object-contain"
+                            />
                         </div>
                         <div>
                             <h1 className="text-xl font-bold tracking-wide">

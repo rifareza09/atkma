@@ -7,6 +7,7 @@
 
 // Inventory - Card based selection
 export const inventoryIndex = () => '/inventory';
+export const prosesPermintaanIndex = () => '/inventory/proses-permintaan';
 
 // Master Data Routes
 export const barangIndex = () => '/master/barang';

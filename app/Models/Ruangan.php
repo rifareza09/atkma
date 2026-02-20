@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Concerns\HasAuditLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class Ruangan extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditLog;
 
     protected $fillable = [
         'kode',
@@ -31,7 +32,9 @@ class Ruangan extends Model
      */
     public function getTotalUsage(): int
     {
-        return $this->transactions()->count();
+        return DB::table('transactions')
+            ->where('ruangan_nama', $this->nama)
+            ->count();
     }
 
     /**
@@ -40,13 +43,5 @@ class Ruangan extends Model
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
-    }
-
-    /**
-     * Get transactions
-     */
-    public function transactions(): HasMany
-    {
-        return $this->hasMany(Transaction::class);
     }
 }

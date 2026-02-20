@@ -103,14 +103,20 @@ class UserController extends Controller
             $query->latest()->take(10);
         }]);
 
+        $activitySummary = $user->getActivitySummary();
+
         return Inertia::render('settings/users/show', [
             'user' => $user,
             'statistics' => [
-                'total_transactions' => $user->transactions()->count(),
-                'transactions_this_month' => $user->transactions()
-                    ->whereMonth('created_at', now()->month)
-                    ->whereYear('created_at', now()->year)
-                    ->count(),
+                'total_transactions' => $activitySummary['total_transactions'],
+                'transactions_this_month' => $activitySummary['transactions_this_month'],
+                'stock_movements_count' => $activitySummary['stock_movements_count'],
+                'last_login' => $user->last_login_at?->format('d/m/Y H:i'),
+                'last_login_ip' => $user->last_login_ip,
+            ],
+            'recent_activity' => [
+                'last_transaction' => $activitySummary['last_transaction'],
+                'last_stock_movement' => $activitySummary['last_stock_movement'],
             ],
         ]);
     }

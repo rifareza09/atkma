@@ -26,7 +26,7 @@ class ReportController extends Controller
         $query = Barang::query()->where('is_active', true);
 
         // Apply filters
-        if ($request->has('ruangan_id') && $request->ruangan_id) {
+        if ($request->has('ruangan_nama') && $request->ruangan_nama) {
             // If you have a relationship between Barang and Ruangan, filter by it
             // For now, we'll just pass the filter to frontend
         }
@@ -52,7 +52,7 @@ class ReportController extends Controller
             'ruangans' => Ruangan::where('is_active', true)
                 ->orderBy('nama')
                 ->get(),
-            'filters' => $request->only(['ruangan_id', 'status', 'from_date', 'to_date']),
+            'filters' => $request->only(['ruangan_nama', 'status', 'from_date', 'to_date']),
         ]);
     }
 
@@ -61,15 +61,15 @@ class ReportController extends Controller
      */
     public function transaksi(Request $request): Response
     {
-        $query = Transaction::with(['ruangan', 'user', 'items.barang']);
+        $query = Transaction::with(['user', 'items.barang']);
 
         // Apply filters
         if ($request->has('type') && $request->type) {
             $query->where('type', $request->type);
         }
 
-        if ($request->has('ruangan_id') && $request->ruangan_id) {
-            $query->where('ruangan_id', $request->ruangan_id);
+        if ($request->has('ruangan_nama') && $request->ruangan_nama) {
+            $query->where('ruangan_nama', $request->ruangan_nama);
         }
 
         if ($request->has('from_date') && $request->from_date) {
@@ -87,7 +87,7 @@ class ReportController extends Controller
             'ruangans' => Ruangan::where('is_active', true)
                 ->orderBy('nama')
                 ->get(),
-            'filters' => $request->only(['type', 'ruangan_id', 'from_date', 'to_date']),
+            'filters' => $request->only(['type', 'ruangan_nama', 'from_date', 'to_date']),
         ]);
     }
 
@@ -163,15 +163,15 @@ class ReportController extends Controller
      */
     public function exportTransactionPdf(Request $request)
     {
-        $query = Transaction::with(['ruangan', 'user', 'items.barang']);
+        $query = Transaction::with(['user', 'items.barang']);
 
         // Apply filters
         if ($request->has('type') && $request->type) {
             $query->where('type', $request->type);
         }
 
-        if ($request->has('ruangan_id') && $request->ruangan_id) {
-            $query->where('ruangan_id', $request->ruangan_id);
+        if ($request->has('ruangan_nama') && $request->ruangan_nama) {
+            $query->where('ruangan_nama', $request->ruangan_nama);
         }
 
         if ($request->has('date_from') && $request->date_from) {
@@ -185,11 +185,7 @@ class ReportController extends Controller
         $transactions = $query->orderBy('tanggal', 'desc')->get();
 
         // Get ruangan name for title if filtered
-        $ruanganName = null;
-        if ($request->has('ruangan_id') && $request->ruangan_id) {
-            $ruangan = Ruangan::find($request->ruangan_id);
-            $ruanganName = $ruangan ? $ruangan->nama : null;
-        }
+        $ruanganName = $request->ruangan_nama ?? null;
 
         $pdf = Pdf::loadView('reports.transaction', [
             'transactions' => $transactions,
@@ -213,7 +209,7 @@ class ReportController extends Controller
     {
         return Excel::download(
             new TransactionExport(
-                $request->only(['type', 'ruangan_id', 'date_from', 'date_to'])
+                $request->only(['type', 'ruangan_nama', 'date_from', 'date_to'])
             ),
             'laporan-transaksi-' . now()->format('Y-m-d') . '.xlsx'
         );

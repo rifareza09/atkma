@@ -2,22 +2,19 @@
 
 namespace App\Notifications;
 
+use App\Models\Barang;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class LowStockNotification extends Notification
+class LowStockNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(
+        public Barang $barang
+    ) {}
 
     /**
      * Get the notification's delivery channels.
@@ -26,7 +23,7 @@ class LowStockNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
     }
 
     /**
@@ -35,9 +32,16 @@ class LowStockNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject('⚠️ Peringatan Stok Rendah: ' . $this->barang->nama)
+            ->line('Stok barang berikut telah mencapai batas minimum:')
+            ->line('')
+            ->line('**Barang:** ' . $this->barang->nama)
+            ->line('**Kode:** ' . $this->barang->kode)
+            ->line('**Stok Tersisa:** ' . $this->barang->stok . ' ' . $this->barang->satuan)
+            ->line('**Stok Minimum:** ' . $this->barang->stok_minimum . ' ' . $this->barang->satuan)
+            ->line('')
+            ->action('Lihat Detail Barang', route('barang.show', $this->barang->id))
+            ->line('Segera lakukan pengadaan untuk menghindari kehabisan stok.');
     }
 
     /**
@@ -48,7 +52,16 @@ class LowStockNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'type' => 'low_stock',
+            'title' => 'Stok Rendah',
+            'message' => "Stok {$this->barang->nama} tersisa {$this->barang->stok} {$this->barang->satuan}",
+            'barang_id' => $this->barang->id,
+            'barang_kode' => $this->barang->kode,
+            'barang_nama' => $this->barang->nama,
+            'stok_current' => $this->barang->stok,
+            'stok_minimum' => $this->barang->stok_minimum,
+            'satuan' => $this->barang->satuan,
+            'link' => route('barang.show', $this->barang->id),
         ];
     }
 }

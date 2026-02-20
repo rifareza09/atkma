@@ -7,6 +7,10 @@ import {
     TableHeader, 
     TableRow 
 } from '@/components/ui/table';
+import { SkeletonTable } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/empty-state';
+import { ResponsiveTableWrapper } from '@/components/responsive-table';
+import { PackageOpen, LucideIcon } from 'lucide-react';
 
 export interface Column<T> {
     key: string;
@@ -21,7 +25,14 @@ export interface DataTableProps<T> {
     data: T[];
     keyField?: keyof T;
     emptyMessage?: string;
+    emptyDescription?: string;
+    emptyIcon?: LucideIcon;
+    emptyAction?: {
+        label: string;
+        onClick: () => void;
+    };
     isLoading?: boolean;
+    'aria-label'?: string;
 }
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -29,29 +40,30 @@ export function DataTable<T extends Record<string, unknown>>({
     data,
     keyField = 'id' as keyof T,
     emptyMessage = 'Tidak ada data',
+    emptyDescription,
+    emptyIcon = PackageOpen,
+    emptyAction,
     isLoading = false,
+    'aria-label': ariaLabel,
 }: DataTableProps<T>) {
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-8">
-                <div className="text-muted-foreground">Loading...</div>
-            </div>
-        );
+        return <SkeletonTable rows={5} />;
     }
 
     if (data.length === 0) {
         return (
-            <div className="flex items-center justify-center rounded-lg border border-dashed py-12">
-                <div className="text-center">
-                    <p className="text-muted-foreground">{emptyMessage}</p>
-                </div>
-            </div>
+            <EmptyState
+                icon={emptyIcon}
+                title={emptyMessage}
+                description={emptyDescription}
+                action={emptyAction}
+            />
         );
     }
 
     return (
-        <div className="rounded-md border">
-            <Table>
+        <ResponsiveTableWrapper>
+            <Table aria-label={ariaLabel}>
                 <TableHeader>
                     <TableRow>
                         {columns.map((column) => (
@@ -81,6 +93,6 @@ export function DataTable<T extends Record<string, unknown>>({
                     ))}
                 </TableBody>
             </Table>
-        </div>
+        </ResponsiveTableWrapper>
     );
 }

@@ -1,10 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { 
-    Plus, 
-    Search, 
-    Eye, 
-    CheckCircle, 
-    RefreshCw, 
+import {
+    Plus,
+    Search,
+    Eye,
+    CheckCircle,
+    RefreshCw,
     FileText,
     ChevronDown,
     Calendar
@@ -71,7 +71,7 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
 
     const applyFilters = () => {
         const params: Record<string, any> = {};
-        
+
         if (filterForm.search) params.search = filterForm.search;
         if (filterForm.ruangan_id !== 'all') params.ruangan_id = filterForm.ruangan_id;
         if (filterForm.status.length > 0) params.status = filterForm.status;
@@ -119,18 +119,61 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
     };
 
     const handleExport = (type: 'pdf' | 'excel') => {
-        // TODO: Implement export functionality
-        console.log(`Export as ${type}`);
+        const params = new URLSearchParams();
+
+        if (filterForm.search) params.append('search', filterForm.search);
+        if (filterForm.ruangan_id !== 'all') params.append('ruangan_id', filterForm.ruangan_id);
+        if (filterForm.status.length > 0) {
+            filterForm.status.forEach(status => params.append('status[]', status));
+        }
+        if (filterForm.from_date) params.append('from_date', filterForm.from_date);
+        if (filterForm.to_date) params.append('to_date', filterForm.to_date);
+
+        const url = type === 'pdf'
+            ? `/transaksi/permintaan-export/pdf?${params.toString()}`
+            : `/transaksi/permintaan-export/excel?${params.toString()}`;
+
+        window.location.href = url;
+    };
+
+    const handleRefresh = () => {
+        router.reload({
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleQuickApprove = (transactionId: number) => {
+        if (!confirm('Apakah Anda yakin ingin menyetujui permintaan ini?')) {
+            return;
+        }
+
+        router.post(
+            `/transaksi/permintaan/${transactionId}/approve`,
+            {},
+            {
+                preserveState: false,
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Refresh the page
+                    router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Error approving transaction:', errors);
+                    alert('Gagal menyetujui permintaan. ' + (Object.values(errors)[0] || ''));
+                },
+            }
+        );
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Daftar Permintaan ATK" />
 
-            <div className="flex h-full flex-1 gap-6 p-6">
+            <div className="flex flex-col lg:flex-row h-full flex-1 gap-4 lg:gap-6 p-3 sm:p-6">
                 {/* Filter Sidebar */}
-                <Card className="w-80 h-fit">
-                    <CardContent className="p-6 space-y-6">
+                <Card className="w-full lg:w-80 h-fit lg:sticky lg:top-6">
+                    <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <ChevronDown className="h-5 w-5" />
@@ -254,21 +297,22 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                 </Card>
 
                 {/* Main Content */}
-                <div className="flex-1 space-y-6">
+                <div className="flex-1 space-y-4 lg:space-y-6">
                     {/* Page Header */}
                     <div className="space-y-2">
-                        <div className="flex items-start justify-between">
+                        <div className="flex flex-col lg:flex-row items-start justify-between gap-3">
                             <div>
-                                <h1 className="text-3xl font-bold">Daftar Permintaan ATK</h1>
-                                <p className="text-muted-foreground mt-1">
+                                <h1 className="text-2xl sm:text-3xl font-bold">Daftar Permintaan ATK</h1>
+                                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                                     Kelola, verifikasi, dan pantau status permintaan dari unit kerja.
                                 </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2 w-full lg:w-auto">
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleExport('pdf')}
+                                    className="flex-1 sm:flex-none"
                                 >
                                     <FileText className="mr-2 h-4 w-4" />
                                     PDF
@@ -277,14 +321,16 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleExport('excel')}
+                                    className="flex-1 sm:flex-none"
                                 >
                                     <FileText className="mr-2 h-4 w-4" />
                                     Excel
                                 </Button>
-                                <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                                <Button asChild className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none">
                                     <Link href={permintaanCreate()}>
                                         <Plus className="mr-2 h-4 w-4" />
-                                        Input Permintaan Baru
+                                        <span className="hidden sm:inline">Input Permintaan Baru</span>
+                                        <span className="sm:hidden">Baru</span>
                                     </Link>
                                 </Button>
                             </div>
@@ -312,7 +358,7 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                             </div>
 
                             {/* Table */}
-                            <div className="border rounded-lg">
+                            <div className="border rounded-lg overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="bg-gray-50">
@@ -354,7 +400,7 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                         })}
                                                     </TableCell>
                                                     <TableCell>
-                                                        {transaction.ruangan?.nama || '-'}
+                                                        {transaction.ruangan_nama || '-'}
                                                     </TableCell>
                                                     <TableCell className="text-center font-semibold">
                                                         {transaction.items?.length || 0}
@@ -368,6 +414,8 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+                                                                onClick={handleRefresh}
+                                                                title="Refresh Data"
                                                             >
                                                                 <RefreshCw className="h-4 w-4" />
                                                             </Button>
@@ -385,6 +433,9 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                                                                onClick={() => handleQuickApprove(transaction.id)}
+                                                                title="Approve Permintaan"
+                                                                disabled={transaction.status !== 'pending'}
                                                             >
                                                                 <CheckCircle className="h-4 w-4" />
                                                             </Button>

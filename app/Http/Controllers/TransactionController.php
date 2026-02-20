@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TransactionExport;
 use App\Http\Requests\TransactionApprovalRequest;
 use App\Http\Requests\TransactionRequest;
 use App\Models\Barang;
@@ -9,9 +10,11 @@ use App\Models\Ruangan;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 use App\TransactionType;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionController extends Controller
 {
@@ -26,7 +29,7 @@ class TransactionController extends Controller
      */
     public function index(Request $request): Response
     {
-        $filters = $request->only(['search', 'type', 'ruangan_id', 'barang_id', 'from_date', 'to_date']);
+        $filters = $request->only(['search', 'type', 'ruangan_id', 'ruangan_nama', 'status', 'barang_id', 'from_date', 'to_date']);
 
         $transactions = $this->transactionService->getTransactions($filters);
 
@@ -112,10 +115,9 @@ class TransactionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Transaction $transaction): Response
+    public function show(Transaction $permintaan): Response
     {
-        $transaction->load([
-            'ruangan',
+        $permintaan->load([
             'user',
             'items.barang',
             'stockMovements.barang',
@@ -123,17 +125,48 @@ class TransactionController extends Controller
         ]);
 
         return Inertia::render('transaksi/permintaan/show', [
-            'transaction' => $transaction,
+            'transaction' => [
+                'id' => $permintaan->id,
+                'kode_transaksi' => $permintaan->kode_transaksi,
+                'ruangan_nama' => $permintaan->ruangan_nama ?? '',
+                'user_id' => $permintaan->user_id,
+                'type' => $permintaan->type?->value ?? 'keluar',
+                'status' => $permintaan->status ?? 'pending',
+                'tanggal' => $permintaan->tanggal?->format('Y-m-d') ?? now()->format('Y-m-d'),
+                'keterangan' => $permintaan->keterangan,
+                'created_at' => $permintaan->created_at?->toISOString() ?? now()->toISOString(),
+                'updated_at' => $permintaan->updated_at?->toISOString() ?? now()->toISOString(),
+                'user' => $permintaan->user ? [
+                    'id' => $permintaan->user->id,
+                    'name' => $permintaan->user->name,
+                    'email' => $permintaan->user->email,
+                ] : null,
+                'items' => $permintaan->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'barang_id' => $item->barang_id,
+                        'jumlah' => (int) $item->jumlah,
+                        'barang' => $item->barang ? [
+                            'id' => $item->barang->id,
+                            'kode' => $item->barang->kode,
+                            'nama' => $item->barang->nama,
+                            'satuan' => $item->barang->satuan,
+                        ] : null,
+                    ];
+                })->values()->toArray(),
+            ],
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Transaction $transaction): Response
+    public function edit(Transaction $permintaan): Response
     {
-        // Note: Editing transactions is typically not allowed for audit trail
-        // But we include it for completeness. Consider disabling in production.
+        // Prevent editing of completed transactions
+        if (in_array($permintaan->status, ['approved', 'rejected'])) {
+            abort(403, 'Transaksi yang sudah ' . $permintaan->status . ' tidak dapat diedit');
+        }
 
         abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
     }
@@ -141,8 +174,13 @@ class TransactionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Transaction $transaction)
+    public function update(Request $request, Transaction $permintaan)
     {
+        // Prevent editing of completed transactions
+        if (in_array($permintaan->status, ['approved', 'rejected'])) {
+            abort(403, 'Transaksi yang sudah ' . $permintaan->status . ' tidak dapat diedit');
+        }
+
         // Transactions should not be editable for audit trail integrity
         abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
     }
@@ -150,13 +188,15 @@ class TransactionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Transaction $transaction)
+    public function destroy(Transaction $permintaan)
     {
-        // Note: Deleting transactions affects stock movements
-        // Consider soft deletes or disabling deletion in production
+        // Prevent deletion of completed transactions
+        if (in_array($permintaan->status, ['approved', 'rejected'])) {
+            abort(403, 'Transaksi yang sudah ' . $permintaan->status . ' tidak dapat dihapus');
+        }
 
         try {
-            $transaction->delete();
+            $permintaan->delete();
 
             return redirect()
                 ->route('permintaan.index')
@@ -232,5 +272,67 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Export transactions to Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        $filters = $request->only(['search', 'type', 'ruangan_id', 'status', 'from_date', 'to_date']);
+
+        $filename = 'transactions_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new TransactionExport($filters), $filename);
+    }
+
+    /**
+     * Export transactions to PDF
+     */
+    public function exportPdf(Request $request)
+    {
+        $filters = $request->only(['search', 'type', 'ruangan_id', 'status', 'from_date', 'to_date']);
+
+        $query = Transaction::with(['user', 'items.barang']);
+
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $query->where('kode_transaksi', 'like', '%' . $filters['search'] . '%');
+        }
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (!empty($filters['ruangan_id']) && $filters['ruangan_id'] !== 'all') {
+            $ruangan = Ruangan::find($filters['ruangan_id']);
+            if ($ruangan) {
+                $query->where('ruangan_nama', $ruangan->nama);
+            }
+        }
+
+        if (!empty($filters['status']) && is_array($filters['status'])) {
+            $query->whereIn('status', $filters['status']);
+        }
+
+        if (!empty($filters['from_date'])) {
+            $query->whereDate('tanggal', '>=', $filters['from_date']);
+        }
+
+        if (!empty($filters['to_date'])) {
+            $query->whereDate('tanggal', '<=', $filters['to_date']);
+        }
+
+        $transactions = $query->orderBy('tanggal', 'desc')->get();
+
+        $pdf = Pdf::loadView('exports.transactions-pdf', [
+            'transactions' => $transactions,
+            'filters' => $filters,
+            'generated_at' => now()->format('d F Y H:i:s')
+        ]);
+
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('transactions_' . now()->format('Y-m-d_His') . '.pdf');
     }
 }

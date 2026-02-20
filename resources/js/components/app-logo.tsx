@@ -1,19 +1,20 @@
 export default function AppLogo() {
     return (
         <>
-            <div className="flex aspect-square size-10 items-center justify-center rounded-md bg-white p-0.5">
+            <div className="flex aspect-square size-16 items-center justify-center rounded-md bg-white/10 p-2 
+                          hover:scale-105 transition-transform animate-fade-in">
                 {/* Logo Mahkamah Agung RI */}
                 <img 
-                    src="/logo-mahkamah-agung.png" 
+                    src="/Logo_Mahkamah_Agung_RI-removebg-preview.png" 
                     alt="Logo Mahkamah Agung RI" 
                     className="w-full h-full object-contain"
                 />
             </div>
-            <div className="ml-2 grid flex-1 text-left">
-                <span className="truncate text-sm font-bold tracking-wide text-white">
+            <div className="ml-3 grid flex-1 text-left">
+                <span className="truncate text-sm font-semibold text-white">
                     Mahkamah Agung RI
                 </span>
-                <span className="truncate text-[10px] font-normal tracking-wider text-white/80">
+                <span className="truncate text-xs text-white/70">
                     Sistem Inventaris ATK
                 </span>
             </div>

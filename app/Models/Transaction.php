@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasAuditLog;
 use App\TransactionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,12 +12,13 @@ use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditLog;
 
     protected $fillable = [
         'kode_transaksi',
-        'ruangan_id',
+        'ruangan_nama',
         'user_id',
+        'nama_peminta',
         'type',
         'status',
         'tanggal',
@@ -29,6 +31,12 @@ class Transaction extends Model
         'revised_by',
         'revised_at',
         'revision_notes',
+    ];
+
+    protected $appends = [
+        'nomor_transaksi',
+        'pemohon',
+        'tanggal_transaksi',
     ];
 
     protected function casts(): array
@@ -85,14 +93,6 @@ class Transaction extends Model
     public function items(): HasMany
     {
         return $this->hasMany(TransactionItem::class);
-    }
-
-    /**
-     * Get ruangan
-     */
-    public function ruangan(): BelongsTo
-    {
-        return $this->belongsTo(Ruangan::class);
     }
 
     /**
@@ -157,5 +157,29 @@ class Transaction extends Model
     public function canBeRevised(): bool
     {
         return $this->status === 'pending';
+    }
+
+    /**
+     * Get nomor_transaksi accessor for backward compatibility
+     */
+    public function getNomorTransaksiAttribute(): ?string
+    {
+        return $this->kode_transaksi;
+    }
+
+    /**
+     * Get pemohon accessor for backward compatibility
+     */
+    public function getPemohonAttribute(): ?string
+    {
+        return $this->nama_peminta;
+    }
+
+    /**
+     * Get tanggal_transaksi accessor for backward compatibility
+     */
+    public function getTanggalTransaksiAttribute(): ?string
+    {
+        return $this->tanggal?->format('Y-m-d');
     }
 }

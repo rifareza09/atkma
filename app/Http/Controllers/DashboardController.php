@@ -20,79 +20,111 @@ class DashboardController extends Controller
     {
         // Stats cards
         $totalBarang = Barang::active()->count();
+        $totalRuangan = Ruangan::where('is_active', true)->count();
+        $totalTransaksiHariIni = Transaction::whereDate('created_at', today())->count();
+        $totalTransaksiBulanIni = Transaction::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
         $totalBarangStokRendah = Barang::active()
-            ->whereRaw('stok < stok_minimum')
+            ->whereRaw('stok <= stok_minimum')
             ->count();
 
-        // Pending review - transactions awaiting approval
-        $pendingReview = Transaction::where('status', 'pending')->count();
+        // Chart Data - Last 7 days transactions
+        $transaksi7Hari = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $total = Transaction::whereDate('created_at', $date)->count();
 
-        // Monthly quota status (simulated - 75% used)
-        $monthlyQuotaPercentage = 75;
+            $transaksi7Hari->push([
+                'tanggal' => $date->format('Y-m-d'),
+                'total' => $total,
+            ]);
+        }
 
-        // Pending Approvals with details
-        $pendingApprovals = Transaction::with(['ruangan', 'items.barang'])
-            ->where('status', 'pending')
+        // Top 5 Barang by request count (from transaction items)
+        $topBarang = DB::table('transaction_items')
+            ->join('barangs', 'transaction_items.barang_id', '=', 'barangs.id')
+            ->select('barangs.id', 'barangs.nama', DB::raw('SUM(transaction_items.jumlah) as total_permintaan'))
+            ->where('barangs.is_active', true)
+            ->groupBy('barangs.id', 'barangs.nama')
+            ->orderBy('total_permintaan', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'nama' => $item->nama,
+                    'total_permintaan' => (int) $item->total_permintaan,
+                ];
+            });
+
+        // Top 5 Ruangan by transaction count
+        $topRuangan = DB::table('transactions')
+            ->select('ruangan_nama as nama', DB::raw('COUNT(*) as total_transaksi'))
+            ->whereNotNull('ruangan_nama')
+            ->groupBy('ruangan_nama')
+            ->orderBy('total_transaksi', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'nama' => $item->nama,
+                    'total_transaksi' => (int) $item->total_transaksi,
+                ];
+            });
+
+        // Low stock items
+        $barangStokRendah = Barang::active()
+            ->whereRaw('stok <= stok_minimum')
+            ->orderBy('stok')
+            ->limit(10)
+            ->get()
+            ->map(function ($barang) {
+                return [
+                    'id' => $barang->id,
+                    'kode' => $barang->kode,
+                    'nama' => $barang->nama,
+                    'stok' => $barang->stok,
+                    'stok_minimum' => $barang->stok_minimum,
+                    'satuan' => $barang->satuan,
+                ];
+            });
+
+        // Recent transactions
+        $transaksiTerbaru = Transaction::with('user')
             ->orderBy('created_at', 'desc')
-            ->limit(4)
+            ->limit(10)
             ->get()
             ->map(function ($transaction) {
                 return [
                     'id' => $transaction->id,
-                    'date' => $transaction->created_at->format('d/m/Y'),
-                    'requester_room' => $transaction->ruangan->nama ?? '-',
-                    'items' => $transaction->items->map(function ($item) {
-                        return $item->barang->nama ?? 'Unknown';
-                    })->take(2)->toArray(),
-                    'items_count' => $transaction->items->count(),
+                    'kode_transaksi' => $transaction->kode_transaksi,
+                    'tanggal' => $transaction->tanggal->format('Y-m-d'),
+                    'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
+                    'jenis_transaksi' => $transaction->type->value,
+                    'ruangan' => [
+                        'nama' => $transaction->ruangan_nama ?? '-',
+                    ],
                     'status' => $transaction->status,
+                    'pemohon' => $transaction->user->name ?? '-',
                 ];
             });
-
-        // Low stock alert items
-        $lowStockItems = Barang::active()
-            ->whereRaw('stok < stok_minimum')
-            ->orderBy('stok')
-            ->limit(3)
-            ->get()
-            ->map(function ($barang) {
-                $remaining = $barang->stok;
-                $unit = $remaining == 2 ? 'units' : ($remaining == 5 ? 'rooms' : 'pcs');
-                $status = $remaining <= 2 ? 'Critical' : 'remaining';
-
-                return [
-                    'id' => $barang->id,
-                    'name' => $barang->nama,
-                    'remaining' => $remaining,
-                    'unit' => $unit,
-                    'status' => $status,
-                ];
-            });
-
-        // Workflow statistics
-        $totalTransactions = Transaction::count();
-        $approvedCount = Transaction::where('status', 'approved')->count();
-        $rejectedCount = Transaction::where('status', 'rejected')->count();
-        $revisedCount = Transaction::where('status', 'revised')->count();
-        $pendingCount = Transaction::where('status', 'pending')->count();
-
-        $workflowStats = [
-            'approved' => $totalTransactions > 0 ? round(($approvedCount / $totalTransactions) * 100) : 0,
-            'rejected' => $totalTransactions > 0 ? round(($rejectedCount / $totalTransactions) * 100) : 0,
-            'revised' => $totalTransactions > 0 ? round(($revisedCount / $totalTransactions) * 100) : 0,
-            'pending' => $totalTransactions > 0 ? round(($pendingCount / $totalTransactions) * 100) : 0,
-        ];
 
         return Inertia::render('dashboard', [
             'stats' => [
-                'total_items' => $totalBarang,
-                'low_stock' => $totalBarangStokRendah,
-                'pending_review' => $pendingReview,
-                'monthly_quota_percentage' => $monthlyQuotaPercentage,
+                'total_barang' => $totalBarang,
+                'total_ruangan' => $totalRuangan,
+                'total_transaksi_hari_ini' => $totalTransaksiHariIni,
+                'total_transaksi_bulan_ini' => $totalTransaksiBulanIni,
+                'total_barang_stok_rendah' => $totalBarangStokRendah,
             ],
-            'pending_approvals' => $pendingApprovals,
-            'low_stock_items' => $lowStockItems,
-            'workflow_stats' => $workflowStats,
+            'chart_data' => [
+                'transaksi_7_hari' => $transaksi7Hari->toArray(),
+            ],
+            'top_barang' => $topBarang->toArray(),
+            'top_ruangan' => $topRuangan->toArray(),
+            'barang_stok_rendah' => $barangStokRendah->toArray(),
+            'transaksi_terbaru' => $transaksiTerbaru->toArray(),
         ]);
     }
 
