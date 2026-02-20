@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import { show as transaksiPermintaanShow } from '@/routes/permintaan';
+import { show as transaksiPermintaanShow } from '@/routes/transactions';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
