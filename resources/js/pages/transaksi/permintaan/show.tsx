@@ -60,38 +60,37 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
             <Head title={`Permintaan ${transaction.kode_transaksi}`} />
 
             {isNewRequest ? (
-                // Success View - New Request
-                <div className="flex h-full flex-1 flex-col items-center justify-center gap-6 p-6">
-                    <Card className="w-full max-w-2xl">
-                        <CardContent className="pt-8">
+                // Success View - New Request (Persis seperti screenshot)
+                <div className="flex min-h-screen items-center justify-center bg-white p-4">
+                    <Card className="w-full max-w-lg border-0 shadow-none">
+                        <CardContent className="p-8">
                             {/* Success Icon */}
                             <div className="flex justify-center mb-6">
-                                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
-                                    <CheckCircle className="w-10 h-10 text-green-600" />
+                                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-500">
+                                    <CheckCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
                                 </div>
                             </div>
 
                             {/* Success Title */}
-                            <div className="text-center mb-6">
-                                <h1 className="text-2xl font-bold mb-2">Permintaan Berhasil Dikirim</h1>
-                                <p className="text-muted-foreground">
-                                    Permintaan ATK Anda telah kami terima dan akan segera diproses.
-                                </p>
+                            <div className="text-center mb-2">
+                                <h1 className="text-2xl font-bold text-gray-900">Permintaan Berhasil Dikirim</h1>
                             </div>
+                            <p className="text-center text-sm text-gray-600 mb-8">
+                                Permintaan ATK Anda telah kami terima dan akan segera diproses.
+                            </p>
 
                             {/* Transaction Details */}
                             <div className="space-y-4 mb-6">
-                                <div className="flex justify-between py-2">
-                                    <span className="text-sm font-medium text-muted-foreground uppercase">ID Transaksi</span>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-medium text-gray-500 uppercase">ID Transaksi</span>
                                     <span className="text-sm font-semibold text-blue-600">
                                         {transaction.kode_transaksi}
                                     </span>
                                 </div>
-                                <Separator />
-                                <div className="flex justify-between py-2">
-                                    <span className="text-sm font-medium text-muted-foreground uppercase">Tanggal</span>
-                                    <span className="text-sm font-medium">
-                                        {new Date(transaction.tanggal).toLocaleDateString('id-ID', {
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-medium text-gray-500 uppercase">Tanggal</span>
+                                    <span className="text-sm font-medium text-gray-900">
+                                        {new Date(transaction.tanggal_transaksi).toLocaleDateString('id-ID', {
                                             day: 'numeric',
                                             month: 'long',
                                             year: 'numeric'
@@ -107,24 +106,18 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
 
                             {/* Items Summary */}
                             <div className="mb-6">
-                                <div className="text-sm font-medium text-muted-foreground uppercase mb-3">
+                                <div className="text-xs font-medium text-gray-500 uppercase mb-3">
                                     Ringkasan Barang
                                 </div>
                                 <div className="space-y-2">
-                                    {transaction.items?.map((item, index) => (
-                                        <div key={item.id} className="flex items-center gap-3 py-2">
-                                            <div className="flex items-center justify-center w-8 h-8 rounded bg-muted">
-                                                {item.barang?.kode === 'KRT-A4-80GSM' ? (
-                                                    <FileText className="w-4 h-4" />
-                                                ) : (
-                                                    <Package className="w-4 h-4" />
-                                                )}
-                                            </div>
+                                    {transaction.items?.map((item) => (
+                                        <div key={item.id} className="flex items-center gap-3">
+                                            <FileText className="w-5 h-5 text-gray-600 flex-shrink-0" />
                                             <div className="flex-1">
-                                                <p className="text-sm font-medium">{item.barang?.nama}</p>
+                                                <p className="text-sm font-medium text-gray-900">{item.barang?.nama}</p>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-sm font-semibold">
+                                                <span className="text-sm font-semibold text-gray-900">
                                                     {item.jumlah} {item.barang?.satuan}
                                                 </span>
                                             </div>
@@ -135,20 +128,21 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
 
                             {/* Status Timeline */}
                             <div className="mb-6">
-                                <div className="text-sm font-medium text-muted-foreground uppercase mb-3">
+                                <div className="text-xs font-medium text-gray-500 uppercase mb-3">
                                     Status Permintaan
                                 </div>
                                 <div className="space-y-3">
                                     <div className="flex items-start gap-3">
-                                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600">
-                                            <CheckCircle className="w-4 h-4 text-white" />
+                                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 mt-0.5">
+                                            <CheckCircle className="w-4 h-4 text-white" strokeWidth={2.5} />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-sm font-semibold">Permintaan Terkirim</p>
-                                            <p className="text-xs text-green-600">
-                                                Berhasil - {new Date().toLocaleDateString('id-ID', {
+                                            <p className="text-sm font-semibold text-gray-900">Permintaan Terkirim</p>
+                                            <p className="text-xs text-green-600 font-medium">
+                                                Selesai - {new Date().toLocaleDateString('id-ID', {
                                                     day: 'numeric',
-                                                    month: 'short',
+                                                    month: 'short'
+                                                })}, {new Date().toLocaleTimeString('id-ID', {
                                                     hour: '2-digit',
                                                     minute: '2-digit'
                                                 })} WIB
@@ -156,15 +150,15 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
-                                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted">
-                                            <Clock className="w-4 h-4 text-muted-foreground" />
+                                        <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0 mt-0.5">
+                                            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium text-muted-foreground">
-                                                Menunggu Persetujuan Kasubbag
+                                            <p className="text-sm font-medium text-gray-600">
+                                                Menunggu Persetujuan Kasubag
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                Estimasi proses 1 hari kerja
+                                            <p className="text-xs text-gray-500">
+                                                Estimasi selesai 1 hari lagi
                                             </p>
                                         </div>
                                     </div>
@@ -182,15 +176,13 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                     Unduh Bukti (PDF)
                                 </Button>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Button variant="outline" asChild>
+                                    <Button variant="outline" className="h-11" asChild>
                                         <Link href={inventoryIndex()}>
-                                            <ShoppingCart className="mr-2 h-4 w-4" />
                                             Kembali ke Katalog
                                         </Link>
                                     </Button>
-                                    <Button asChild>
+                                    <Button className="h-11 bg-blue-600 hover:bg-blue-700" asChild>
                                         <Link href={permintaanIndex()}>
-                                            <FileText className="mr-2 h-4 w-4" />
                                             Lihat Status Permintaan
                                         </Link>
                                     </Button>
@@ -276,11 +268,21 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                             <div className="grid gap-4 md:grid-cols-2 text-sm">
                                 <div>
                                     <p className="text-muted-foreground">Dibuat pada</p>
-                                    <p>{new Date(transaction.created_at).toLocaleString('id-ID')}</p>
+                                    <p>
+                                        {transaction.created_at 
+                                            ? new Date(transaction.created_at).toLocaleString('id-ID')
+                                            : '-'
+                                        }
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Terakhir diperbarui</p>
-                                    <p>{new Date(transaction.updated_at).toLocaleString('id-ID')}</p>
+                                    <p>
+                                        {transaction.updated_at 
+                                            ? new Date(transaction.updated_at).toLocaleString('id-ID')
+                                            : '-'
+                                        }
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>

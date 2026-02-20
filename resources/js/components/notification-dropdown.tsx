@@ -23,9 +23,9 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
     const [isOpen, setIsOpen] = useState(false);
 
     // Debug logs
-    console.log('NotificationDropdown rendered', {
-        notificationsCount: notifications.length,
-        unreadCount
+    console.log('NotificationDropdown rendered', { 
+        notificationsCount: notifications.length, 
+        unreadCount 
     });
 
     const handleMarkAsRead = (notificationId: number) => {
@@ -70,7 +70,7 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
 
     const getNotificationLink = (notification: Notification): string => {
         const data = notification.data || {};
-
+        
         if (notification.type === 'transaction_created' && data.transaction_id) {
             return `/transaksi/permintaan/${data.transaction_id}`;
         }
@@ -89,7 +89,7 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} menit lalu`;
         if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam lalu`;
         if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} hari lalu`;
-
+        
         return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
@@ -99,16 +99,16 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
             setIsOpen(open);
         }}>
             <DropdownMenuTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative"
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="relative text-white hover:bg-white/10 hover:text-white"
                     onClick={() => console.log('Bell button clicked!')}
                 >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                        <Badge
-                            variant="destructive"
+                        <Badge 
+                            variant="destructive" 
                             className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
                         >
                             {unreadCount > 9 ? '9+' : unreadCount}
@@ -121,9 +121,9 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
                 <DropdownMenuLabel className="flex items-center justify-between">
                     <span>Notifikasi</span>
                     {notifications.length > 0 && unreadCount > 0 && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
                             className="h-auto p-1 text-xs"
                             onClick={handleMarkAllRead}
                         >
@@ -133,7 +133,7 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
                     )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-
+                
                 {notifications.length === 0 ? (
                     <div className="py-8 text-center">
                         <Bell className="mx-auto h-8 w-8 text-muted-foreground/50" />
@@ -152,7 +152,7 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
                                 asChild
                             >
                                 <div>
-                                    <Link
+                                    <Link 
                                         href={getNotificationLink(notification)}
                                         className="w-full"
                                         onClick={() => {
@@ -217,7 +217,7 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
                         ))}
                     </ScrollArea>
                 )}
-
+                
                 {notifications.length > 0 && (
                     <>
                         <DropdownMenuSeparator />

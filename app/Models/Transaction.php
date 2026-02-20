@@ -18,6 +18,7 @@ class Transaction extends Model
         'kode_transaksi',
         'ruangan_nama',
         'user_id',
+        'nama_peminta',
         'type',
         'status',
         'tanggal',
@@ -30,6 +31,12 @@ class Transaction extends Model
         'revised_by',
         'revised_at',
         'revision_notes',
+    ];
+
+    protected $appends = [
+        'nomor_transaksi',
+        'pemohon',
+        'tanggal_transaksi',
     ];
 
     protected function casts(): array
@@ -150,5 +157,29 @@ class Transaction extends Model
     public function canBeRevised(): bool
     {
         return $this->status === 'pending';
+    }
+
+    /**
+     * Get nomor_transaksi accessor for backward compatibility
+     */
+    public function getNomorTransaksiAttribute(): ?string
+    {
+        return $this->kode_transaksi;
+    }
+
+    /**
+     * Get pemohon accessor for backward compatibility
+     */
+    public function getPemohonAttribute(): ?string
+    {
+        return $this->nama_peminta;
+    }
+
+    /**
+     * Get tanggal_transaksi accessor for backward compatibility
+     */
+    public function getTanggalTransaksiAttribute(): ?string
+    {
+        return $this->tanggal?->format('Y-m-d');
     }
 }

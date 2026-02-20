@@ -7,6 +7,7 @@ import {
     CheckSquare,
     FileText,
     Settings,
+    ClipboardCheck,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -24,7 +25,7 @@ import {
     ruanganIndex,
     transaksiPermintaanIndex,
     transaksiMasukIndex,
-    laporanInventaris
+    laporanInventaris,
 } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
@@ -50,7 +51,6 @@ const mainNavItems: NavItem[] = [
         title: 'Approval Management',
         href: transaksiPermintaanIndex(),
         icon: CheckSquare,
-        badge: '12',
     },
     {
         title: 'Rooms',
@@ -82,12 +82,20 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset" className="bg-[#2563eb] border-r-0">
-            <SidebarHeader className="bg-[#2563eb] border-b border-white/10">
+        <Sidebar 
+            collapsible="icon" 
+            variant="inset" 
+            className="bg-[#2563eb] transition-smooth"
+        >
+            <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild className="hover:bg-white/10">
-                            <Link href={dashboard()} prefetch>
+                        <SidebarMenuButton 
+                            size="lg" 
+                            asChild 
+                            className="hover:bg-white/10 transition-smooth group"
+                        >
+                            <Link href={dashboard()} prefetch className="flex items-center gap-3">
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -95,11 +103,11 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="bg-[#2563eb]">
+            <SidebarContent className="gap-0">
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter className="bg-[#2563eb] border-t border-white/10">
+            <SidebarFooter>
                 <NavMain items={settingsNavItems} />
             </SidebarFooter>
         </Sidebar>

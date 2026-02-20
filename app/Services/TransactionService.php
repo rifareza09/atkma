@@ -31,9 +31,11 @@ class TransactionService
             $transaction = Transaction::create([
                 'ruangan_nama' => $data['ruangan_nama'],
                 'user_id' => $user->id,
+                'nama_peminta' => $data['nama_peminta'] ?? null,
                 'type' => $data['type'],
+                'status' => 'pending',
                 'tanggal' => $data['tanggal'],
-                'keterangan' => $data['keterangan'] ?? null,
+                'keterangan' => $data['keperluan'] ?? $data['keterangan'] ?? null,
             ]);
 
             // Process items

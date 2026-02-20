@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import {
-    Package2,
+import { 
+    Package2, 
     AlertCircle,
     FileCheck,
     Eye,
@@ -89,12 +89,12 @@ interface DashboardProps {
 // Warna untuk charts
 const COLORS = ['#2563eb', '#16a34a', '#ea580c', '#ca8a04', '#7c3aed'];
 
-export default function Dashboard({
+export default function Dashboard({ 
     stats,
     chart_data,
     top_barang = [],
     top_ruangan = [],
-    barang_stok_rendah = [],
+    barang_stok_rendah = [], 
     transaksi_terbaru = []
 }: DashboardProps) {
     const [lowStockData, setLowStockData] = useState<any>(null);
@@ -154,49 +154,64 @@ export default function Dashboard({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-
-            <div className="flex h-full flex-1 flex-col gap-4 p-3 sm:gap-6 sm:p-6 bg-gray-50">
-                {/* Page Header */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Admin Inventory Dashboard</h1>
+            
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* Page Header with Animation */}
+                <div className="flex items-center justify-between animate-fade-in-up">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold">
+                            Admin Inventory Dashboard Overview
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">Selamat datang di Sistem Manajemen Inventaris ATK</p>
+                    </div>
                 </div>
 
-                {/* Statistics Cards */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-5">
-                    <StatCard
-                        title="Total Barang"
-                        value={stats.total_barang}
-                        icon={<Package className="size-4" />}
-                        description="Jenis barang terdaftar"
-                    />
-                    <StatCard
-                        title="Total Ruangan"
-                        value={stats.total_ruangan}
-                        icon={<Building2 className="size-4" />}
-                        description="Ruangan aktif"
-                    />
-                    <StatCard
-                        title="Transaksi Hari Ini"
-                        value={stats.total_transaksi_hari_ini}
-                        icon={<ArrowRightLeft className="size-4" />}
-                        description="Transaksi hari ini"
-                    />
-                    <StatCard
-                        title="Transaksi Bulan Ini"
-                        value={stats.total_transaksi_bulan_ini}
-                        icon={<TrendingUp className="size-4" />}
-                        description="Total bulan ini"
-                    />
-                    <StatCard
-                        title="Stok Rendah"
-                        value={stats.total_barang_stok_rendah}
-                        icon={<AlertCircle className="size-4 text-destructive" />}
-                        description="Barang perlu restok"
-                    />
+                {/* Statistics Cards with Staggered Animation */}
+                <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                    <div className="animate-fade-in-up animate-delay-100">
+                        <StatCard
+                            title="Total Barang"
+                            value={stats.total_barang}
+                            icon={<Package className="size-4" />}
+                            description="Jenis barang terdaftar"
+                        />
+                    </div>
+                    <div className="animate-fade-in-up animate-delay-200">
+                        <StatCard
+                            title="Total Ruangan"
+                            value={stats.total_ruangan}
+                            icon={<Building2 className="size-4" />}
+                            description="Ruangan aktif"
+                        />
+                    </div>
+                    <div className="animate-fade-in-up animate-delay-300">
+                        <StatCard
+                            title="Transaksi Hari Ini"
+                            value={stats.total_transaksi_hari_ini}
+                            icon={<ArrowRightLeft className="size-4" />}
+                            description="Transaksi hari ini"
+                        />
+                    </div>
+                    <div className="animate-fade-in-up animate-delay-400">
+                        <StatCard
+                            title="Transaksi Bulan Ini"
+                            value={stats.total_transaksi_bulan_ini}
+                            icon={<TrendingUp className="size-4" />}
+                            description="Total bulan ini"
+                        />
+                    </div>
+                    <div className="animate-fade-in-up animate-delay-500">
+                        <StatCard
+                            title="Stok Rendah"
+                            value={stats.total_barang_stok_rendah}
+                            icon={<AlertCircle className="size-4 text-destructive" />}
+                            description="Barang perlu restok"
+                        />
+                    </div>
                 </div>
 
                 {/* Charts Row */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                     {/* Line Chart - Transaksi 7 Hari */}
                     <Card>
                         <CardHeader>
@@ -213,17 +228,17 @@ export default function Dashboard({
                                 <ResponsiveContainer width="100%" height={250}>
                                     <LineChart data={lineChartData}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="date"
+                                        <XAxis 
+                                            dataKey="date" 
                                             fontSize={12}
                                         />
                                         <YAxis fontSize={12} />
                                         <Tooltip />
                                         <Legend />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="total"
-                                            stroke="#2563eb"
+                                        <Line 
+                                            type="monotone" 
+                                            dataKey="total" 
+                                            stroke="#2563eb" 
                                             strokeWidth={2}
                                             name="Jumlah Transaksi"
                                         />
@@ -253,8 +268,8 @@ export default function Dashboard({
                                 <ResponsiveContainer width="100%" height={250}>
                                     <BarChart data={topBarangData}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="name"
+                                        <XAxis 
+                                            dataKey="name" 
                                             fontSize={11}
                                             angle={-45}
                                             textAnchor="end"
@@ -263,8 +278,8 @@ export default function Dashboard({
                                         <YAxis fontSize={12} />
                                         <Tooltip />
                                         <Legend />
-                                        <Bar
-                                            dataKey="total"
+                                        <Bar 
+                                            dataKey="total" 
                                             fill="#16a34a"
                                             name="Total Permintaan"
                                         />
@@ -419,7 +434,7 @@ export default function Dashboard({
                                             </TableCell>
                                             <TableCell>
                                                 {new Date(
-                                                    transaksi.tanggal || transaksi.created_at,
+                                                    transaksi.tanggal_transaksi || transaksi.created_at,
                                                 ).toLocaleDateString('id-ID', {
                                                     day: 'numeric',
                                                     month: 'short',
@@ -438,7 +453,7 @@ export default function Dashboard({
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                {transaksi.ruangan?.nama || '-'}
+                                                {transaksi.ruangan_nama || '-'}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button

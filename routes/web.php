@@ -5,6 +5,7 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProsesPermintaanController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SettingsController;

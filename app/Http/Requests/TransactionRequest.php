@@ -24,9 +24,15 @@ class TransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
+<<<<<<< Updated upstream
             'ruangan_nama' => ['required_if:type,keluar', 'nullable', 'string', 'max:100'],
+=======
+            'ruangan_id' => ['required', 'integer', 'exists:ruangans,id'],
+            'nama_peminta' => ['required', 'string', 'max:100'],
+>>>>>>> Stashed changes
             'type' => ['required', Rule::enum(TransactionType::class)],
             'tanggal' => ['required', 'date'],
+            'keperluan' => ['nullable', 'string', 'max:500'],
             'keterangan' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.barang_id' => ['required', 'integer', 'exists:barangs,id'],
@@ -42,9 +48,15 @@ class TransactionRequest extends FormRequest
     public function attributes(): array
     {
         return [
+<<<<<<< Updated upstream
             'ruangan_nama' => 'nama ruangan',
+=======
+            'ruangan_id' => 'ruangan',
+            'nama_peminta' => 'nama peminta',
+>>>>>>> Stashed changes
             'type' => 'tipe transaksi',
             'tanggal' => 'tanggal transaksi',
+            'keperluan' => 'keperluan',
             'keterangan' => 'keterangan',
             'items' => 'daftar barang',
             'items.*.barang_id' => 'barang',
