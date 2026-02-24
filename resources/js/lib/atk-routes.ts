@@ -1,6 +1,6 @@
 /**
  * ATK Routes Helper
- * 
+ *
  * Route helpers untuk modul ATK (Alat Tulis Kantor)
  * Routes ini akan mengikuti pattern Laravel Wayfinder
  */

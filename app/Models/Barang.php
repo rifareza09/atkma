@@ -46,12 +46,12 @@ class Barang extends Model
     {
         $date = date('Ymd');
         $prefix = "BRG-{$date}-";
-        
+
         // Get last kode for today
         $lastBarang = static::where('kode', 'like', "{$prefix}%")
             ->orderBy('kode', 'desc')
             ->first();
-        
+
         if ($lastBarang) {
             // Extract number and increment
             $lastNumber = (int) substr($lastBarang->kode, -3);
@@ -59,7 +59,7 @@ class Barang extends Model
         } else {
             $newNumber = '001';
         }
-        
+
         return $prefix . $newNumber;
     }
 

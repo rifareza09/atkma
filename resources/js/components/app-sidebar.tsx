@@ -64,7 +64,7 @@ export function AppSidebar() {
             },
         ];
 
-        // All users see the same menu
+        // All users see the same menu (CRUD buttons are hidden in pages based on role)
         return [
             ...baseItems,
             {

@@ -99,7 +99,7 @@ class IncomingStock extends Model
                 'jumlah' => $this->jumlah,
                 'stok_sebelum' => $stokSebelum,
                 'stok_sesudah' => $stokSesudah,
-                'keterangan' => "Barang Masuk: {$this->kode_barang_masuk}" . 
+                'keterangan' => "Barang Masuk: {$this->kode_barang_masuk}" .
                               ($this->keterangan ? " - {$this->keterangan}" : ''),
             ]);
         });
