@@ -1,0 +1,13 @@
+[phases.setup]
+nixPkgs = ['...']
+
+[phases.install]
+cmds = ['echo "Installing PHP extensions..."']
+
+[phases.build]
+cmds = ['echo "Building application..."']
+
+[variables]
+# PHP Extensions yang diperlukan untuk Railway deployment
+# Menambahkan gd extension yang dibutuhkan oleh phpoffice/phpspreadsheet
+NIXPACKS_PHP_EXTENSIONS = "gd zip exif pcntl bcmath"
