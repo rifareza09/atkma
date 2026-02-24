@@ -157,8 +157,8 @@ export default function Dashboard({
             <Head title="Dashboard" />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* Page Header with Animation */}
-                <div className="flex items-center justify-between animate-fade-in-up">
+                {/* Page Header */}
+                <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold">
                             Ringkasan Dashboard Inventaris ATK
@@ -167,9 +167,9 @@ export default function Dashboard({
                     </div>
                 </div>
 
-                {/* Statistics Cards with Staggered Animation */}
+                {/* Statistics Cards */}
                 <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                    <div className="animate-fade-in-up animate-delay-100">
+                    <div>
                         <StatCard
                             title="Total Barang"
                             value={stats.total_barang}
@@ -177,7 +177,7 @@ export default function Dashboard({
                             description="Jenis barang terdaftar"
                         />
                     </div>
-                    <div className="animate-fade-in-up animate-delay-200">
+                    <div>
                         <StatCard
                             title="Total Ruangan"
                             value={stats.total_ruangan}
@@ -185,7 +185,7 @@ export default function Dashboard({
                             description="Ruangan aktif"
                         />
                     </div>
-                    <div className="animate-fade-in-up animate-delay-300">
+                    <div>
                         <StatCard
                             title="Transaksi Hari Ini"
                             value={stats.total_transaksi_hari_ini}
@@ -193,7 +193,7 @@ export default function Dashboard({
                             description="Transaksi hari ini"
                         />
                     </div>
-                    <div className="animate-fade-in-up animate-delay-400">
+                    <div>
                         <StatCard
                             title="Transaksi Bulan Ini"
                             value={stats.total_transaksi_bulan_ini}
@@ -201,7 +201,7 @@ export default function Dashboard({
                             description="Total bulan ini"
                         />
                     </div>
-                    <div className="animate-fade-in-up animate-delay-500">
+                    <div>
                         <StatCard
                             title="Stok Rendah"
                             value={stats.total_barang_stok_rendah}

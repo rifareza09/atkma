@@ -94,18 +94,18 @@ export function AppSidebar() {
     };
 
     return (
-        <Sidebar
-            collapsible="icon"
-            variant="inset"
-            className="bg-[#2563eb] transition-smooth"
+        <Sidebar 
+            collapsible="icon" 
+            variant="inset" 
+            className="bg-[#2563eb]"
         >
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton
-                            size="lg"
-                            asChild
-                            className="hover:bg-white/10 transition-smooth group"
+                        <SidebarMenuButton 
+                            size="lg" 
+                            asChild 
+                            className="group"
                         >
                             <Link href={dashboard()} prefetch className="flex items-center gap-3">
                                 <AppLogo />

@@ -26,15 +26,15 @@ export function StatCard({
     const displayValue = value ?? 0;
     
     return (
-        <Card className={cn("transition-smooth hover:shadow-xl hover:-translate-y-1 hover-glow border-2 hover:border-blue-200", className)}>
+        <Card className={cn("", className)}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                <div className="text-muted-foreground transition-smooth hover:scale-125 hover:rotate-12 animate-bounce-subtle">
+                <div className="text-muted-foreground">
                     {icon}
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl md:text-3xl font-bold animate-fade-in">{displayValue}</div>
+                <div className="text-2xl md:text-3xl font-bold">{displayValue}</div>
                 {description && (
                     <p className="text-xs text-gray-600 mt-1">{description}</p>
                 )}

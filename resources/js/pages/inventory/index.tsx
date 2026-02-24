@@ -380,7 +380,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
 
                 {/* Right Sidebar - Hidden for Superadmin */}
                 {!isSuperadmin && (
-                <div className="w-full lg:w-96 space-y-4 lg:sticky lg:top-6 lg:h-fit">
+                <div className="w-full lg:w-96 space-y-4 lg:sticky lg:top-20 lg:h-fit">
                     {/* Summary Card */}
                     <Card>
                         <CardContent className="p-4 sm:p-6 space-y-4">
@@ -396,18 +396,18 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                 <Button
                                     type="button"
                                     variant={transactionMode === 'masuk' ? 'default' : 'ghost'}
-                                    className="flex-1"
+                                    className="flex-1 text-xs sm:text-sm px-2 py-2"
                                     onClick={() => setTransactionMode('masuk')}
                                 >
-                                    📦 Tambah Stock Gudang
+                                    <span className="truncate">📦 Tambah Stock</span>
                                 </Button>
                                 <Button
                                     type="button"
                                     variant={transactionMode === 'keluar' ? 'default' : 'ghost'}
-                                    className="flex-1"
+                                    className="flex-1 text-xs sm:text-sm px-2 py-2"
                                     onClick={() => setTransactionMode('keluar')}
                                 >
-                                    🏢 Permintaan Barang
+                                    <span className="truncate">🏢 Permintaan Barang</span>
                                 </Button>
                             </div>
 

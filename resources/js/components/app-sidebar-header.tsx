@@ -30,18 +30,18 @@ export function AppSidebarHeader({
     };
 
     return (
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-2 
-                         border-b border-white/10 bg-[#2563eb] px-6 transition-smooth shadow-lg
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 
+                         border-b border-white/10 bg-[#2563eb] px-6 shadow-lg
                          group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 
-                         md:px-4 lg:px-6 animate-fade-in">
-            <div className="flex items-center gap-3 animate-slide-in-right">
-                <SidebarTrigger className="-ml-1 text-white hover:bg-white/10 rounded-lg p-2 transition-smooth" />
+                         md:px-4 lg:px-6 rounded-2xl mb-2">
+            <div className="flex items-center gap-3">
+                <SidebarTrigger className="-ml-1 text-white hover:bg-white/10 rounded-lg p-2" />
                 <div className="hidden md:block">
                     <Breadcrumbs breadcrumbs={breadcrumbs} />
                 </div>
             </div>
             
-            <div className="flex items-center gap-2 md:gap-4 animate-slide-in-left">
+            <div className="flex items-center gap-2 md:gap-4">
                 {/* Notification Bell */}
                 <NotificationDropdown />
                 
@@ -49,8 +49,7 @@ export function AppSidebarHeader({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button className="flex items-center gap-2 md:gap-3 rounded-xl px-2 md:px-3 py-2 
-                                         hover:bg-white/10 transition-smooth group border border-white/20
-                                         hover:shadow-lg hover:border-white/30">
+                                         hover:bg-white/10 border border-white/20">
                             {/* User Info - Hidden on mobile */}
                             <div className="hidden md:block text-right">
                                 <p className="text-sm font-semibold text-white">
@@ -64,18 +63,17 @@ export function AppSidebarHeader({
                             {/* Avatar */}
                             <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center 
                                           rounded-full bg-white text-xs md:text-sm font-bold text-blue-600 
-                                          shadow-lg ring-2 ring-white/30
-                                          group-hover:scale-110 group-hover:ring-white/50 transition-smooth">
+                                          shadow-lg ring-2 ring-white/30">
                                 {user?.name ? getInitials(user.name) : 'AU'}
                             </div>
                             
                             {/* Chevron Icon */}
-                            <ChevronDown className="h-4 w-4 text-white transition-smooth group-hover:rotate-180" />
+                            <ChevronDown className="h-4 w-4 text-white" />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent 
                         align="end" 
-                        className="w-56 animate-scale-in"
+                        className="w-56"
                     >
                         {user && <UserMenuContent user={user} />}
                     </DropdownMenuContent>
