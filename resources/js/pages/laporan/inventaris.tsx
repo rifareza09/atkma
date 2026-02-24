@@ -1,7 +1,6 @@
-import { Head, router } from '@inertiajs/react';
-import { Calendar, FileText, Download, Filter } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Calendar, Eye, FileText, Download, Filter } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -94,13 +93,6 @@ export default function LaporanInventaris({
                 : `/reports/inventory/excel?${params.toString()}`;
 
         window.open(url, '_blank');
-    };
-
-    const getStockBadge = (barang: Barang) => {
-        if (barang.stok <= barang.stok_minimum) {
-            return <Badge variant="destructive">Stok Rendah</Badge>;
-        }
-        return <Badge variant="default">Stok Aman</Badge>;
     };
 
     return (
@@ -310,22 +302,19 @@ export default function LaporanInventaris({
                                             <TableHead className="font-bold">KODE</TableHead>
                                             <TableHead className="font-bold">NAMA BARANG</TableHead>
                                             <TableHead className="font-bold text-center">
-                                                STOK
+                                                SALDO
                                             </TableHead>
                                             <TableHead className="font-bold text-center">
                                                 SATUAN
                                             </TableHead>
-                                            <TableHead className="font-bold text-center">
-                                                MIN. STOK
-                                            </TableHead>
-                                            <TableHead className="font-bold">STATUS</TableHead>
+                                            <TableHead className="font-bold text-center">AKSI</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {barangs.length === 0 ? (
                                             <TableRow>
                                                 <TableCell
-                                                    colSpan={6}
+                                                    colSpan={5}
                                                     className="text-center py-8 text-muted-foreground"
                                                 >
                                                     Tidak ada data barang
@@ -345,9 +334,13 @@ export default function LaporanInventaris({
                                                         {barang.satuan.toUpperCase()}
                                                     </TableCell>
                                                     <TableCell className="text-center">
-                                                        {barang.stok_minimum}
+                                                        <Link href={`/laporan/barang/${barang.id}/bulan`}>
+                                                            <button className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+                                                                <Eye className="size-3" />
+                                                                Detail
+                                                            </button>
+                                                        </Link>
                                                     </TableCell>
-                                                    <TableCell>{getStockBadge(barang)}</TableCell>
                                                 </TableRow>
                                             ))
                                         )}

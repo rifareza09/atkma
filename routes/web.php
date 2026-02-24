@@ -122,6 +122,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('laporan')->group(function () {
         Route::get('/inventaris', [ReportController::class, 'inventaris'])->name('laporan.inventaris');
         Route::get('/transaksi', [ReportController::class, 'transaksi'])->name('laporan.transaksi');
+        Route::get('/barang/{barang}/bulan', [ReportController::class, 'barangBulan'])->name('laporan.barang.bulan');
+        Route::get('/barang/{barang}/bulan/{month}/{year}', [ReportController::class, 'barangBulanDetail'])->name('laporan.barang.bulan.detail');
+        Route::get('/barang/{barang}/export-pdf', [ReportController::class, 'exportBarangBulanPdf'])->name('laporan.barang.export-pdf');
     });
 
     // Report routes - Export PDF and Excel

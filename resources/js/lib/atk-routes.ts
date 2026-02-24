@@ -46,3 +46,8 @@ export const laporanInventaris = () => '/laporan/inventaris';
 export const laporanTransaksi = () => '/laporan/transaksi';
 export const laporanKartuStok = () => '/laporan/kartu-stok';
 export const laporanStokRendah = () => '/laporan/stok-rendah';
+export const laporanBarangBulan = (id: number) => `/laporan/barang/${id}/bulan`;
+export const laporanBarangBulanDetail = (id: number, month: number, year: number) =>
+    `/laporan/barang/${id}/bulan/${month}/${year}`;
+export const laporanBarangExportPdf = (id: number, month: number, year: number) =>
+    `/laporan/barang/${id}/export-pdf?month=${month}&year=${year}`;

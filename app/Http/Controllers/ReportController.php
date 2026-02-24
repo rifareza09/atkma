@@ -227,4 +227,120 @@ class ReportController extends Controller
             'riwayat-stock-movement-' . now()->format('Y-m-d') . '.xlsx'
         );
     }
+
+    /**
+     * Show bulan selector page for a specific barang
+     */
+    public function barangBulan(Barang $barang): \Inertia\Response
+    {
+        return \Inertia\Inertia::render('laporan/barang-bulan', [
+            'barang' => $barang->only(['id', 'kode', 'nama', 'satuan', 'stok']),
+        ]);
+    }
+
+    /**
+     * Show the detail page: transactions for a specific barang/month/year grouped by ruangan
+     */
+    public function barangBulanDetail(Barang $barang, int $month, int $year): \Inertia\Response
+    {
+        $items = $barang->transactionItems()
+            ->whereHas('transaction', function ($q) use ($month, $year) {
+                $q->where('type', 'keluar')
+                  ->whereMonth('tanggal', $month)
+                  ->whereYear('tanggal', $year);
+            })
+            ->with(['transaction'])
+            ->get()
+            ->sortBy('transaction.tanggal')
+            ->values();
+
+        $groupedByRuangan = $items
+            ->groupBy(fn ($item) => $item->transaction->ruangan_nama ?? 'Tidak Diketahui')
+            ->map(function ($ruanganItems, $ruanganNama) {
+                $rows = $ruanganItems->map(fn ($item) => [
+                    'tanggal'    => $item->transaction->tanggal,
+                    'jumlah'     => $item->jumlah,
+                    'keterangan' => $item->transaction->keterangan ?? '-',
+                ])->values();
+
+                return [
+                    'ruangan'  => $ruanganNama,
+                    'rows'     => $rows,
+                    'subtotal' => $rows->sum('jumlah'),
+                ];
+            })
+            ->sortBy('ruangan')
+            ->values();
+
+        return \Inertia\Inertia::render('laporan/barang-bulan-detail', [
+            'barang'      => $barang->only(['id', 'kode', 'nama', 'satuan', 'stok']),
+            'ruangans'    => $groupedByRuangan,
+            'grand_total' => $groupedByRuangan->sum('subtotal'),
+            'month'       => $month,
+            'year'        => $year,
+        ]);
+    }
+
+    /**
+     * Export distribusi barang per ruangan untuk bulan tertentu sebagai PDF
+     */
+    public function exportBarangBulanPdf(Request $request, Barang $barang)
+    {
+        $month = (int) $request->get('month', now()->month);
+        $year  = (int) $request->get('year',  now()->year);
+
+        $monthNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',    4 => 'April',
+            5 => 'Mei',     6 => 'Juni',      7 => 'Juli',     8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+
+        // Fetch all "keluar" transaction items for this barang in the given month/year
+        $items = $barang->transactionItems()
+            ->whereHas('transaction', function ($q) use ($month, $year) {
+                $q->where('type', 'keluar')
+                  ->whereMonth('tanggal', $month)
+                  ->whereYear('tanggal', $year);
+            })
+            ->with(['transaction'])
+            ->get()
+            ->sortBy('transaction.tanggal')
+            ->values();
+
+        // Group by ruangan_nama
+        $groupedByRuangan = $items
+            ->groupBy(fn ($item) => $item->transaction->ruangan_nama ?? 'Tidak Diketahui')
+            ->map(function ($ruanganItems, $ruanganNama) {
+                $rows = $ruanganItems->map(fn ($item) => [
+                    'tanggal' => $item->transaction->tanggal,
+                    'jumlah'  => $item->jumlah,
+                    'keterangan' => $item->transaction->keterangan ?? '-',
+                ])->values();
+
+                return [
+                    'ruangan' => $ruanganNama,
+                    'rows'    => $rows,
+                    'subtotal' => $rows->sum('jumlah'),
+                ];
+            })
+            ->sortBy('ruangan')
+            ->values();
+
+        $grandTotal = $groupedByRuangan->sum('subtotal');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.barang-bulan-pdf', [
+            'barang'      => $barang,
+            'ruangans'    => $groupedByRuangan,
+            'grand_total' => $grandTotal,
+            'month'       => $month,
+            'year'        => $year,
+            'month_name'  => $monthNames[$month] ?? '-',
+            'generated_at' => now()->format('d/m/Y H:i:s'),
+        ])->setPaper('a4', 'portrait');
+
+        $filename = 'laporan-distribusi-' . \Illuminate\Support\Str::slug($barang->nama)
+            . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . $year . '.pdf';
+
+        return $pdf->download($filename);
+    }
 }
