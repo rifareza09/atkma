@@ -9,7 +9,9 @@ Error: `phpoffice/phpspreadsheet requires ext-gd * -> it is missing from your sy
 ## File Konfigurasi
 
 ### nixpacks.toml
+
 File ini sudah dibuat untuk menambahkan PHP extensions yang diperlukan:
+
 - `gd` - Untuk image processing (required oleh phpspreadsheet)
 - `zip` - Untuk file compression
 - `exif` - Untuk image metadata
@@ -19,6 +21,7 @@ File ini sudah dibuat untuk menambahkan PHP extensions yang diperlukan:
 ## Langkah Deployment ke Railway
 
 ### 1. Commit file konfigurasi baru
+
 ```bash
 git add nixpacks.toml
 git commit -m "Add nixpacks config for Railway deployment with GD extension"
@@ -30,6 +33,7 @@ git push origin develop
 Pastikan environment variables berikut sudah diset di Railway:
 
 **Required:**
+
 ```
 APP_NAME="ATK Mahkamah Agung RI"
 APP_ENV=production
@@ -50,6 +54,7 @@ CACHE_STORE=database
 ```
 
 **Optional tapi Recommended:**
+
 ```
 LOG_CHANNEL=stack
 LOG_LEVEL=error
@@ -62,25 +67,29 @@ Setelah deploy berhasil, jalankan migrations di Railway:
 
 1. Buka Railway Dashboard → Your Service → Settings
 2. Di "Start Command", ubah ke:
-   ```bash
-   php artisan migrate --force && /start-container.sh
-   ```
-   
-   Atau jalankan manual lewat Railway CLI:
-   ```bash
-   railway run php artisan migrate --force
-   ```
+
+    ```bash
+    php artisan migrate --force && /start-container.sh
+    ```
+
+    Atau jalankan manual lewat Railway CLI:
+
+    ```bash
+    railway run php artisan migrate --force
+    ```
 
 ### 4. Build Command (Optional)
 
 Jika Railway tidak otomatis menjalankan build, set di Settings:
 
 **Build Command:**
+
 ```bash
 composer install --optimize-autoloader --no-dev && yarn install && yarn build
 ```
 
 **Start Command:**
+
 ```bash
 php artisan config:cache && php artisan route:cache && php artisan view:cache && /start-container.sh
 ```
@@ -90,33 +99,35 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache &&
 ### Jika masih error setelah deploy:
 
 1. **Check Build Logs:**
-   - Pastikan "install-php-extensions" sudah include `gd`
-   - Cari text: "Installing gd" di logs
+    - Pastikan "install-php-extensions" sudah include `gd`
+    - Cari text: "Installing gd" di logs
 
 2. **Jika GD masih missing:**
    Update `nixpacks.toml` dan ubah ke format alternatif:
-   ```toml
-   [phases.setup]
-   aptPkgs = ['libpng-dev', 'libjpeg-dev', 'libfreetype6-dev']
-   
-   [phases.install]
-   cmds = [
-     'docker-php-ext-configure gd --with-freetype --with-jpeg',
-     'docker-php-ext-install -j$(nproc) gd zip exif pcntl bcmath'
-   ]
-   ```
+
+    ```toml
+    [phases.setup]
+    aptPkgs = ['libpng-dev', 'libjpeg-dev', 'libfreetype6-dev']
+
+    [phases.install]
+    cmds = [
+      'docker-php-ext-configure gd --with-freetype --with-jpeg',
+      'docker-php-ext-install -j$(nproc) gd zip exif pcntl bcmath'
+    ]
+    ```
 
 3. **Storage Permission Issues:**
    Tambahkan di start command:
-   ```bash
-   chmod -R 775 storage bootstrap/cache && php artisan config:cache && /start-container.sh
-   ```
+
+    ```bash
+    chmod -R 775 storage bootstrap/cache && php artisan config:cache && /start-container.sh
+    ```
 
 4. **Memory Limit:**
    Jika aplikasi crash, tambah environment variable:
-   ```
-   PHP_MEMORY_LIMIT=512M
-   ```
+    ```
+    PHP_MEMORY_LIMIT=512M
+    ```
 
 ## Checklist Deployment ✓
 
@@ -132,6 +143,7 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache &&
 ## Railway CLI Commands
 
 Install Railway CLI:
+
 ```bash
 npm i -g @railway/cli
 railway login
@@ -139,6 +151,7 @@ railway link
 ```
 
 Useful commands:
+
 ```bash
 # Lihat logs real-time
 railway logs
@@ -157,6 +170,7 @@ railway variables
 ## Database Connection dari Local
 
 Jika ingin connect ke Railway database dari local:
+
 ```bash
 railway connect
 # Atau manual set di .env:
@@ -170,10 +184,12 @@ DB_PASSWORD=<password>
 ## Support
 
 Jika masih ada masalah, cek:
+
 1. Railway Build Logs
-2. Railway Application Logs  
+2. Railway Application Logs
 3. Railway Environment Variables
 4. GitHub repository sudah sync
 
 ---
+
 **Last Updated:** February 24, 2026
