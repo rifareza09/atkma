@@ -1,14 +1,14 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Plus, Pencil, Eye, Trash2, FileText, Download } from 'lucide-react';
+import { Plus, Pencil, Eye, Trash2, FileText, Download, Search, Package } from 'lucide-react';
 import { useState } from 'react';
-import type { Column } from '@/components/data-table';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { DataTable } from '@/components/data-table';
 import { FilterSelect, type FilterOption } from '@/components/filter-select';
 import { Pagination } from '@/components/pagination';
-import { SearchInput } from '@/components/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { barangCreate, barangEdit, barangShow, barangIndex } from '@/lib/atk-routes';
@@ -44,18 +44,15 @@ const stockOptions: FilterOption[] = [
 export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
     const { toast } = useToast();
     const { auth } = usePage<SharedData>().props;
-    const userRole = auth?.user?.role;
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
 
-    const handleSearch = (search: string) => {
+    const handleSearchSubmit = () => {
         router.get(
             barangIndex(),
-            { ...filters, search },
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
+            { ...filters, search: searchQuery },
+            { preserveState: true, preserveScroll: true },
         );
     };
 
@@ -63,125 +60,42 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
         router.get(
             barangIndex(),
             { ...filters, [key]: value === 'all' ? undefined : value },
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
+            { preserveState: true, preserveScroll: true },
         );
     };
 
     const handleDelete = () => {
         if (!deleteId) return;
-
         router.delete(`/master/barang/${deleteId}`, {
             onSuccess: () => {
-                toast({
-                    title: 'Berhasil',
-                    description: 'Barang berhasil dihapus',
-                });
+                toast({ title: 'Berhasil', description: 'Barang berhasil dihapus' });
                 setDeleteId(null);
             },
             onError: () => {
-                toast({
-                    title: 'Gagal',
-                    description: 'Terjadi kesalahan saat menghapus barang',
-                    variant: 'destructive',
-                });
+                toast({ title: 'Gagal', description: 'Terjadi kesalahan saat menghapus barang', variant: 'destructive' });
             },
         });
     };
 
-    const columns: Column<Barang>[] = [
-        {
-            key: 'kode',
-            label: 'Kode Barang',
-            render: (item) => (
-                <span className="font-medium">{item.kode}</span>
-            ),
-        },
-        {
-            key: 'nama',
-            label: 'Nama Barang',
-        },
-        {
-            key: 'stok',
-            label: 'Stok',
-            render: (item) => (
-                <div className="text-right">
-                    <Badge
-                        variant={
-                            item.stok <= item.stok_minimum
-                                ? 'destructive'
-                                : 'default'
-                        }
-                    >
-                        {item.stok} {item.satuan}
-                    </Badge>
-                </div>
-            ),
-            className: 'text-right',
-        },
-        {
-            key: 'stok_minimum',
-            label: 'Stok Minimum',
-            render: (item) => (
-                <span className="text-muted-foreground">
-                    {item.stok_minimum} {item.satuan}
-                </span>
-            ),
-            className: 'text-right',
-        },
-        {
-            key: 'is_active',
-            label: 'Status',
-            render: (item) => (
-                <Badge variant={item.is_active ? 'default' : 'secondary'}>
-                    {item.is_active ? 'Aktif' : 'Tidak Aktif'}
-                </Badge>
-            ),
-        },
-        {
-            key: 'actions',
-            label: 'Aksi',
-            render: (item) => (
-                <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="ghost" asChild>
-                        <Link href={barangShow(item.id)}>
-                            <Eye className="size-4" />
-                        </Link>
-                    </Button>
-                    <Button size="sm" variant="ghost" asChild>
-                        <Link href={barangEdit(item.id)}>
-                            <Pencil className="size-4" />
-                        </Link>
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeleteId(item.id)}
-                    >
-                        <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                </div>
-            ),
-            className: 'text-right',
-        },
-    ];
+    const getStockPercent = (barang: Barang) => {
+        if (!barang.stok_minimum || barang.stok_minimum === 0) return 100;
+        return Math.min(100, Math.round((barang.stok / (barang.stok_minimum * 2)) * 100));
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Data Barang" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 {/* Page Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold">Data Barang</h1>
-                        <p className="text-muted-foreground">
-                            Kelola data master barang ATK
+                        <h1 className="text-2xl md:text-3xl font-bold">Master Barang</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Kelola data master barang ATK — {barangs.meta?.total ?? barangs.data.length} barang terdaftar
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                         <Button
                             variant="outline"
                             size="sm"
@@ -208,13 +122,18 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                 </div>
 
                 {/* Search & Filter */}
-                <div className="flex items-center gap-4">
-                    <SearchInput
-                        value={filters.search}
-                        onSearch={handleSearch}
-                        placeholder="Cari kode atau nama barang..."
-                        className="max-w-md"
-                    />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Cari kode atau nama barang..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+                            className="pl-10"
+                        />
+                    </div>
+                    <Button variant="outline" onClick={handleSearchSubmit}>Cari</Button>
                     <FilterSelect
                         value={filters.status || 'all'}
                         onValueChange={(value) => handleFilterChange('status', value)}
@@ -229,12 +148,90 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                     />
                 </div>
 
-                {/* Data Table */}
-                <DataTable<Barang>
-                    columns={columns}
-                    data={barangs.data}
-                    keyField="id"
-                />
+                {/* Card Grid */}
+                {barangs.data.length === 0 ? (
+                    <div className="text-center py-16 text-muted-foreground">
+                        <Package className="mx-auto mb-4 h-12 w-12 opacity-30" />
+                        <p>Tidak ada barang ditemukan</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {barangs.data.map((barang) => {
+                            const isLowStock = barang.stok <= barang.stok_minimum;
+                            const stockPct = getStockPercent(barang);
+                            return (
+                                <Card key={barang.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                    {/* Thumbnail */}
+                                    <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                        <Badge
+                                            variant={isLowStock ? 'destructive' : 'default'}
+                                            className={`absolute top-3 left-3 ${isLowStock ? 'bg-red-500' : 'bg-green-500'}`}
+                                        >
+                                            {isLowStock ? 'Stok Menipis' : 'Stok Aman'}
+                                        </Badge>
+                                        {!barang.is_active && (
+                                            <Badge variant="secondary" className="absolute top-3 right-3">
+                                                Nonaktif
+                                            </Badge>
+                                        )}
+                                        <div className="text-5xl text-gray-300">📦</div>
+                                    </div>
+
+                                    <CardContent className="p-4 space-y-3">
+                                        {/* Info */}
+                                        <div>
+                                            <p className="text-xs text-muted-foreground font-mono">{barang.kode}</p>
+                                            <h3 className="font-semibold text-base leading-tight mt-0.5 line-clamp-2">
+                                                {barang.nama}
+                                            </h3>
+                                        </div>
+
+                                        {/* Stock Progress */}
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs text-muted-foreground">
+                                                <span>Stok</span>
+                                                <span className="font-semibold text-foreground">
+                                                    {barang.stok} {barang.satuan}
+                                                </span>
+                                            </div>
+                                            <Progress
+                                                value={stockPct}
+                                                className={`h-1.5 ${isLowStock ? '[&>div]:bg-red-500' : '[&>div]:bg-green-500'}`}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Min. {barang.stok_minimum} {barang.satuan}
+                                            </p>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-1.5 pt-1 border-t">
+                                            <Button size="sm" variant="outline" className="flex-1" asChild>
+                                                <Link href={barangShow(barang.id)}>
+                                                    <Eye className="size-3.5 mr-1" />
+                                                    Detail
+                                                </Link>
+                                            </Button>
+                                            <Button size="sm" variant="outline" className="flex-1" asChild>
+                                                <Link href={barangEdit(barang.id)}>
+                                                    <Pencil className="size-3.5 mr-1" />
+                                                    Edit
+                                                </Link>
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                onClick={() => setDeleteId(barang.id)}
+                                            >
+                                                <Trash2 className="size-3.5" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {/* Pagination */}
                 {barangs.meta && (
@@ -244,10 +241,7 @@ export default function BarangIndex({ barangs, filters }: BarangIndexProps) {
                             router.get(
                                 barangIndex(),
                                 { ...filters, page },
-                                {
-                                    preserveState: true,
-                                    preserveScroll: true,
-                                },
+                                { preserveState: true, preserveScroll: true },
                             );
                         }}
                     />

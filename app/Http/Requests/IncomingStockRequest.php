@@ -20,10 +20,12 @@ class IncomingStockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_barang' => ['required', 'string', 'max:255'],
-            'jumlah' => ['required', 'integer', 'min:1', 'max:999999'],
-            'tanggal_masuk' => ['required', 'date', 'before_or_equal:today'],
-            'keterangan' => ['nullable', 'string', 'max:1000'],
+            'barang_id'       => ['required', 'integer', 'exists:barangs,id'],
+            'jumlah'          => ['required', 'integer', 'min:1', 'max:999999'],
+            'tanggal'         => ['required', 'date', 'before_or_equal:today'],
+            'sumber_tujuan'   => ['nullable', 'string', 'max:255'],
+            'nomor_referensi' => ['nullable', 'string', 'max:255'],
+            'keterangan'      => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -33,10 +35,12 @@ class IncomingStockRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'nama_barang' => 'nama barang',
-            'jumlah' => 'jumlah barang',
-            'tanggal_masuk' => 'tanggal barang masuk',
-            'keterangan' => 'keterangan',
+            'barang_id'       => 'barang',
+            'jumlah'          => 'jumlah barang',
+            'tanggal'         => 'tanggal barang masuk',
+            'sumber_tujuan'   => 'sumber',
+            'nomor_referensi' => 'nomor referensi',
+            'keterangan'      => 'keterangan',
         ];
     }
 
@@ -46,16 +50,15 @@ class IncomingStockRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nama_barang.required' => 'Nama barang harus diisi.',
-            'nama_barang.string' => 'Nama barang harus berupa teks.',
-            'nama_barang.max' => 'Nama barang maksimal 255 karakter.',
-            'jumlah.required' => 'Jumlah barang harus diisi.',
-            'jumlah.integer' => 'Jumlah barang harus berupa angka.',
-            'jumlah.min' => 'Jumlah barang minimal 1.',
-            'jumlah.max' => 'Jumlah barang maksimal 999999.',
-            'tanggal_masuk.required' => 'Tanggal barang masuk harus diisi.',
-            'tanggal_masuk.date' => 'Format tanggal tidak valid.',
-            'tanggal_masuk.before_or_equal' => 'Tanggal barang masuk tidak boleh lebih dari hari ini.',
+            'barang_id.required' => 'Barang harus dipilih.',
+            'barang_id.exists'   => 'Barang yang dipilih tidak valid.',
+            'jumlah.required'    => 'Jumlah barang harus diisi.',
+            'jumlah.integer'     => 'Jumlah barang harus berupa angka.',
+            'jumlah.min'         => 'Jumlah barang minimal 1.',
+            'jumlah.max'         => 'Jumlah barang maksimal 999999.',
+            'tanggal.required'          => 'Tanggal barang masuk harus diisi.',
+            'tanggal.date'              => 'Format tanggal tidak valid.',
+            'tanggal.before_or_equal'   => 'Tanggal barang masuk tidak boleh lebih dari hari ini.',
         ];
     }
 }

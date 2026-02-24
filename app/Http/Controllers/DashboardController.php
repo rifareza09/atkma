@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Models\IncomingStock;
 use App\Models\Ruangan;
 use App\Models\StockMovement;
 use App\Models\Transaction;
@@ -90,25 +91,49 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Recent transactions
-        $transaksiTerbaru = Transaction::with('user')
+        // Recent transactions (barang keluar)
+        $transaksiKeluar = Transaction::with('user')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($transaction) {
                 return [
-                    'id' => $transaction->id,
-                    'kode_transaksi' => $transaction->kode_transaksi,
-                    'tanggal' => $transaction->tanggal->format('Y-m-d'),
-                    'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
-                    'jenis_transaksi' => $transaction->type->value,
-                    'ruangan' => [
-                        'nama' => $transaction->ruangan_nama ?? '-',
-                    ],
-                    'status' => $transaction->status,
-                    'pemohon' => $transaction->user->name ?? '-',
+                    'id'                => $transaction->id,
+                    'source_type'       => 'transaction',
+                    'kode_transaksi'    => $transaction->kode_transaksi,
+                    'tanggal_transaksi' => $transaction->tanggal->format('Y-m-d'),
+                    'created_at'        => $transaction->created_at->format('Y-m-d H:i:s'),
+                    'jenis_transaksi'   => 'keluar',
+                    'ruangan'           => ['nama' => $transaction->ruangan_nama ?? '-'],
+                    'status'            => $transaction->status,
+                    'pemohon'           => $transaction->user->name ?? '-',
                 ];
             });
+
+        // Recent incoming stocks (barang masuk)
+        $transaksiMasuk = IncomingStock::with(['barang', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($stock) {
+                return [
+                    'id'                => $stock->id,
+                    'source_type'       => 'incoming_stock',
+                    'kode_transaksi'    => $stock->kode_barang_masuk,
+                    'tanggal_transaksi' => optional($stock->tanggal_masuk)->format('Y-m-d'),
+                    'created_at'        => $stock->created_at->format('Y-m-d H:i:s'),
+                    'jenis_transaksi'   => 'masuk',
+                    'ruangan'           => ['nama' => $stock->barang->nama ?? '-'],
+                    'status'            => $stock->status,
+                    'pemohon'           => $stock->user->name ?? '-',
+                ];
+            });
+
+        // Merge and sort by created_at, take 10 most recent
+        $transaksiTerbaru = $transaksiKeluar->concat($transaksiMasuk)
+            ->sortByDesc('created_at')
+            ->values()
+            ->take(10);
 
         return Inertia::render('dashboard', [
             'stats' => [

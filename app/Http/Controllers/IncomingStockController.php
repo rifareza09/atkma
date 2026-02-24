@@ -54,7 +54,17 @@ class IncomingStockController extends Controller
             ->withQueryString();
 
         return Inertia::render('transaksi/barang-masuk/index', [
-            'incomingStocks' => $incomingStocks,
+            'incomingStocks' => [
+                'data' => $incomingStocks->items(),
+                'meta' => [
+                    'current_page' => $incomingStocks->currentPage(),
+                    'last_page'    => $incomingStocks->lastPage(),
+                    'per_page'     => $incomingStocks->perPage(),
+                    'total'        => $incomingStocks->total(),
+                    'from'         => $incomingStocks->firstItem(),
+                    'to'           => $incomingStocks->lastItem(),
+                ],
+            ],
             'filters' => $request->only(['search', 'status', 'start_date', 'end_date', 'barang_id']),
             'barangs' => Barang::select('id', 'kode', 'nama')->where('is_active', true)->get(),
         ]);
@@ -67,7 +77,12 @@ class IncomingStockController extends Controller
     {
         $this->authorize('create', IncomingStock::class);
 
-        return Inertia::render('transaksi/barang-masuk/create');
+        return Inertia::render('transaksi/barang-masuk/create', [
+            'barangs' => Barang::select('id', 'kode', 'nama', 'satuan', 'stok')
+                ->where('is_active', true)
+                ->orderBy('nama')
+                ->get(),
+        ]);
     }
 
     /**
@@ -77,39 +92,19 @@ class IncomingStockController extends Controller
     {
         $this->authorize('create', IncomingStock::class);
 
-        $incomingStock = \DB::transaction(function () use ($request) {
-            // Generate kode barang
-            $kodeBarang = Barang::generateKode();
-
-            // Create new barang with initial stock = 0
-            // Stock will be added automatically by IncomingStock model
-            $barang = Barang::create([
-                'kode' => $kodeBarang,
-                'nama' => $request->nama_barang,
-                'satuan' => 'Pcs', // Default satuan
-                'stok' => 0, // Initial stock = 0, will be updated by incoming stock
-                'stok_minimum' => 10, // Default stok minimum
-                'is_active' => true,
-            ]);
-
-            // Create incoming stock record
-            // The IncomingStock model will automatically:
-            // 1. Update barang stock
-            // 2. Create stock movement record
-            return IncomingStock::create([
-                'barang_id' => $barang->id,
-                'jumlah' => $request->jumlah,
-                'tanggal_masuk' => $request->tanggal_masuk,
-                'keterangan' => $request->keterangan,
-                'user_id' => auth()->id(),
-                'status' => 'approved', // Auto approve
-                'sumber' => 'Barang Masuk Manual',
-                'nomor_dokumen' => null,
-            ]);
-        });
+        $incomingStock = IncomingStock::create([
+            'barang_id'     => $request->barang_id,
+            'jumlah'        => $request->jumlah,
+            'tanggal_masuk' => $request->tanggal,
+            'sumber'        => $request->sumber_tujuan,
+            'nomor_dokumen' => $request->nomor_referensi,
+            'keterangan'    => $request->keterangan,
+            'user_id'       => auth()->id(),
+            'status'        => 'approved',
+        ]);
 
         return redirect()->route('barang-masuk.show', $incomingStock)
-            ->with('success', 'Barang baru berhasil ditambahkan dan stok telah tercatat.');
+            ->with('success', 'Barang masuk berhasil dicatat dan stok telah diperbarui.');
     }
 
     /**

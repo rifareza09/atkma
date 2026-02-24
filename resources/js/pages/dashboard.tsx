@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import { transaksiPermintaanShow } from '@/lib/atk-routes';
+import { transaksiPermintaanShow, barangMasukShow } from '@/lib/atk-routes';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -76,6 +76,7 @@ interface DashboardProps {
     }>;
     transaksi_terbaru?: Array<{
         id: number;
+        source_type?: string;
         kode_transaksi: string;
         tanggal_transaksi?: string;
         created_at: string;
@@ -160,7 +161,7 @@ export default function Dashboard({
                 <div className="flex items-center justify-between animate-fade-in-up">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold">
-                            Admin Inventory Dashboard Overview
+                            Ringkasan Dashboard Inventaris ATK
                         </h1>
                         <p className="text-sm text-muted-foreground mt-1">Selamat datang di Sistem Manajemen Inventaris ATK</p>
                     </div>
@@ -395,7 +396,7 @@ export default function Dashboard({
                                     </p>
                                     <Button variant="secondary" size="sm" className="w-full">
                                         <Info className="mr-2 h-4 w-4" />
-                                        Learn More
+                                        Pelajari Lebih Lanjut
                                     </Button>
                                 </>
                             )}
@@ -421,8 +422,8 @@ export default function Dashboard({
                                     <TableRow>
                                         <TableHead>Kode Transaksi</TableHead>
                                         <TableHead>Tanggal</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Ruangan</TableHead>
+                                        <TableHead>Jenis</TableHead>
+                                        <TableHead>Ruangan / Barang</TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -462,9 +463,11 @@ export default function Dashboard({
                                                     asChild
                                                 >
                                                     <Link
-                                                        href={transaksiPermintaanShow(
-                                                            transaksi.id,
-                                                        )}
+                                                        href={
+                                                            transaksi.source_type === 'incoming_stock'
+                                                                ? barangMasukShow(transaksi.id)
+                                                                : transaksiPermintaanShow(transaksi.id)
+                                                        }
                                                     >
                                                         <Eye className="mr-2 size-4" />
                                                         Detail

@@ -3,7 +3,6 @@ import {
     LayoutGrid,
     Package,
     Building2,
-    FileCheck,
     CheckSquare,
     FileText,
     Settings,
@@ -26,7 +25,6 @@ import {
     barangMasukIndex,
     inventoryIndex,
     ruanganIndex,
-    transaksiPermintaanIndex,
     transaksiMasukIndex,
     laporanInventaris,
 } from '@/lib/atk-routes';
@@ -81,11 +79,6 @@ export function AppSidebar() {
                 title: 'Barang Masuk',
                 href: barangMasukIndex(),
                 icon: TrendingUp,
-            },
-            {
-                title: 'Requests',
-                href: transaksiPermintaanIndex(),
-                icon: FileCheck,
             },
             {
                 title: 'Rooms',

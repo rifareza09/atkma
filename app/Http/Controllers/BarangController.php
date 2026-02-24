@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BarangRequest;
 use App\Models\Barang;
+use App\Models\IncomingStock;
 use App\Exports\BarangTransactionHistoryExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,7 +44,7 @@ class BarangController extends Controller
         }
 
         $barangs = $query->latest()
-            ->paginate(10)
+            ->paginate(100)
             ->withQueryString();
 
         return Inertia::render('master/barang/index', [
@@ -154,58 +155,86 @@ class BarangController extends Controller
      */
     public function transactionHistory(Request $request, Barang $barang)
     {
-        $query = $barang->transactionItems()
-            ->with(['transaction' => function ($q) {
-                $q->where('type', 'keluar'); // Only outgoing transactions (requests)
-            }])
-            ->whereHas('transaction', function ($q) {
-                $q->where('type', 'keluar');
-            });
-
-        // Filter by date range
-        if ($request->has('start_date') && $request->start_date) {
-            $query->whereHas('transaction', function ($q) use ($request) {
+        // Helper to apply date filters to a query
+        $applyFilters = function ($q) use ($request) {
+            if ($request->has('start_date') && $request->start_date) {
                 $q->whereDate('tanggal', '>=', $request->start_date);
-            });
-        }
-
-        if ($request->has('end_date') && $request->end_date) {
-            $query->whereHas('transaction', function ($q) use ($request) {
+            }
+            if ($request->has('end_date') && $request->end_date) {
                 $q->whereDate('tanggal', '<=', $request->end_date);
-            });
-        }
-
-        // Filter by month and year
-        if ($request->has('month') && $request->has('year')) {
-            $query->whereHas('transaction', function ($q) use ($request) {
+            }
+            if ($request->has('month') && $request->has('year')) {
                 $q->whereMonth('tanggal', $request->month)
                   ->whereYear('tanggal', $request->year);
-            });
-        } elseif ($request->has('year')) {
-            $query->whereHas('transaction', function ($q) use ($request) {
+            } elseif ($request->has('year')) {
                 $q->whereYear('tanggal', $request->year);
-            });
-        }
+            }
+        };
 
-        // Get transactions grouped by ruangan
-        $transactions = $query->latest()
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'ruangan_nama' => $item->transaction->ruangan_nama,
-                    'tanggal' => $item->transaction->tanggal,
-                    'jumlah' => $item->jumlah,
-                    'kode_transaksi' => $item->transaction->kode_transaksi,
-                ];
+        // --- Barang Keluar (permintaan) ---
+        $keluarQuery = $barang->transactionItems()
+            ->with('transaction')
+            ->whereHas('transaction', function ($q) use ($applyFilters) {
+                $q->where('type', 'keluar');
+                $applyFilters($q);
             });
 
-        // Group by ruangan and sum quantities
-        $groupedByRuangan = $transactions->groupBy('ruangan_nama')->map(function ($items, $ruangan) {
+        $keluarTransactions = $keluarQuery->latest()->get()->map(function ($item) {
+            return [
+                'ruangan_nama' => $item->transaction->ruangan_nama ?? '-',
+                'nama_peminta' => $item->transaction->nama_peminta ?? '-',
+                'tanggal' => $item->transaction->tanggal,
+                'jumlah' => $item->jumlah,
+                'kode_transaksi' => $item->transaction->kode_transaksi,
+            ];
+        });
+
+        $groupedKeluar = $keluarTransactions->groupBy('ruangan_nama')->map(function ($items, $ruangan) {
             return [
                 'ruangan' => $ruangan,
                 'total_jumlah' => $items->sum('jumlah'),
                 'transaksi_count' => $items->count(),
                 'transaksi' => $items->sortByDesc('tanggal')->values(),
+            ];
+        })->values();
+
+        // --- Barang Masuk (dari incoming_stocks) ---
+        $masukQuery = IncomingStock::with(['user'])
+            ->where('barang_id', $barang->id)
+            ->where('status', 'approved');
+
+        // Apply date filters using tanggal_masuk
+        if ($request->filled('start_date')) {
+            $masukQuery->whereDate('tanggal_masuk', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $masukQuery->whereDate('tanggal_masuk', '<=', $request->end_date);
+        }
+        if ($request->filled('month') && $request->filled('year')) {
+            $masukQuery->whereMonth('tanggal_masuk', $request->month)
+                       ->whereYear('tanggal_masuk', $request->year);
+        } elseif ($request->filled('year')) {
+            $masukQuery->whereYear('tanggal_masuk', $request->year);
+        }
+
+        $masukTransactions = $masukQuery->latest()->get()->map(function ($stock) {
+            $petugas = $stock->user?->name ?? 'Admin';
+            return [
+                'petugas'         => $petugas,
+                'tanggal'         => $stock->tanggal_masuk,
+                'jumlah'          => $stock->jumlah,
+                'kode_transaksi'  => $stock->kode_barang_masuk,
+                'keterangan'      => $stock->keterangan ?? '-',
+                'sumber'          => $stock->sumber ?? '-',
+            ];
+        });
+
+        $groupedMasuk = $masukTransactions->groupBy('petugas')->map(function ($items, $petugas) {
+            return [
+                'petugas'          => $petugas,
+                'total_jumlah'     => $items->sum('jumlah'),
+                'transaksi_count'  => $items->count(),
+                'transaksi'        => $items->sortByDesc('tanggal')->values(),
             ];
         })->values();
 
@@ -216,9 +245,12 @@ class BarangController extends Controller
                 'kode' => $barang->kode,
                 'satuan' => $barang->satuan,
             ],
-            'data' => $groupedByRuangan,
-            'total_requests' => $transactions->count(),
-            'total_quantity' => $transactions->sum('jumlah'),
+            'data' => $groupedKeluar,
+            'total_requests' => $keluarTransactions->count(),
+            'total_quantity' => $keluarTransactions->sum('jumlah'),
+            'masuk_data' => $groupedMasuk,
+            'total_masuk' => $masukTransactions->count(),
+            'total_masuk_quantity' => $masukTransactions->sum('jumlah'),
         ]);
     }
 
@@ -227,98 +259,103 @@ class BarangController extends Controller
      */
     public function exportTransactionHistory(Request $request, Barang $barang)
     {
-        $format = $request->get('format', 'pdf'); // pdf or excel
+        $format = $request->get('format', 'pdf');
         $filters = $request->only(['start_date', 'end_date', 'month', 'year']);
 
-        // Get ALL transaction data (both masuk and keluar)
-        $query = $barang->transactionItems()
-            ->with(['transaction']);
-
-        // Apply filters
-        if ($request->has('start_date') && $request->start_date) {
-            $query->whereHas('transaction', function ($q) use ($request) {
-                $q->whereDate('tanggal', '>=', $request->start_date);
-            });
-        }
-
-        if ($request->has('end_date') && $request->end_date) {
-            $query->whereHas('transaction', function ($q) use ($request) {
-                $q->whereDate('tanggal', '<=', $request->end_date);
-            });
-        }
-
-        if ($request->has('month') && $request->has('year')) {
-            $query->whereHas('transaction', function ($q) use ($request) {
-                $q->whereMonth('tanggal', $request->month)
-                  ->whereYear('tanggal', $request->year);
-            });
-        } elseif ($request->has('year')) {
-            $query->whereHas('transaction', function ($q) use ($request) {
-                $q->whereYear('tanggal', $request->year);
-            });
-        }
-
-        // Get transactions and sort by date
-        $transactions = $query->get()
-            ->sortBy(function ($item) {
-                return $item->transaction->tanggal;
-            })
-            ->values();
-
-        // Calculate initial stock (saldo awal)
-        // Get all transactions before the start date
-        $initialStock = $barang->stok; // Current stock
-        
-        // Calculate backwards: subtract all transactions after filter period
-        $afterPeriodQuery = $barang->transactionItems()->with(['transaction']);
-        
-        if ($request->has('start_date') && $request->start_date) {
-            $afterPeriodQuery->whereHas('transaction', function ($q) use ($request) {
-                $q->whereDate('tanggal', '>=', $request->start_date);
-            });
-            
-            $afterPeriodTransactions = $afterPeriodQuery->get();
-            foreach ($afterPeriodTransactions as $item) {
-                $itemType = $item->transaction->type instanceof \App\TransactionType
-                    ? $item->transaction->type->value
-                    : $item->transaction->type;
-                if ($itemType === 'masuk') {
-                    $initialStock -= $item->jumlah;
-                } else {
-                    $initialStock += $item->jumlah;
-                }
+        // Helper to check if a date is within the requested period
+        $inPeriod = function ($date) use ($request) {
+            $d = \Carbon\Carbon::parse($date);
+            if ($request->filled('start_date') && $d->lt(\Carbon\Carbon::parse($request->start_date)->startOfDay())) return false;
+            if ($request->filled('end_date')   && $d->gt(\Carbon\Carbon::parse($request->end_date)->endOfDay()))   return false;
+            if ($request->filled('month') && $request->filled('year')) {
+                if ($d->month != $request->month || $d->year != $request->year) return false;
+            } elseif ($request->filled('year')) {
+                if ($d->year != $request->year) return false;
             }
-        }
+            return true;
+        };
 
-        // Build transaction list with running balance
-        $transactionList = [];
-        $saldo = $initialStock;
+        // Helper: is date on/after start of period?
+        $afterPeriodStart = function ($date) use ($request) {
+            if ($request->filled('start_date')) {
+                return \Carbon\Carbon::parse($date)->gte(\Carbon\Carbon::parse($request->start_date)->startOfDay());
+            }
+            if ($request->filled('month') && $request->filled('year')) {
+                return \Carbon\Carbon::parse($date)->gte(\Carbon\Carbon::create($request->year, $request->month, 1)->startOfDay());
+            }
+            if ($request->filled('year')) {
+                return \Carbon\Carbon::parse($date)->year >= $request->year;
+            }
+            return true; // no filter = all in period
+        };
 
-        foreach ($transactions as $item) {
-            $type = $item->transaction->type instanceof \App\TransactionType
-                ? $item->transaction->type->value
-                : $item->transaction->type;
-            $masuk = $type === 'masuk' ? $item->jumlah : 0;
-            $keluar = $type === 'keluar' ? $item->jumlah : 0;
-            
-            $saldo = $saldo + $masuk - $keluar;
+        // --- 1. Keluar transactions from transaction_items ---
+        $keluarItems = $barang->transactionItems()
+            ->with(['transaction'])
+            ->whereHas('transaction', fn($q) => $q->where('type', 'keluar'))
+            ->get()
+            ->filter(fn($item) => $inPeriod($item->transaction->tanggal));
 
-            $transactionList[] = [
+        // --- 2. Masuk transactions from incoming_stocks ---
+        $masukItems = IncomingStock::where('barang_id', $barang->id)
+            ->where('status', 'approved')
+            ->with('user')
+            ->get()
+            ->filter(fn($stock) => $inPeriod($stock->tanggal_masuk));
+
+        // --- 3. Calculate saldo awal (stock before the period) ---
+        $saldoAwal = $barang->stok;
+
+        // Subtract everything in/after the period to get the stock before it
+        $allKeluar = $barang->transactionItems()->with('transaction')
+            ->whereHas('transaction', fn($q) => $q->where('type', 'keluar'))
+            ->get()
+            ->filter(fn($item) => $afterPeriodStart($item->transaction->tanggal));
+
+        $allMasuk = IncomingStock::where('barang_id', $barang->id)
+            ->where('status', 'approved')
+            ->get()
+            ->filter(fn($stock) => $afterPeriodStart($stock->tanggal_masuk));
+
+        foreach ($allKeluar as $item) { $saldoAwal += $item->jumlah; }  // reverse keluar
+        foreach ($allMasuk  as $stock) { $saldoAwal -= $stock->jumlah; } // reverse masuk
+
+        // --- 4. Build unified sorted transaction list ---
+        $combined = collect();
+
+        foreach ($keluarItems as $item) {
+            $combined->push([
                 'tanggal' => $item->transaction->tanggal,
-                'uraian' => $item->transaction->ruangan_nama,
-                'masuk' => $masuk,
-                'keluar' => $keluar,
-                'saldo' => $saldo,
-            ];
+                'uraian'  => $item->transaction->ruangan_nama ?? '-',
+                'masuk'   => 0,
+                'keluar'  => $item->jumlah,
+            ]);
         }
+
+        foreach ($masukItems as $stock) {
+            $combined->push([
+                'tanggal' => $stock->tanggal_masuk,
+                'uraian'  => $stock->sumber ?? ('Barang Masuk - ' . ($stock->user->name ?? 'Admin')),
+                'masuk'   => $stock->jumlah,
+                'keluar'  => 0,
+            ]);
+        }
+
+        $sorted = $combined->sortBy(fn($t) => \Carbon\Carbon::parse($t['tanggal']))->values();
+
+        $saldo = $saldoAwal;
+        $transactionList = $sorted->map(function ($t) use (&$saldo) {
+            $saldo += $t['masuk'] - $t['keluar'];
+            return array_merge($t, ['saldo' => $saldo]);
+        })->toArray();
 
         $data = [
-            'barang' => $barang,
-            'transactions' => $transactionList,
-            'saldo_awal' => $initialStock,
-            'filters' => $filters,
-            'period_label' => $this->getPeriodLabel($filters),
-            'generated_at' => now()->format('d/m/Y H:i:s'),
+            'barang'        => $barang,
+            'transactions'  => $transactionList,
+            'saldo_awal'    => $saldoAwal,
+            'filters'       => $filters,
+            'period_label'  => $this->getPeriodLabel($filters),
+            'generated_at'  => now()->format('d/m/Y H:i:s'),
         ];
 
         if ($format === 'excel') {
@@ -326,11 +363,10 @@ class BarangController extends Controller
             return Excel::download(new BarangTransactionHistoryExport($barang, $filters), $filename);
         }
 
-        // Default to PDF
         $pdf = Pdf::loadView('exports.barang-transaction-history-pdf', $data);
         $pdf->setPaper('a4', 'portrait');
         $filename = 'kartu-stok-' . str_replace(' ', '-', strtolower($barang->nama)) . '-' . now()->format('Y-m-d') . '.pdf';
-        
+
         return $pdf->download($filename);
     }
 

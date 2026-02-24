@@ -51,7 +51,7 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        post('/transaksi/barang-masuk', {
+        post(barangMasukIndex(), {
             onSuccess: () => {
                 toast({
                     title: 'Berhasil',
