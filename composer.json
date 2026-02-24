@@ -10,6 +10,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-gd": "*",
+        "ext-zip": "*",
+        "ext-exif": "*",
+        "ext-bcmath": "*",
         "barryvdh/laravel-dompdf": "^3.1",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/fortify": "^1.30",
