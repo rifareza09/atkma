@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title }}</title>
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 20mm 25mm 20mm 25mm;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -14,6 +18,7 @@
             font-family: 'Arial', sans-serif;
             font-size: 11px;
             line-height: 1.4;
+            width: 210mm;
         }
         .header {
             text-align: center;
@@ -40,22 +45,23 @@
             color: #555;
         }
         table {
-            width: 100%;
+            width: 90%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
         }
         th {
             background-color: #1E3A5F;
             color: white;
-            padding: 8px;
+            padding: 5px 7px;
             text-align: left;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
         }
         td {
-            padding: 6px 8px;
+            padding: 3px 7px;
             border-bottom: 1px solid #ddd;
-            font-size: 10px;
+            font-size: 12px;
+            line-height: 1.3;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
@@ -147,7 +153,7 @@
                         <span class="badge badge-success">AMAN</span>
                     @endif
                 </td>
-                <td style="font-size: 9px;">{{ Str::limit($barang->deskripsi, 30) }}</td>
+                <td style="font-size: 12px;">{{ Str::limit($barang->deskripsi, 30) }}</td>
             </tr>
             @empty
             <tr>
