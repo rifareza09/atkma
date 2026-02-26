@@ -31,9 +31,9 @@ export function AppSidebarHeader({
 
     return (
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 
-                         border-b border-white/10 bg-[#2563eb] px-6 shadow-lg
+                         border-b border-[#1d4ed8] bg-[#2563eb] px-6
                          group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 
-                         md:px-4 lg:px-6 rounded-2xl mb-2">
+                         md:px-4 lg:px-6">
             <div className="flex items-center gap-3">
                 <SidebarTrigger className="-ml-1 text-white hover:bg-white/10 rounded-lg p-2" />
                 <div className="hidden md:block">

@@ -27,19 +27,19 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             asChild
                             isActive={isCurrentUrl(item.href)}
                             tooltip={{ children: item.title }}
-                            className="group relative text-white hover:text-white hover:bg-white/10 
-                                     data-[active=true]:bg-white/20 data-[active=true]:text-white
-                                     rounded-md px-3 py-2"
+                            className="group relative text-white/80 hover:text-white hover:bg-white/10 
+                                     data-[active=true]:bg-white data-[active=true]:text-[#2563eb]
+                                     rounded-xl px-3 py-2 transition-all duration-150"
                         >
-                            <Link href={item.href} prefetch className="flex items-center gap-3 w-full text-white">
+                            <Link href={item.href} prefetch className="flex items-center gap-3 w-full">
                                 {item.icon && (
                                     <item.icon 
-                                        className="flex-shrink-0 text-white" 
+                                        className="flex-shrink-0 group-data-[active=true]:text-[#2563eb] text-white" 
                                         size={20} 
                                         strokeWidth={2}
                                     />
                                 )}
-                                <span className="text-sm text-white">
+                                <span className="text-sm font-medium group-data-[active=true]:text-[#2563eb] text-white">
                                     {item.title}
                                 </span>
                                 {item.badge && (

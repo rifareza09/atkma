@@ -96,7 +96,7 @@ export function AppSidebar() {
     return (
         <Sidebar
             collapsible="icon"
-            variant="inset"
+            variant="sidebar"
             className="bg-[#2563eb]"
         >
             <SidebarHeader>
