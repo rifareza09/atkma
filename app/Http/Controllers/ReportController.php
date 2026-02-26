@@ -6,9 +6,12 @@ use App\Exports\InventoryExport;
 use App\Exports\StockMovementExport;
 use App\Exports\TransactionExport;
 use App\Models\Barang;
+use App\Models\IncomingStock;
 use App\Models\Ruangan;
 use App\Models\StockMovement;
 use App\Models\Transaction;
+use App\Models\TransactionItem;
+use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -282,7 +285,7 @@ class ReportController extends Controller
     }
 
     /**
-     * Export distribusi barang per ruangan untuk bulan tertentu sebagai PDF
+     * Export kartu stok barang per bulan sebagai PDF (format buku besar)
      */
     public function exportBarangBulanPdf(Request $request, Barang $barang)
     {
@@ -295,50 +298,85 @@ class ReportController extends Controller
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
 
-        // Fetch all "keluar" transaction items for this barang in the given month/year
-        $items = $barang->transactionItems()
-            ->whereHas('transaction', function ($q) use ($month, $year) {
-                $q->where('type', 'keluar')
-                  ->whereMonth('tanggal', $month)
-                  ->whereYear('tanggal', $year);
-            })
-            ->with(['transaction'])
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfDay();
+
+        // Hitung saldo awal bulan:
+        // saldo_awal = stok_sekarang - total_masuk_sejak_awal_bulan + total_keluar_sejak_awal_bulan
+        $totalMasukSejak = IncomingStock::where('barang_id', $barang->id)
+            ->where('status', 'approved')
+            ->where('tanggal_masuk', '>=', $startOfMonth)
+            ->sum('jumlah');
+
+        $totalKeluarSejak = TransactionItem::where('barang_id', $barang->id)
+            ->whereHas('transaction', fn ($q) => $q->where('type', 'keluar')
+                ->where('tanggal', '>=', $startOfMonth))
+            ->sum('jumlah');
+
+        $saldoAwal = $barang->stok - $totalMasukSejak + $totalKeluarSejak;
+
+        // Ambil semua transaksi MASUK bulan ini
+        $masuks = IncomingStock::where('barang_id', $barang->id)
+            ->where('status', 'approved')
+            ->whereMonth('tanggal_masuk', $month)
+            ->whereYear('tanggal_masuk', $year)
+            ->orderBy('tanggal_masuk')
+            ->get()
+            ->map(fn ($m) => [
+                'type'    => 'masuk',
+                'tanggal' => $m->tanggal_masuk,
+                'uraian'  => $m->keterangan ?: ($m->sumber ?: 'Penerimaan Barang'),
+                'masuk'   => $m->jumlah,
+                'keluar'  => 0,
+            ]);
+
+        // Ambil semua transaksi KELUAR bulan ini (flat per item)
+        $keluars = TransactionItem::where('barang_id', $barang->id)
+            ->whereHas('transaction', fn ($q) => $q->where('type', 'keluar')
+                ->whereMonth('tanggal', $month)
+                ->whereYear('tanggal', $year))
+            ->with('transaction')
             ->get()
             ->sortBy('transaction.tanggal')
+            ->values()
+            ->map(fn ($item) => [
+                'type'    => 'keluar',
+                'tanggal' => $item->transaction->tanggal,
+                'uraian'  => $item->transaction->ruangan_nama ?? 'Tidak Diketahui',
+                'masuk'   => 0,
+                'keluar'  => $item->jumlah,
+            ]);
+
+        // Gabung, urutkan berdasarkan tanggal, hitung running saldo
+        $rows = $masuks->concat($keluars)
+            ->sortBy(fn ($r) => $r['tanggal'])
             ->values();
 
-        // Group by ruangan_nama
-        $groupedByRuangan = $items
-            ->groupBy(fn ($item) => $item->transaction->ruangan_nama ?? 'Tidak Diketahui')
-            ->map(function ($ruanganItems, $ruanganNama) {
-                $rows = $ruanganItems->map(fn ($item) => [
-                    'tanggal' => $item->transaction->tanggal,
-                    'jumlah'  => $item->jumlah,
-                    'keterangan' => $item->transaction->keterangan ?? '-',
-                ])->values();
+        $saldo = $saldoAwal;
+        $rows = $rows->map(function ($r) use (&$saldo) {
+            $saldo += $r['masuk'] - $r['keluar'];
+            $r['saldo'] = $saldo;
+            return $r;
+        });
 
-                return [
-                    'ruangan' => $ruanganNama,
-                    'rows'    => $rows,
-                    'subtotal' => $rows->sum('jumlah'),
-                ];
-            })
-            ->sortBy('ruangan')
-            ->values();
-
-        $grandTotal = $groupedByRuangan->sum('subtotal');
+        $totalMasukBulan  = $rows->sum('masuk');
+        $totalKeluarBulan = $rows->sum('keluar');
+        $saldoAkhir       = $saldo;
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.barang-bulan-pdf', [
-            'barang'      => $barang,
-            'ruangans'    => $groupedByRuangan,
-            'grand_total' => $grandTotal,
-            'month'       => $month,
-            'year'        => $year,
-            'month_name'  => $monthNames[$month] ?? '-',
-            'generated_at' => now()->format('d/m/Y H:i:s'),
+            'barang'         => $barang,
+            'rows'           => $rows,
+            'saldo_awal'     => $saldoAwal,
+            'total_masuk'    => $totalMasukBulan,
+            'total_keluar'   => $totalKeluarBulan,
+            'saldo_akhir'    => $saldoAkhir,
+            'month'          => $month,
+            'year'           => $year,
+            'month_name'     => $monthNames[$month] ?? '-',
+            'generated_at'   => now()->format('d/m/Y H:i:s'),
+            'signature_date' => now()->locale('id')->isoFormat('D MMMM Y'),
         ])->setPaper('a4', 'portrait');
 
-        $filename = 'laporan-distribusi-' . \Illuminate\Support\Str::slug($barang->nama)
+        $filename = 'kartu-stok-' . \Illuminate\Support\Str::slug($barang->nama)
             . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . $year . '.pdf';
 
         return $pdf->download($filename);
