@@ -199,7 +199,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pilih Barang - Inventory" />
 
-            <div className="flex flex-col lg:flex-row h-full flex-1 gap-4 lg:gap-6 p-3 sm:p-6">
+            <div className="flex flex-col lg:flex-row items-start gap-4 lg:gap-6 p-3 sm:p-6">
                 {/* Main Content */}
                 <div className="flex-1 space-y-4 lg:space-y-6">
                     {/* Header */}
@@ -380,7 +380,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
 
                 {/* Right Sidebar - Hidden for Superadmin */}
                 {!isSuperadmin && (
-                <div className="w-full lg:w-96 space-y-4 lg:sticky lg:top-20 lg:h-fit">
+                <div className="w-full lg:w-96 flex-shrink-0 lg:sticky lg:top-6 lg:self-start space-y-4">
                     {/* Summary Card */}
                     <Card>
                         <CardContent className="p-4 sm:p-6 space-y-4">

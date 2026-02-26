@@ -108,9 +108,9 @@ export default function LaporanTransaksi({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Transaksi" />
 
-            <div className="flex h-full flex-1 gap-6 p-6">
+            <div className="grid h-full overflow-hidden p-6 gap-6" style={{gridTemplateColumns: '320px 1fr'}}>
                 {/* Filter Sidebar */}
-                <Card className="w-80 h-fit">
+                <Card className="overflow-y-auto">
                     <CardContent className="p-6 space-y-6">
                         <div className="flex items-center gap-2">
                             <Filter className="h-5 w-5" />
@@ -217,7 +217,7 @@ export default function LaporanTransaksi({
                 </Card>
 
                 {/* Main Content */}
-                <div className="flex-1 space-y-6">
+                <div className="overflow-y-auto space-y-6">
                     {/* Page Header */}
                     <div className="space-y-2">
                         <div className="flex items-start justify-between">

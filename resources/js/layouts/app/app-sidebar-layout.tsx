@@ -15,7 +15,7 @@ export default function AppSidebarLayout({
                 <div className="sticky top-0 z-50 pt-2 px-2 bg-background">
                     <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 </div>
-                <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-clip px-2">
                     {children}
                 </div>
             </AppContent>
