@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Pencil, Building2, Users } from 'lucide-react';
+import { ArrowLeft, Pencil, Building2, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,11 +9,30 @@ import { ruanganIndex, ruanganEdit } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
 import type { Ruangan, BreadcrumbItem } from '@/types';
 
-interface RuanganShowProps {
-    ruangan: Ruangan;
+interface TransactionItemRow {
+    id: number;
+    nama_barang: string;
+    kode_barang: string;
+    satuan: string;
+    jumlah: number;
 }
 
-export default function RuanganShow({ ruangan }: RuanganShowProps) {
+interface TransactionRow {
+    id: number;
+    kode_transaksi: string;
+    tanggal: string;
+    nama_peminta: string;
+    keterangan?: string;
+    status: string;
+    items: TransactionItemRow[];
+}
+
+interface RuanganShowProps {
+    ruangan: Ruangan;
+    transactions: TransactionRow[];
+}
+
+export default function RuanganShow({ ruangan, transactions }: RuanganShowProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
         { title: 'Master Data', href: '#' },
@@ -138,6 +157,73 @@ export default function RuanganShow({ ruangan }: RuanganShowProps) {
                         </Card>
                     </div>
                 </div>
+
+                {/* Riwayat Peminjaman Barang */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Package className="size-5" />
+                            Riwayat Peminjaman Barang
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {transactions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-4 text-center">
+                                Belum ada riwayat peminjaman barang untuk ruangan ini.
+                            </p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b text-left text-muted-foreground">
+                                            <th className="pb-3 pr-4 font-semibold">No. Transaksi</th>
+                                            <th className="pb-3 pr-4 font-semibold">Tanggal</th>
+                                            <th className="pb-3 pr-4 font-semibold">Nama Peminta</th>
+                                            <th className="pb-3 pr-4 font-semibold">Kode Barang</th>
+                                            <th className="pb-3 pr-4 font-semibold">Nama Barang</th>
+                                            <th className="pb-3 pr-4 font-semibold text-right">Jumlah</th>
+                                            <th className="pb-3 font-semibold">Satuan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {transactions.map((trx) =>
+                                            trx.items.length === 0 ? (
+                                                <tr key={trx.id} className="border-b last:border-0">
+                                                    <td className="py-3 pr-4 font-mono">{trx.kode_transaksi}</td>
+                                                    <td className="py-3 pr-4">{trx.tanggal}</td>
+                                                    <td className="py-3 pr-4">{trx.nama_peminta}</td>
+                                                    <td colSpan={4} className="py-3 text-muted-foreground italic">Tidak ada item</td>
+                                                </tr>
+                                            ) : (
+                                                trx.items.map((item, idx) => (
+                                                    <tr key={`${trx.id}-${item.id}`} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                                                        {idx === 0 && (
+                                                            <>
+                                                                <td className="py-3 pr-4 font-mono align-top" rowSpan={trx.items.length}>
+                                                                    {trx.kode_transaksi}
+                                                                </td>
+                                                                <td className="py-3 pr-4 align-top" rowSpan={trx.items.length}>
+                                                                    {trx.tanggal}
+                                                                </td>
+                                                                <td className="py-3 pr-4 align-top" rowSpan={trx.items.length}>
+                                                                    {trx.nama_peminta}
+                                                                </td>
+                                                            </>
+                                                        )}
+                                                        <td className="py-3 pr-4 font-mono">{item.kode_barang}</td>
+                                                        <td className="py-3 pr-4">{item.nama_barang}</td>
+                                                        <td className="py-3 pr-4 text-right font-semibold">{item.jumlah}</td>
+                                                        <td className="py-3">{item.satuan}</td>
+                                                    </tr>
+                                                ))
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </AppLayout>
     );

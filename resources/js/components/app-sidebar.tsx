@@ -94,17 +94,17 @@ export function AppSidebar() {
     };
 
     return (
-        <Sidebar 
-            collapsible="icon" 
-            variant="inset" 
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
             className="bg-[#2563eb]"
         >
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton 
-                            size="lg" 
-                            asChild 
+                        <SidebarMenuButton
+                            size="lg"
+                            asChild
                             className="group"
                         >
                             <Link href={dashboard()} prefetch className="flex items-center gap-3">

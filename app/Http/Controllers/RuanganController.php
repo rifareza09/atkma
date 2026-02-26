@@ -81,12 +81,34 @@ class RuanganController extends Controller
     {
         $this->authorize('view', $ruangan);
 
-        $ruangan->load(['transactions' => function ($query) {
-            $query->latest()->limit(10);
-        }]);
+        $transactions = \App\Models\Transaction::with(['items.barang'])
+            ->where('ruangan_nama', $ruangan->nama)
+            ->where('type', 'keluar')
+            ->orderBy('tanggal', 'desc')
+            ->get()
+            ->map(function ($trx) {
+                return [
+                    'id'             => $trx->id,
+                    'kode_transaksi' => $trx->kode_transaksi,
+                    'tanggal'        => $trx->tanggal?->format('d/m/Y'),
+                    'nama_peminta'   => $trx->nama_peminta,
+                    'keterangan'     => $trx->keterangan,
+                    'status'         => $trx->status,
+                    'items'          => $trx->items->map(function ($item) {
+                        return [
+                            'id'         => $item->id,
+                            'nama_barang'=> $item->barang?->nama ?? '-',
+                            'kode_barang'=> $item->barang?->kode ?? '-',
+                            'satuan'     => $item->barang?->satuan ?? '-',
+                            'jumlah'     => $item->jumlah,
+                        ];
+                    }),
+                ];
+            });
 
         return Inertia::render('master/ruangan/show', [
-            'ruangan' => $ruangan,
+            'ruangan'      => $ruangan,
+            'transactions' => $transactions,
         ]);
     }
 

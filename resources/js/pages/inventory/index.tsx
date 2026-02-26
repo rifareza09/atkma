@@ -57,6 +57,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const [formData, setFormData] = useState({
         ruangan_nama: '',
         nama_peminta: '',
+        tanggal_permintaan: new Date().toISOString().split('T')[0],
         keperluan: '',
     });
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
@@ -70,6 +71,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         setFormData({
             ruangan_nama: '',
             nama_peminta: '',
+            tanggal_permintaan: new Date().toISOString().split('T')[0],
             keperluan: '',
         });
     }, [transactionMode]);
@@ -141,7 +143,9 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         // Submit the request
         const requestData: any = {
             type: transactionMode,
-            tanggal: new Date().toISOString().split('T')[0],
+            tanggal: transactionMode === 'keluar' && formData.tanggal_permintaan
+                ? formData.tanggal_permintaan
+                : new Date().toISOString().split('T')[0],
             keterangan: formData.keperluan || (transactionMode === 'masuk' ? 'Penambahan stock gudang' : ''),
             items: cart.map((item) => ({
                 barang_id: item.id,
@@ -152,6 +156,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         // Hanya kirim ruangan jika mode keluar (permintaan barang)
         if (transactionMode === 'keluar') {
             requestData.ruangan_nama = formData.ruangan_nama;
+            requestData.nama_peminta = formData.nama_peminta;
         } else {
             requestData.ruangan_nama = 'Gudang'; // Default untuk transaksi masuk
         }
@@ -383,7 +388,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                 <div className="w-full lg:w-96 flex-shrink-0 lg:sticky lg:top-6 lg:self-start space-y-4">
                     {/* Summary Card */}
                     <Card>
-                        <CardContent className="p-4 sm:p-6 space-y-4">
+                        <CardContent className="p-4 sm:p-6 space-y-4 overflow-y-auto max-h-[calc(100vh-8rem)] lg:max-h-none">
                             <div className="flex items-center gap-2">
                                 <Crown className="h-5 w-5 text-yellow-500" />
                                 <h3 className="font-bold text-lg">
@@ -410,24 +415,6 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                     <span className="truncate">🏢 Permintaan Barang</span>
                                 </Button>
                             </div>
-
-                            {/* Quota Progress - Only show for 'keluar' mode */}
-                            {transactionMode === 'keluar' && (
-                                <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-semibold text-gray-700">
-                                            SISA KUOTA RUANGAN
-                                        </span>
-                                        <span className="font-bold text-blue-600">
-                                            {quotaPercentage}%
-                                        </span>
-                                    </div>
-                                    <Progress value={quotaPercentage} className="h-2" />
-                                    <p className="text-xs text-muted-foreground">
-                                        Bagian Hukum & Humas
-                                    </p>
-                                </div>
-                            )}
 
                             {/* Form */}
                             <div className="space-y-4 pt-4 border-t">
@@ -484,6 +471,26 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                             />
                                             <Camera className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* Tanggal Permintaan - Only show for 'keluar' mode */}
+                                {transactionMode === 'keluar' && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="tanggal_permintaan">
+                                            Tanggal Permintaan
+                                        </Label>
+                                        <Input
+                                            id="tanggal_permintaan"
+                                            type="date"
+                                            value={formData.tanggal_permintaan}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    tanggal_permintaan: e.target.value,
+                                                })
+                                            }
+                                        />
                                     </div>
                                 )}
 
