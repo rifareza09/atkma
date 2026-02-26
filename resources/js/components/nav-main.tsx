@@ -14,11 +14,11 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     const { isCurrentUrl } = useCurrentUrl();
 
     return (
-        <SidebarGroup className="px-2 py-3">
-            <SidebarGroupLabel className="text-white/60 text-xs font-medium uppercase tracking-wider px-3 mb-2">
+        <SidebarGroup className="px-3 py-3">
+            <SidebarGroupLabel className="text-slate-500 text-[10px] font-semibold uppercase tracking-widest px-2 mb-2">
                 Platform
             </SidebarGroupLabel>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-0.5">
                 {items.map((item, index) => (
                     <SidebarMenuItem 
                         key={item.title}
@@ -27,19 +27,20 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             asChild
                             isActive={isCurrentUrl(item.href)}
                             tooltip={{ children: item.title }}
-                            className="group relative text-white/80 hover:text-white hover:bg-white/10 
-                                     data-[active=true]:bg-white data-[active=true]:text-[#2563eb]
-                                     rounded-xl px-3 py-2 transition-all duration-150"
+                            className="group relative text-slate-400 hover:text-white hover:bg-slate-800 
+                                     data-[active=true]:bg-indigo-600 data-[active=true]:text-white
+                                     data-[active=true]:shadow-md data-[active=true]:shadow-indigo-900/50
+                                     rounded-lg px-3 py-2.5 transition-all duration-150"
                         >
                             <Link href={item.href} prefetch className="flex items-center gap-3 w-full">
                                 {item.icon && (
                                     <item.icon 
-                                        className="flex-shrink-0 group-data-[active=true]:text-[#2563eb] text-white" 
-                                        size={20} 
-                                        strokeWidth={2}
+                                        className="flex-shrink-0 group-data-[active=true]:text-white text-slate-400 group-hover:text-white transition-colors" 
+                                        size={18} 
+                                        strokeWidth={1.75}
                                     />
                                 )}
-                                <span className="text-sm font-medium group-data-[active=true]:text-[#2563eb] text-white">
+                                <span className="text-sm font-medium group-data-[active=true]:text-white text-inherit">
                                     {item.title}
                                 </span>
                                 {item.badge && (

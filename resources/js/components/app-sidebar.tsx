@@ -1,14 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
-    LayoutGrid,
-    Package,
+    LayoutDashboard,
+    Boxes,
     Building2,
-    CheckSquare,
     FileText,
-    Settings,
-    ClipboardCheck,
-    Box,
-    TrendingUp,
+    Settings2,
+    Database,
+    PackagePlus,
+    BarChart2,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -36,7 +35,7 @@ const settingsNavItems: NavItem[] = [
     {
         title: 'Settings',
         href: '#',
-        icon: Settings,
+        icon: Settings2,
     },
 ];
 
@@ -58,7 +57,7 @@ export function AppSidebar() {
             {
                 title: 'Dashboard',
                 href: dashboard(),
-                icon: LayoutGrid,
+                icon: LayoutDashboard,
             },
         ];
 
@@ -68,17 +67,17 @@ export function AppSidebar() {
             {
                 title: 'Inventory',
                 href: inventoryIndex(),
-                icon: Package,
+                icon: Boxes,
             },
             {
                 title: 'Master Barang',
                 href: barangIndex(),
-                icon: Box,
+                icon: Database,
             },
             {
                 title: 'Barang Masuk',
                 href: barangMasukIndex(),
-                icon: TrendingUp,
+                icon: PackagePlus,
             },
             {
                 title: 'Rooms',
@@ -88,7 +87,7 @@ export function AppSidebar() {
             {
                 title: 'Reports',
                 href: laporanInventaris(),
-                icon: FileText,
+                icon: BarChart2,
             },
         ];
     };
@@ -97,7 +96,7 @@ export function AppSidebar() {
         <Sidebar
             collapsible="icon"
             variant="sidebar"
-            className="bg-[#2563eb]"
+            className="bg-[#0f172a]"
         >
             <SidebarHeader>
                 <SidebarMenu>
