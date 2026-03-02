@@ -135,6 +135,50 @@ class DashboardController extends Controller
             ->values()
             ->take(10);
 
+        // Detail transaksi hari ini (Keluar) — per transaksi dengan item barangnya
+        $transaksiHariIniDetail = Transaction::with(['items.barang'])
+            ->whereDate('created_at', today())
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($trx) {
+                return [
+                    'id'             => $trx->id,
+                    'kode_transaksi' => $trx->kode_transaksi,
+                    'ruangan'        => $trx->ruangan_nama ?? '-',
+                    'tanggal'        => $trx->created_at->format('H:i'),
+                    'items'          => $trx->items->map(fn($item) => [
+                        'nama_barang' => $item->barang->nama ?? '-',
+                        'kode_barang' => $item->barang->kode ?? '-',
+                        'satuan'      => $item->barang->satuan ?? '',
+                        'jumlah'      => $item->jumlah,
+                        'saldo'       => $item->barang->stok ?? 0,
+                    ])->values(),
+                ];
+            });
+
+        // Detail transaksi bulan ini (Keluar) — per transaksi dengan item barangnya
+        $transaksiKeluar30 = Transaction::with(['items.barang'])
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->orderBy('created_at', 'desc')
+            ->limit(100)
+            ->get()
+            ->map(function ($trx) {
+                return [
+                    'id'             => $trx->id,
+                    'kode_transaksi' => $trx->kode_transaksi,
+                    'ruangan'        => $trx->ruangan_nama ?? '-',
+                    'tanggal'        => $trx->created_at->format('d/m/Y H:i'),
+                    'items'          => $trx->items->map(fn($item) => [
+                        'nama_barang' => $item->barang->nama ?? '-',
+                        'kode_barang' => $item->barang->kode ?? '-',
+                        'satuan'      => $item->barang->satuan ?? '',
+                        'jumlah'      => $item->jumlah,
+                        'saldo'       => $item->barang->stok ?? 0,
+                    ])->values(),
+                ];
+            });
+
         return Inertia::render('dashboard', [
             'stats' => [
                 'total_barang' => $totalBarang,
@@ -150,6 +194,8 @@ class DashboardController extends Controller
             'top_ruangan' => $topRuangan->toArray(),
             'barang_stok_rendah' => $barangStokRendah->toArray(),
             'transaksi_terbaru' => $transaksiTerbaru->toArray(),
+            'transaksi_hari_ini_detail' => $transaksiHariIniDetail->toArray(),
+            'transaksi_bulan_ini_detail' => $transaksiKeluar30->toArray(),
         ]);
     }
 

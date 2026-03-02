@@ -1,0 +1,433 @@
+import { Head, router } from '@inertiajs/react';
+import { History, Filter, FileDown, FileSpreadsheet, X, Package, Users, CalendarDays } from 'lucide-react';
+import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { historyIndex } from '@/lib/atk-routes';
+import { dashboard } from '@/routes';
+import type { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: dashboard().url },
+    { title: 'History Transaksi', href: historyIndex() },
+];
+
+const MONTHS = [
+    { value: '1', label: 'Januari' },
+    { value: '2', label: 'Februari' },
+    { value: '3', label: 'Maret' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'Mei' },
+    { value: '6', label: 'Juni' },
+    { value: '7', label: 'Juli' },
+    { value: '8', label: 'Agustus' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'Oktober' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'Desember' },
+];
+
+interface TransactionItem {
+    nama_barang: string;
+    kode_barang: string;
+    satuan: string;
+    jumlah: number;
+}
+
+interface TransactionRow {
+    id: number;
+    kode_transaksi: string;
+    tanggal: string;
+    ruangan_nama: string;
+    nama_peminta: string;
+    status: string;
+    items: TransactionItem[];
+}
+
+interface RuanganOption {
+    id: number;
+    nama: string;
+    kode: string;
+}
+
+interface HistoryIndexProps {
+    transactions: TransactionRow[];
+    ruangans: RuanganOption[];
+    available_years: number[];
+    filters: {
+        tanggal?: string;
+        bulan?: string;
+        tahun?: string;
+        ruangan_id?: string;
+    };
+}
+
+export default function HistoryIndex({
+    transactions,
+    ruangans,
+    available_years,
+    filters,
+}: HistoryIndexProps) {
+    const currentYear = new Date().getFullYear().toString();
+    const currentMonth = String(new Date().getMonth() + 1);
+
+    const [form, setForm] = useState({
+        tanggal:    filters.tanggal    ?? '',
+        bulan:      filters.bulan      ?? currentMonth,
+        tahun:      filters.tahun      ?? currentYear,
+        ruangan_id: filters.ruangan_id ?? 'all',
+    });
+
+    const applyFilters = () => {
+        const params: Record<string, string> = {};
+        if (form.tanggal) {
+            params.tanggal = form.tanggal;
+        } else {
+            if (form.bulan && form.bulan !== 'all') params.bulan = form.bulan;
+            if (form.tahun && form.tahun !== 'all') params.tahun = form.tahun;
+        }
+        if (form.ruangan_id !== 'all') params.ruangan_id = form.ruangan_id;
+
+        router.get(historyIndex(), params, { preserveState: true, preserveScroll: true });
+    };
+
+    const resetFilters = () => {
+        const defaults = { tanggal: '', bulan: currentMonth, tahun: currentYear, ruangan_id: 'all' };
+        setForm(defaults);
+        router.get(historyIndex(), { bulan: currentMonth, tahun: currentYear }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handleExportPdf = () => {
+        const params = new URLSearchParams();
+        if (form.tanggal) {
+            params.set('tanggal', form.tanggal);
+        } else {
+            if (form.bulan && form.bulan !== 'all') params.set('bulan', form.bulan);
+            if (form.tahun && form.tahun !== 'all') params.set('tahun', form.tahun);
+        }
+        if (form.ruangan_id !== 'all') params.set('ruangan_id', form.ruangan_id);
+        window.open(`/history/export-pdf?${params.toString()}`, '_blank');
+    };
+
+    const handleExportExcel = () => {
+        const params = new URLSearchParams();
+        if (form.tanggal) {
+            params.set('tanggal', form.tanggal);
+        } else {
+            if (form.bulan && form.bulan !== 'all') params.set('bulan', form.bulan);
+            if (form.tahun && form.tahun !== 'all') params.set('tahun', form.tahun);
+        }
+        if (form.ruangan_id !== 'all') params.set('ruangan_id', form.ruangan_id);
+        window.open(`/history/export-excel?${params.toString()}`, '_blank');
+    };
+
+    const totalItems = transactions.reduce((sum, t) => sum + t.items.reduce((s, i) => s + i.jumlah, 0), 0);
+    const uniqueRuangan = new Set(transactions.map((t) => t.ruangan_nama)).size;
+
+    const hasActiveFilter =
+        form.tanggal !== '' ||
+        form.bulan !== currentMonth ||
+        form.tahun !== currentYear ||
+        form.ruangan_id !== 'all';
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="History Transaksi" />
+
+            <div className="space-y-6 p-6">
+
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold flex items-center gap-2">
+                            <History className="size-7 text-blue-600" />
+                            History Transaksi
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Riwayat semua transaksi permintaan barang keluar
+                        </p>
+                    </div>
+                    <Button
+                        onClick={handleExportPdf}
+                        disabled={transactions.length === 0}
+                        className="gap-2"
+                    >
+                        <FileDown className="size-4" />
+                        Export PDF
+                    </Button>
+                    <Button
+                        onClick={handleExportExcel}
+                        disabled={transactions.length === 0}
+                        variant="outline"
+                        className="gap-2"
+                    >
+                        <FileSpreadsheet className="size-4" />
+                        Export Excel
+                    </Button>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Card>
+                        <CardContent className="pt-5 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                                    <History className="size-5 text-blue-600" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold">{transactions.length}</p>
+                                    <p className="text-xs text-muted-foreground">Total Transaksi</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-5 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                                    <Package className="size-5 text-green-600" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold">{totalItems.toLocaleString()}</p>
+                                    <p className="text-xs text-muted-foreground">Total Item Diminta</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-5 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+                                    <Users className="size-5 text-orange-600" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold">{uniqueRuangan}</p>
+                                    <p className="text-xs text-muted-foreground">Ruangan Aktif</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Filter */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <Filter className="size-4" />
+                            Filter Data
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+
+                            {/* Tanggal spesifik */}
+                            <div className="space-y-1">
+                                <Label className="text-xs">Tanggal Spesifik</Label>
+                                <Input
+                                    type="date"
+                                    value={form.tanggal}
+                                    onChange={(e) => {
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            tanggal: e.target.value,
+                                            bulan: e.target.value ? 'all' : currentMonth,
+                                            tahun: e.target.value ? 'all' : currentYear,
+                                        }));
+                                    }}
+                                    className="h-9 text-sm"
+                                />
+                            </div>
+
+                            {/* Bulan */}
+                            <div className="space-y-1">
+                                <Label className="text-xs">Bulan</Label>
+                                <Select
+                                    value={form.bulan}
+                                    onValueChange={(v) => setForm((p) => ({ ...p, bulan: v, tanggal: '' }))}
+                                >
+                                    <SelectTrigger className="h-9 text-sm">
+                                        <SelectValue placeholder="Semua Bulan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Bulan</SelectItem>
+                                        {MONTHS.map((m) => (
+                                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Tahun */}
+                            <div className="space-y-1">
+                                <Label className="text-xs">Tahun</Label>
+                                <Select
+                                    value={form.tahun}
+                                    onValueChange={(v) => setForm((p) => ({ ...p, tahun: v, tanggal: '' }))}
+                                >
+                                    <SelectTrigger className="h-9 text-sm">
+                                        <SelectValue placeholder="Semua Tahun" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Tahun</SelectItem>
+                                        {available_years.map((y) => (
+                                            <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Ruangan */}
+                            <div className="space-y-1">
+                                <Label className="text-xs">Ruangan / Unit Kerja</Label>
+                                <Select
+                                    value={form.ruangan_id}
+                                    onValueChange={(v) => setForm((p) => ({ ...p, ruangan_id: v }))}
+                                >
+                                    <SelectTrigger className="h-9 text-sm">
+                                        <SelectValue placeholder="Semua Ruangan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Ruangan</SelectItem>
+                                        {ruangans.map((r) => (
+                                            <SelectItem key={r.id} value={String(r.id)}>
+                                                {r.nama}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex gap-2">
+                                <Button onClick={applyFilters} size="sm" className="h-9 flex-1">
+                                    <Filter className="size-3 mr-1" />
+                                    Terapkan
+                                </Button>
+                                {hasActiveFilter && (
+                                    <Button onClick={resetFilters} size="sm" variant="outline" className="h-9">
+                                        <X className="size-3" />
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Table */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            <CalendarDays className="size-5" />
+                            Riwayat Transaksi
+                            <Badge variant="secondary" className="ml-1">
+                                {transactions.length} transaksi
+                            </Badge>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {transactions.length === 0 ? (
+                            <p className="py-12 text-center text-sm text-muted-foreground">
+                                Tidak ada transaksi untuk filter yang dipilih.
+                            </p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-40">No. Transaksi</TableHead>
+                                            <TableHead className="w-28">Tanggal</TableHead>
+                                            <TableHead className="w-48">Ruangan / Unit Kerja</TableHead>
+                                            <TableHead className="w-40">Nama Peminta</TableHead>
+                                            <TableHead className="w-32">Kode Barang</TableHead>
+                                            <TableHead>Nama Barang</TableHead>
+                                            <TableHead className="text-right w-24">Jumlah</TableHead>
+                                            <TableHead className="w-20">Satuan</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {transactions.map((trx) =>
+                                            trx.items.length === 0 ? (
+                                                <TableRow key={trx.id}>
+                                                    <TableCell className="font-mono text-sm">{trx.kode_transaksi}</TableCell>
+                                                    <TableCell>{trx.tanggal}</TableCell>
+                                                    <TableCell>{trx.ruangan_nama}</TableCell>
+                                                    <TableCell>{trx.nama_peminta}</TableCell>
+                                                    <TableCell colSpan={4} className="text-muted-foreground italic text-xs">
+                                                        Tidak ada item
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                trx.items.map((item, idx) => (
+                                                    <TableRow key={`${trx.id}-${idx}`} className="hover:bg-muted/30">
+                                                        {idx === 0 && (
+                                                            <>
+                                                                <TableCell
+                                                                    rowSpan={trx.items.length}
+                                                                    className="font-mono text-sm align-top pt-3"
+                                                                >
+                                                                    {trx.kode_transaksi}
+                                                                </TableCell>
+                                                                <TableCell
+                                                                    rowSpan={trx.items.length}
+                                                                    className="align-top pt-3 text-sm"
+                                                                >
+                                                                    {trx.tanggal}
+                                                                </TableCell>
+                                                                <TableCell
+                                                                    rowSpan={trx.items.length}
+                                                                    className="align-top pt-3 font-medium"
+                                                                >
+                                                                    {trx.ruangan_nama}
+                                                                </TableCell>
+                                                                <TableCell
+                                                                    rowSpan={trx.items.length}
+                                                                    className="align-top pt-3 text-sm text-muted-foreground"
+                                                                >
+                                                                    {trx.nama_peminta}
+                                                                </TableCell>
+                                                            </>
+                                                        )}
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {item.kode_barang}
+                                                        </TableCell>
+                                                        <TableCell>{item.nama_barang}</TableCell>
+                                                        <TableCell className="text-right font-semibold">
+                                                            {item.jumlah}
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground text-xs">
+                                                            {item.satuan}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ),
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+            </div>
+        </AppLayout>
+    );
+}

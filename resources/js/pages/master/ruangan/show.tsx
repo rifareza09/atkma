@@ -1,8 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Pencil, Building2, Package } from 'lucide-react';
+import { ArrowLeft, Pencil, Building2, Package, CalendarDays, X, FileDown } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { ruanganIndex, ruanganEdit } from '@/lib/atk-routes';
@@ -39,6 +43,75 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
         { title: 'Data Ruangan', href: ruanganIndex() },
         { title: ruangan.nama, href: '#' },
     ];
+
+    // Kumpulkan semua tahun yang ada di data transaksi
+    const availableYears = useMemo(() => {
+        const years = new Set(transactions.map((t) => t.tanggal.substring(0, 4)));
+        return Array.from(years).sort((a, b) => Number(b) - Number(a));
+    }, [transactions]);
+
+    const currentYear = new Date().getFullYear().toString();
+    const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+
+    const [filterTanggal, setFilterTanggal] = useState('');
+    const [filterBulan, setFilterBulan] = useState(currentMonth);
+    const [filterTahun, setFilterTahun] = useState(currentYear);
+
+    const MONTHS = [
+        { value: '01', label: 'Januari' },
+        { value: '02', label: 'Februari' },
+        { value: '03', label: 'Maret' },
+        { value: '04', label: 'April' },
+        { value: '05', label: 'Mei' },
+        { value: '06', label: 'Juni' },
+        { value: '07', label: 'Juli' },
+        { value: '08', label: 'Agustus' },
+        { value: '09', label: 'September' },
+        { value: '10', label: 'Oktober' },
+        { value: '11', label: 'November' },
+        { value: '12', label: 'Desember' },
+    ];
+
+    const filteredTransactions = useMemo(() => {
+        return transactions.filter((trx) => {
+            // tanggal format: YYYY-MM-DD atau DD/MM/YYYY — normalize
+            const raw = trx.tanggal ?? '';
+            // coba parse berbagai format
+            let dateStr = raw; // asumsikan YYYY-MM-DD
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+                // DD/MM/YYYY → YYYY-MM-DD
+                const [d, m, y] = raw.split('/');
+                dateStr = `${y}-${m}-${d}`;
+            }
+
+            if (filterTanggal) {
+                return dateStr === filterTanggal;
+            }
+            const yearMatch = filterTahun && filterTahun !== 'all' ? dateStr.startsWith(filterTahun) : true;
+            const monthMatch = filterBulan && filterBulan !== 'all' ? dateStr.substring(5, 7) === filterBulan : true;
+            return yearMatch && monthMatch;
+        });
+    }, [transactions, filterTanggal, filterBulan, filterTahun]);
+
+    const hasFilter = filterTanggal !== '' || filterBulan !== currentMonth || filterTahun !== currentYear;
+
+    const resetFilter = () => {
+        setFilterTanggal('');
+        setFilterBulan(currentMonth);
+        setFilterTahun(currentYear);
+    };
+
+    const handleExportPdf = () => {
+        const params = new URLSearchParams();
+        if (filterTanggal) {
+            params.set('tanggal', filterTanggal);
+        } else {
+            if (filterBulan && filterBulan !== 'all') params.set('bulan', filterBulan);
+            if (filterTahun && filterTahun !== 'all') params.set('tahun', filterTahun);
+        }
+        const qs = params.toString();
+        window.open(`/master/ruangan/${ruangan.id}/export-pdf${qs ? '?' + qs : ''}`, '_blank');
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -161,15 +234,114 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
                 {/* Riwayat Peminjaman Barang */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Package className="size-5" />
-                            Riwayat Peminjaman Barang
-                        </CardTitle>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <CardTitle className="flex items-center gap-2">
+                                <Package className="size-5" />
+                                Riwayat Peminjaman Barang
+                                <Badge variant="secondary" className="ml-1">
+                                    {filteredTransactions.length} transaksi
+                                </Badge>
+                            </CardTitle>
+
+                            {/* Filter Bar */}
+                            <div className="flex flex-wrap items-end gap-2">
+                                {/* Filter Tanggal spesifik */}
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Tanggal</Label>
+                                    <Input
+                                        type="date"
+                                        value={filterTanggal}
+                                        onChange={(e) => {
+                                            setFilterTanggal(e.target.value);
+                                            if (e.target.value) {
+                                                setFilterBulan('all');
+                                                setFilterTahun('all');
+                                            } else {
+                                                setFilterBulan(currentMonth);
+                                                setFilterTahun(currentYear);
+                                            }
+                                        }}
+                                        className="h-8 text-sm w-36"
+                                    />
+                                </div>
+
+                                {/* Filter Bulan */}
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Bulan</Label>
+                                    <Select
+                                        value={filterBulan}
+                                        onValueChange={(v) => {
+                                            setFilterBulan(v);
+                                            setFilterTanggal('');
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 text-sm w-32">
+                                            <SelectValue placeholder="Semua" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua Bulan</SelectItem>
+                                            {MONTHS.map((m) => (
+                                                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Filter Tahun */}
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Tahun</Label>
+                                    <Select
+                                        value={filterTahun}
+                                        onValueChange={(v) => {
+                                            setFilterTahun(v);
+                                            setFilterTanggal('');
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 text-sm w-24">
+                                            <SelectValue placeholder="Semua" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua Tahun</SelectItem>
+                                            {availableYears.map((y) => (
+                                                <SelectItem key={y} value={y}>{y}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Reset */}
+                                {hasFilter && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={resetFilter}
+                                        className="h-8 text-xs text-muted-foreground"
+                                    >
+                                        <X className="size-3 mr-1" />
+                                        Reset
+                                    </Button>
+                                )}
+
+                                {/* Export PDF */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleExportPdf}
+                                    className="h-8 text-xs"
+                                    disabled={filteredTransactions.length === 0}
+                                >
+                                    <FileDown className="size-3 mr-1" />
+                                    Export PDF
+                                </Button>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        {transactions.length === 0 ? (
+                        {filteredTransactions.length === 0 ? (
                             <p className="text-sm text-muted-foreground py-4 text-center">
-                                Belum ada riwayat peminjaman barang untuk ruangan ini.
+                                {transactions.length === 0
+                                    ? 'Belum ada riwayat peminjaman barang untuk ruangan ini.'
+                                    : 'Tidak ada transaksi pada filter yang dipilih.'}
                             </p>
                         ) : (
                             <div className="overflow-x-auto">
@@ -186,7 +358,7 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {transactions.map((trx) =>
+                                        {filteredTransactions.map((trx) =>
                                             trx.items.length === 0 ? (
                                                 <tr key={trx.id} className="border-b last:border-0">
                                                     <td className="py-3 pr-4 font-mono">{trx.kode_transaksi}</td>

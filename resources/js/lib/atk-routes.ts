@@ -9,6 +9,9 @@
 export const inventoryIndex = () => '/inventory';
 export const prosesPermintaanIndex = () => '/inventory/proses-permintaan';
 
+// History Transaksi
+export const historyIndex = () => '/history';
+
 // Master Data Routes
 export const barangIndex = () => '/master/barang';
 export const barangCreate = () => '/master/barang/create';

@@ -9,6 +9,7 @@ import {
     ClipboardCheck,
     Box,
     TrendingUp,
+    History,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -23,6 +24,7 @@ import {
 import {
     barangIndex,
     barangMasukIndex,
+    historyIndex,
     inventoryIndex,
     ruanganIndex,
     transaksiMasukIndex,
@@ -84,6 +86,11 @@ export function AppSidebar() {
                 title: 'Rooms',
                 href: ruanganIndex(),
                 icon: Building2,
+            },
+            {
+                title: 'History',
+                href: historyIndex(),
+                icon: History,
             },
             {
                 title: 'Reports',

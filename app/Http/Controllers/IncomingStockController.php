@@ -92,19 +92,27 @@ class IncomingStockController extends Controller
     {
         $this->authorize('create', IncomingStock::class);
 
-        $incomingStock = IncomingStock::create([
-            'barang_id'     => $request->barang_id,
-            'jumlah'        => $request->jumlah,
-            'tanggal_masuk' => $request->tanggal,
-            'sumber'        => $request->sumber_tujuan,
-            'nomor_dokumen' => $request->nomor_referensi,
-            'keterangan'    => $request->keterangan,
-            'user_id'       => auth()->id(),
-            'status'        => 'approved',
-        ]);
+        $lastInserted = null;
+        foreach ($request->items as $item) {
+            $lastInserted = IncomingStock::create([
+                'barang_id'     => $item['barang_id'],
+                'jumlah'        => $item['jumlah'],
+                'tanggal_masuk' => $request->tanggal,
+                'sumber'        => $request->sumber_tujuan,
+                'nomor_dokumen' => $request->nomor_referensi,
+                'keterangan'    => $request->keterangan,
+                'user_id'       => auth()->id(),
+                'status'        => 'approved',
+            ]);
+        }
 
-        return redirect()->route('barang-masuk.show', $incomingStock)
-            ->with('success', 'Barang masuk berhasil dicatat dan stok telah diperbarui.');
+        $count = count($request->items);
+        $message = $count === 1
+            ? 'Barang masuk berhasil dicatat dan stok telah diperbarui.'
+            : "{$count} barang masuk berhasil dicatat dan stok telah diperbarui.";
+
+        return redirect()->route('barang-masuk.index')
+            ->with('success', $message);
     }
 
     /**

@@ -20,12 +20,13 @@ class IncomingStockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'barang_id'       => ['required', 'integer', 'exists:barangs,id'],
-            'jumlah'          => ['required', 'integer', 'min:1', 'max:999999'],
-            'tanggal'         => ['required', 'date', 'before_or_equal:today'],
-            'sumber_tujuan'   => ['nullable', 'string', 'max:255'],
-            'nomor_referensi' => ['nullable', 'string', 'max:255'],
-            'keterangan'      => ['nullable', 'string', 'max:1000'],
+            'tanggal'              => ['required', 'date', 'before_or_equal:today'],
+            'sumber_tujuan'        => ['nullable', 'string', 'max:255'],
+            'nomor_referensi'      => ['nullable', 'string', 'max:255'],
+            'keterangan'           => ['nullable', 'string', 'max:1000'],
+            'items'                => ['required', 'array', 'min:1'],
+            'items.*.barang_id'    => ['required', 'integer', 'exists:barangs,id'],
+            'items.*.jumlah'       => ['required', 'integer', 'min:1', 'max:999999'],
         ];
     }
 
@@ -35,12 +36,13 @@ class IncomingStockRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'barang_id'       => 'barang',
-            'jumlah'          => 'jumlah barang',
-            'tanggal'         => 'tanggal barang masuk',
-            'sumber_tujuan'   => 'sumber',
-            'nomor_referensi' => 'nomor referensi',
-            'keterangan'      => 'keterangan',
+            'tanggal'           => 'tanggal barang masuk',
+            'sumber_tujuan'     => 'sumber',
+            'nomor_referensi'   => 'nomor referensi',
+            'keterangan'        => 'keterangan',
+            'items'             => 'daftar barang',
+            'items.*.barang_id' => 'barang',
+            'items.*.jumlah'    => 'jumlah barang',
         ];
     }
 
@@ -50,15 +52,18 @@ class IncomingStockRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'barang_id.required' => 'Barang harus dipilih.',
-            'barang_id.exists'   => 'Barang yang dipilih tidak valid.',
-            'jumlah.required'    => 'Jumlah barang harus diisi.',
-            'jumlah.integer'     => 'Jumlah barang harus berupa angka.',
-            'jumlah.min'         => 'Jumlah barang minimal 1.',
-            'jumlah.max'         => 'Jumlah barang maksimal 999999.',
-            'tanggal.required'          => 'Tanggal barang masuk harus diisi.',
-            'tanggal.date'              => 'Format tanggal tidak valid.',
-            'tanggal.before_or_equal'   => 'Tanggal barang masuk tidak boleh lebih dari hari ini.',
+            'tanggal.required'            => 'Tanggal barang masuk harus diisi.',
+            'tanggal.date'                => 'Format tanggal tidak valid.',
+            'tanggal.before_or_equal'     => 'Tanggal barang masuk tidak boleh lebih dari hari ini.',
+            'items.required'              => 'Minimal 1 barang harus diisi.',
+            'items.array'                 => 'Format daftar barang tidak valid.',
+            'items.min'                   => 'Minimal 1 barang harus diisi.',
+            'items.*.barang_id.required'  => 'Barang harus dipilih.',
+            'items.*.barang_id.exists'    => 'Barang yang dipilih tidak valid.',
+            'items.*.jumlah.required'     => 'Jumlah barang harus diisi.',
+            'items.*.jumlah.integer'      => 'Jumlah barang harus berupa angka.',
+            'items.*.jumlah.min'          => 'Jumlah barang minimal 1.',
+            'items.*.jumlah.max'          => 'Jumlah barang maksimal 999999.',
         ];
     }
 }

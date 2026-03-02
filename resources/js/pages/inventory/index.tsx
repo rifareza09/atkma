@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Crown, Search, Plus, Minus, Camera, ArrowRight, PackagePlus } from 'lucide-react';
+import { Crown, Search, Plus, Minus, Camera, ArrowRight, PackagePlus, LayoutGrid, List } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     });
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
     const [selectedBarang, setSelectedBarang] = useState<{ id: number; nama: string } | null>(null);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Get ruangan names for autocomplete suggestions
     const ruanganNames = ruangans.map((r) => r.nama);
@@ -116,6 +117,15 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
 
     const removeFromCart = (id: number) => {
         setCart((prev) => prev.filter((item) => item.id !== id));
+    };
+
+    const setQuantityDirect = (id: number, value: number, maxStok?: number) => {
+        const clamped = Math.max(1, maxStok !== undefined ? Math.min(value, maxStok) : value);
+        setCart((prev) =>
+            prev.map((item) =>
+                item.id === id ? { ...item, quantity: isNaN(clamped) ? 1 : clamped } : item
+            )
+        );
     };
 
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -250,26 +260,56 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                     </Button>
                                 ))}
                             </div>
-                            <Button variant="outline" size="sm">
-                                <svg
-                                    className="w-4 h-4 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                                    />
-                                </svg>
-                                Filter
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm">
+                                    <svg
+                                        className="w-4 h-4 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                                        />
+                                    </svg>
+                                    Filter
+                                </Button>
+                                {/* View Toggle */}
+                                <div className="flex items-center border rounded-md overflow-hidden">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('grid')}
+                                        className={`p-2 transition-colors ${
+                                            viewMode === 'grid'
+                                                ? 'bg-black text-white'
+                                                : 'bg-white text-gray-500 hover:bg-gray-100'
+                                        }`}
+                                        title="Tampilan Grid"
+                                    >
+                                        <LayoutGrid className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-2 transition-colors ${
+                                            viewMode === 'list'
+                                                ? 'bg-black text-white'
+                                                : 'bg-white text-gray-500 hover:bg-gray-100'
+                                        }`}
+                                        title="Tampilan List"
+                                    >
+                                        <List className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Products Grid */}
+                    {/* Products */}
+                    {viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filteredBarangs.map((barang) => {
                             const inCart = cart.find((item) => item.id === barang.id);
@@ -294,6 +334,9 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                             <h3 className="font-semibold text-lg line-clamp-2">
                                                 {barang.nama}
                                             </h3>
+                                            <p className="text-xs font-mono text-muted-foreground mt-0.5 tracking-wide">
+                                                {barang.kode}
+                                            </p>
                                             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                                                 <svg
                                                     className="w-4 h-4"
@@ -331,9 +374,20 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                                             >
                                                                 <Minus className="h-4 w-4" />
                                                             </Button>
-                                                            <span className="flex-1 text-center font-semibold">
-                                                                {inCart.quantity}
-                                                            </span>
+                                                            <Input
+                                                                type="number"
+                                                                min="1"
+                                                                max={transactionMode === 'keluar' ? barang.stok : undefined}
+                                                                value={inCart.quantity}
+                                                                onChange={(e) =>
+                                                                    setQuantityDirect(
+                                                                        barang.id,
+                                                                        parseInt(e.target.value),
+                                                                        transactionMode === 'keluar' ? barang.stok : undefined
+                                                                    )
+                                                                }
+                                                                className="h-8 w-12 text-center px-1 font-semibold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                            />
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
@@ -375,6 +429,102 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                             );
                         })}
                     </div>
+                    ) : (
+                    /* List View */
+                    <div className="space-y-2">
+                        {filteredBarangs.map((barang) => {
+                            const inCart = cart.find((item) => item.id === barang.id);
+                            const isHabis = transactionMode === 'keluar' && barang.stok === 0;
+                            return (
+                                <div
+                                    key={barang.id}
+                                    className="flex items-center gap-4 px-4 py-3 rounded-lg border bg-white hover:shadow-sm transition-shadow"
+                                >
+                                    {/* Icon */}
+                                    <div
+                                        className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0 cursor-pointer hover:from-gray-200 hover:to-gray-300 transition-colors"
+                                        onClick={() => {
+                                            setSelectedBarang({ id: barang.id, nama: barang.nama });
+                                            setHistoryDialogOpen(true);
+                                        }}
+                                        title="Klik untuk melihat riwayat"
+                                    >
+                                        <span className="text-2xl">📦</span>
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-semibold text-sm truncate">{barang.nama}</span>
+                                            {barang.stok <= barang.stok_minimum ? (
+                                                <Badge variant="destructive" className="text-xs shrink-0">Stok Menipis</Badge>
+                                            ) : (
+                                                <Badge className="bg-green-500 text-xs shrink-0">Stok Aman</Badge>
+                                            )}
+                                        </div>
+                                        <p className="text-xs font-mono text-muted-foreground mt-0.5">{barang.kode}</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            Stok: <span className="font-medium text-gray-700">{barang.stok} {barang.satuan}</span>
+                                        </p>
+                                    </div>
+
+                                    {/* Action */}
+                                    {!isSuperadmin ? (
+                                        isHabis ? (
+                                            <span className="text-xs text-red-500 font-medium shrink-0">Stok Habis</span>
+                                        ) : inCart ? (
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => updateQuantity(barang.id, -1)}
+                                                    className="h-7 w-7 p-0"
+                                                >
+                                                    <Minus className="h-3 w-3" />
+                                                </Button>
+                                                <Input
+                                                    type="number"
+                                                    min="1"
+                                                    max={transactionMode === 'keluar' ? barang.stok : undefined}
+                                                    value={inCart.quantity}
+                                                    onChange={(e) =>
+                                                        setQuantityDirect(
+                                                            barang.id,
+                                                            parseInt(e.target.value),
+                                                            transactionMode === 'keluar' ? barang.stok : undefined
+                                                        )
+                                                    }
+                                                    className="h-7 w-10 text-center px-0 text-sm font-semibold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => updateQuantity(barang.id, 1)}
+                                                    className="h-7 w-7 p-0 border-blue-600 text-blue-600"
+                                                    disabled={transactionMode === 'keluar' && inCart.quantity >= barang.stok}
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => addToCart(barang)}
+                                                className="shrink-0 h-8"
+                                            >
+                                                <Plus className="h-3 w-3 mr-1" />
+                                                Tambah
+                                            </Button>
+                                        )
+                                    ) : (
+                                        <span className="text-xs text-muted-foreground shrink-0">View Only</span>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                    )}
 
                     {filteredBarangs.length === 0 && (
                         <div className="text-center py-12 text-muted-foreground">
@@ -404,7 +554,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                     className="flex-1 text-xs sm:text-sm px-2 py-2"
                                     onClick={() => setTransactionMode('masuk')}
                                 >
-                                    <span className="truncate">📦 Tambah Stock</span>
+                                    <span className="truncate">📦 Tambah Stock Awal</span>
                                 </Button>
                                 <Button
                                     type="button"
@@ -448,29 +598,6 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                         <p className="text-xs text-muted-foreground">
                                             Anda bisa memilih dari daftar atau mengetik manual
                                         </p>
-                                    </div>
-                                )}
-
-                                {/* Nama Peminta - Only show for 'keluar' mode */}
-                                {transactionMode === 'keluar' && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor="nama_peminta">
-                                            Nama Peminta
-                                        </Label>
-                                        <div className="relative">
-                                            <Input
-                                                id="nama_peminta"
-                                                value={formData.nama_peminta}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        nama_peminta: e.target.value,
-                                                    })
-                                                }
-                                                placeholder="Nama Lengkap"
-                                            />
-                                            <Camera className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        </div>
                                     </div>
                                 )}
 

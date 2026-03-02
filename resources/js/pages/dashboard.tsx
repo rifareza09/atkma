@@ -16,12 +16,14 @@ import {
     Package,
     Building2,
     ArrowRightLeft,
+    X,
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { StatCard } from '@/components/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     Table,
     TableBody,
@@ -85,6 +87,24 @@ interface DashboardProps {
             nama: string;
         };
     }>;
+    transaksi_hari_ini_detail?: TransaksiDetail[];
+    transaksi_bulan_ini_detail?: TransaksiDetail[];
+}
+
+interface TransaksiDetailItem {
+    nama_barang: string;
+    kode_barang: string;
+    satuan: string;
+    jumlah: number;
+    saldo: number;
+}
+
+interface TransaksiDetail {
+    id: number;
+    kode_transaksi: string;
+    ruangan: string;
+    tanggal: string;
+    items: TransaksiDetailItem[];
 }
 
 // Warna untuk charts
@@ -96,12 +116,16 @@ export default function Dashboard({
     top_barang = [],
     top_ruangan = [],
     barang_stok_rendah = [],
-    transaksi_terbaru = []
+    transaksi_terbaru = [],
+    transaksi_hari_ini_detail = [],
+    transaksi_bulan_ini_detail = [],
 }: DashboardProps) {
     const [lowStockData, setLowStockData] = useState<any>(null);
     const [stockMovements, setStockMovements] = useState<any[]>([]);
     const [loadingLowStock, setLoadingLowStock] = useState(false);
     const [loadingMovements, setLoadingMovements] = useState(false);
+    const [dialogHariIni, setDialogHariIni] = useState(false);
+    const [dialogBulanIni, setDialogBulanIni] = useState(false);
 
     const fetchLowStockData = async () => {
         setLoadingLowStock(true);
@@ -153,6 +177,7 @@ export default function Dashboard({
     })) || [];
 
     return (
+        <>
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
 
@@ -185,22 +210,30 @@ export default function Dashboard({
                             description="Ruangan aktif"
                         />
                     </div>
-                    <div>
+                    <button
+                        type="button"
+                        onClick={() => setDialogHariIni(true)}
+                        className="text-left w-full rounded-xl ring-offset-background transition-all hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                    >
                         <StatCard
                             title="Transaksi Hari Ini"
                             value={stats.total_transaksi_hari_ini}
                             icon={<ArrowRightLeft className="size-4" />}
-                            description="Transaksi hari ini"
+                            description="Klik untuk detail"
                         />
-                    </div>
-                    <div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDialogBulanIni(true)}
+                        className="text-left w-full rounded-xl ring-offset-background transition-all hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                    >
                         <StatCard
                             title="Transaksi Bulan Ini"
                             value={stats.total_transaksi_bulan_ini}
                             icon={<TrendingUp className="size-4" />}
-                            description="Total bulan ini"
+                            description="Klik untuk detail"
                         />
-                    </div>
+                    </button>
                     <div>
                         <StatCard
                             title="Stok Rendah"
@@ -487,6 +520,173 @@ export default function Dashboard({
                 </Card>
             </div>
         </AppLayout>
+
+        {/* Dialog: Transaksi Hari Ini */}
+        <Dialog open={dialogHariIni} onOpenChange={setDialogHariIni}>
+            <DialogContent className="sm:max-w-[90vw] max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <ArrowRightLeft className="size-5 text-blue-600" />
+                        Detail Transaksi Hari Ini
+                        <Badge className="ml-2">{transaksi_hari_ini_detail.length} transaksi</Badge>
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto flex-1 pr-1">
+                    {transaksi_hari_ini_detail.length === 0 ? (
+                        <p className="py-12 text-center text-sm text-muted-foreground">Belum ada transaksi hari ini</p>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-40">Kode Transaksi</TableHead>
+                                    <TableHead className="w-44">Ruangan</TableHead>
+                                    <TableHead className="w-24">Jam</TableHead>
+                                    <TableHead>Barang</TableHead>
+                                    <TableHead className="text-right w-36">Jumlah Diminta</TableHead>
+                                    <TableHead className="text-right w-36">Saldo Barang</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {transaksi_hari_ini_detail.map((trx) =>
+                                    trx.items.length === 0 ? (
+                                        <TableRow key={trx.id}>
+                                            <TableCell className="font-mono text-sm">{trx.kode_transaksi}</TableCell>
+                                            <TableCell>{trx.ruangan}</TableCell>
+                                            <TableCell>{trx.tanggal}</TableCell>
+                                            <TableCell colSpan={3} className="text-muted-foreground text-xs">—</TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        trx.items.map((item, i) => (
+                                            <TableRow key={`${trx.id}-${i}`}>
+                                                {i === 0 && (
+                                                    <>
+                                                        <TableCell
+                                                            rowSpan={trx.items.length}
+                                                            className="font-mono text-sm align-top pt-3"
+                                                        >
+                                                            {trx.kode_transaksi}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            rowSpan={trx.items.length}
+                                                            className="font-medium align-top pt-3"
+                                                        >
+                                                            {trx.ruangan}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            rowSpan={trx.items.length}
+                                                            className="text-muted-foreground text-xs align-top pt-3"
+                                                        >
+                                                            {trx.tanggal}
+                                                        </TableCell>
+                                                    </>
+                                                )}
+                                                <TableCell>
+                                                    <span className="text-xs text-muted-foreground font-mono">{item.kode_barang}</span>
+                                                    <br />
+                                                    <span>{item.nama_barang}</span>
+                                                </TableCell>
+                                                <TableCell className="text-right font-semibold">
+                                                    {item.jumlah} <span className="text-xs text-muted-foreground">{item.satuan}</span>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Badge variant={item.saldo <= 0 ? 'destructive' : 'secondary'}>
+                                                        {item.saldo} {item.satuan}
+                                                    </Badge>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ),
+                                )}
+                            </TableBody>
+                        </Table>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        {/* Dialog: Transaksi Bulan Ini */}
+        <Dialog open={dialogBulanIni} onOpenChange={setDialogBulanIni}>
+            <DialogContent className="sm:max-w-[90vw] max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <TrendingUp className="size-5 text-blue-600" />
+                        Detail Transaksi Bulan Ini
+                        <Badge className="ml-2">{transaksi_bulan_ini_detail.length} transaksi</Badge>
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto flex-1 pr-1">
+                    {transaksi_bulan_ini_detail.length === 0 ? (
+                        <p className="py-12 text-center text-sm text-muted-foreground">Belum ada transaksi bulan ini</p>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-40">Kode Transaksi</TableHead>
+                                    <TableHead className="w-44">Ruangan</TableHead>
+                                    <TableHead className="w-28">Tanggal</TableHead>
+                                    <TableHead>Barang</TableHead>
+                                    <TableHead className="text-right w-36">Jumlah Diminta</TableHead>
+                                    <TableHead className="text-right w-36">Saldo Barang</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {transaksi_bulan_ini_detail.map((trx) =>
+                                    trx.items.length === 0 ? (
+                                        <TableRow key={trx.id}>
+                                            <TableCell className="font-mono text-sm">{trx.kode_transaksi}</TableCell>
+                                            <TableCell>{trx.ruangan}</TableCell>
+                                            <TableCell>{trx.tanggal}</TableCell>
+                                            <TableCell colSpan={3} className="text-muted-foreground text-xs">—</TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        trx.items.map((item, i) => (
+                                            <TableRow key={`${trx.id}-${i}`}>
+                                                {i === 0 && (
+                                                    <>
+                                                        <TableCell
+                                                            rowSpan={trx.items.length}
+                                                            className="font-mono text-sm align-top pt-3"
+                                                        >
+                                                            {trx.kode_transaksi}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            rowSpan={trx.items.length}
+                                                            className="font-medium align-top pt-3"
+                                                        >
+                                                            {trx.ruangan}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            rowSpan={trx.items.length}
+                                                            className="text-muted-foreground text-xs align-top pt-3"
+                                                        >
+                                                            {trx.tanggal}
+                                                        </TableCell>
+                                                    </>
+                                                )}
+                                                <TableCell>
+                                                    <span className="text-xs text-muted-foreground font-mono">{item.kode_barang}</span>
+                                                    <br />
+                                                    <span>{item.nama_barang}</span>
+                                                </TableCell>
+                                                <TableCell className="text-right font-semibold">
+                                                    {item.jumlah} <span className="text-xs text-muted-foreground">{item.satuan}</span>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Badge variant={item.saldo <= 0 ? 'destructive' : 'secondary'}>
+                                                        {item.saldo} {item.satuan}
+                                                    </Badge>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ),
+                                )}
+                            </TableBody>
+                        </Table>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    </>
     );
 }
 
