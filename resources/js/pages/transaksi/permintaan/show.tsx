@@ -205,7 +205,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                             </Badge>
                         </div>
                         <p className="text-muted-foreground">
-                            Detail permintaan barang
+                            Detail Permintaan Barang
                         </p>
                     </div>
                     <Button variant="outline" asChild>
