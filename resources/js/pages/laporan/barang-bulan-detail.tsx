@@ -93,9 +93,9 @@ export default function BarangBulanDetail({ barang, ruangans, grand_total, month
     ];
 
     const [showDialog, setShowDialog] = useState(false);
-    const [namaPpk, setNamaPpk] = useState('ST. KRIS NUGROHO, SH., MH.');
-    const [namaMengetahui, setNamaMengetahui] = useState('ASEP NURSOBAH S.AG., MH.');
-    const [namaPjawab, setNamaPjawab] = useState('RANO, SE.');
+    const [namaPpk, setNamaPpk] = useState('');
+    const [namaMengetahui, setNamaMengetahui] = useState('');
+    const [namaPjawab, setNamaPjawab] = useState('');
 
     const handleExportPdf = () => {
         setShowDialog(true);
