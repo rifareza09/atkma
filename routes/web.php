@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\IncomingStockController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\NotificationController;
@@ -65,6 +66,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json($transaction);
     });
 
+    // History Transaksi
+    Route::get('history', [HistoryController::class, 'index'])->name('history.index');
+    Route::get('history/export-pdf', [HistoryController::class, 'exportPdf'])->name('history.export-pdf');
+    Route::get('history/export-excel', [HistoryController::class, 'exportExcel'])->name('history.export-excel');
+
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('api/dashboard/low-stock', [DashboardController::class, 'getLowStockData'])->name('api.dashboard.low-stock');
@@ -91,6 +97,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('barang/{barang}/transaction-history/export', [BarangController::class, 'exportTransactionHistory'])->name('barang.transactionHistory.export');
 
         // Ruangan routes - Admin can create/update/delete, Pengawas can only view
+        Route::get('ruangan/{ruangan}/export-pdf', [RuanganController::class, 'exportPdf'])->name('ruangan.export-pdf');
         Route::resource('ruangan', RuanganController::class);
     });
 

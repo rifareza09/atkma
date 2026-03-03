@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RuanganRequest;
 use App\Models\Ruangan;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -110,6 +111,60 @@ class RuanganController extends Controller
             'ruangan'      => $ruangan,
             'transactions' => $transactions,
         ]);
+    }
+
+    /**
+     * Export riwayat peminjaman ruangan ke PDF.
+     */
+    public function exportPdf(Request $request, Ruangan $ruangan)
+    {
+        $this->authorize('view', $ruangan);
+
+        $query = \App\Models\Transaction::with(['items.barang'])
+            ->where('ruangan_nama', $ruangan->nama)
+            ->where('type', 'keluar');
+
+        $bulan = $request->query('bulan'); // format: 01-12
+        $tahun = $request->query('tahun'); // format: 2026
+        $tanggal = $request->query('tanggal'); // format: YYYY-MM-DD
+
+        if ($tanggal) {
+            $query->whereDate('tanggal', $tanggal);
+            $period_label = \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y');
+        } else {
+            if ($tahun) {
+                $query->whereYear('tanggal', $tahun);
+            }
+            if ($bulan) {
+                $query->whereMonth('tanggal', $bulan);
+            }
+
+            $bulanLabel = $bulan ? \Carbon\Carbon::createFromDate(null, $bulan, 1)->translatedFormat('F') : null;
+            if ($bulanLabel && $tahun) {
+                $period_label = $bulanLabel . ' ' . $tahun;
+            } elseif ($tahun) {
+                $period_label = 'Tahun ' . $tahun;
+            } elseif ($bulanLabel) {
+                $period_label = $bulanLabel;
+            } else {
+                $period_label = 'Semua Periode';
+            }
+        }
+
+        $transactions = $query->orderBy('tanggal', 'desc')->get();
+
+        $pdf = Pdf::loadView('exports.ruangan-pdf', [
+            'ruangan'      => $ruangan,
+            'transactions' => $transactions,
+            'period_label' => $period_label,
+            'generated_at' => now()->format('d F Y H:i:s'),
+        ]);
+
+        $pdf->setPaper('a4', 'landscape');
+
+        $filename = 'riwayat-' . str($ruangan->kode)->slug() . '-' . now()->format('Ymd') . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     /**

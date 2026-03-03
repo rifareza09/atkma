@@ -8,6 +8,7 @@ import {
     Database,
     PackagePlus,
     BarChart2,
+    History,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -22,6 +23,7 @@ import {
 import {
     barangIndex,
     barangMasukIndex,
+    historyIndex,
     inventoryIndex,
     ruanganIndex,
     transaksiMasukIndex,
@@ -85,6 +87,11 @@ export function AppSidebar() {
                 icon: Building2,
             },
             {
+                title: 'History',
+                href: historyIndex(),
+                icon: History,
+            },
+            {
                 title: 'Reports',
                 href: laporanInventaris(),
                 icon: BarChart2,
@@ -96,7 +103,7 @@ export function AppSidebar() {
         <Sidebar
             collapsible="icon"
             variant="sidebar"
-            className="bg-[#0f172a]"
+            className="bg-[#2563eb]"
         >
             <SidebarHeader>
                 <SidebarMenu>
