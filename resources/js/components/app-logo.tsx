@@ -3,9 +3,9 @@ export default function AppLogo() {
         <>
             <div className="flex aspect-square size-16 items-center justify-center rounded-md bg-white/10 p-2">
                 {/* Logo Mahkamah Agung RI */}
-                <img 
-                    src="/Logo_Mahkamah_Agung_RI-removebg-preview.png" 
-                    alt="Logo Mahkamah Agung RI" 
+                <img
+                    src="/Logo_Mahkamah_Agung_RI-removebg-preview.png"
+                    alt="Logo Mahkamah Agung RI"
                     className="w-full h-full object-contain"
                 />
             </div>

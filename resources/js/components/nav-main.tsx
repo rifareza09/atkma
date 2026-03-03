@@ -20,22 +20,22 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
             </SidebarGroupLabel>
             <SidebarMenu className="space-y-1">
                 {items.map((item, index) => (
-                    <SidebarMenuItem 
+                    <SidebarMenuItem
                         key={item.title}
                     >
                         <SidebarMenuButton
                             asChild
                             isActive={isCurrentUrl(item.href)}
                             tooltip={{ children: item.title }}
-                            className="group relative text-white/80 hover:text-white hover:bg-white/10 
+                            className="group relative text-white/80 hover:text-white hover:bg-white/10
                                      data-[active=true]:bg-white data-[active=true]:text-[#2563eb]
                                      rounded-xl px-3 py-2 transition-all duration-150"
                         >
                             <Link href={item.href} prefetch className="flex items-center gap-3 w-full">
                                 {item.icon && (
-                                    <item.icon 
-                                        className="flex-shrink-0 group-data-[active=true]:text-[#2563eb] text-white" 
-                                        size={20} 
+                                    <item.icon
+                                        className="flex-shrink-0 group-data-[active=true]:text-[#2563eb] text-white"
+                                        size={20}
                                         strokeWidth={2}
                                     />
                                 )}
