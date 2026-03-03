@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     ArrowLeft,
     Building2,
@@ -11,6 +12,15 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import {
     Table,
     TableBody,
@@ -82,11 +92,25 @@ export default function BarangBulanDetail({ barang, ruangans, grand_total, month
         { title: `${monthName} ${year}`, href: '#' },
     ];
 
+    const [showDialog, setShowDialog] = useState(false);
+    const [namaPpk, setNamaPpk] = useState('ST. KRIS NUGROHO, SH., MH.');
+    const [namaMengetahui, setNamaMengetahui] = useState('ASEP NURSOBAH S.AG., MH.');
+    const [namaPjawab, setNamaPjawab] = useState('RANO, SE.');
+
     const handleExportPdf = () => {
-        window.open(
-            `/laporan/barang/${barang.id}/export-pdf?month=${month}&year=${year}`,
-            '_blank',
-        );
+        setShowDialog(true);
+    };
+
+    const handleConfirmExport = () => {
+        const params = new URLSearchParams({
+            month: String(month),
+            year: String(year),
+            nama_ppk: namaPpk,
+            nama_mengetahui: namaMengetahui,
+            nama_pjawab: namaPjawab,
+        });
+        window.open(`/laporan/barang/${barang.id}/export-pdf?${params.toString()}`, '_blank');
+        setShowDialog(false);
     };
 
     const totalTransactions = ruangans.reduce((sum, r) => sum + r.rows.length, 0);
@@ -94,6 +118,59 @@ export default function BarangBulanDetail({ barang, ruangans, grand_total, month
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${barang.nama} — ${monthName} ${year}`} />
+
+            {/* Dialog Tanda Tangan */}
+            <Dialog open={showDialog} onOpenChange={setShowDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <FileText className="size-5 text-blue-600" />
+                            Pengaturan Tanda Tangan PDF
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                PPK Biaya Proses
+                            </Label>
+                            <Input
+                                value={namaPpk}
+                                onChange={e => setNamaPpk(e.target.value)}
+                                placeholder="Nama PPK Biaya Proses"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Mengetahui — Kuasa Pengelola Biaya Proses
+                            </Label>
+                            <Input
+                                value={namaMengetahui}
+                                onChange={e => setNamaMengetahui(e.target.value)}
+                                placeholder="Nama Mengetahui"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Penanggung Jawab ATK
+                            </Label>
+                            <Input
+                                value={namaPjawab}
+                                onChange={e => setNamaPjawab(e.target.value)}
+                                placeholder="Nama Penanggung Jawab ATK"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowDialog(false)}>
+                            Batal
+                        </Button>
+                        <Button onClick={handleConfirmExport} className="bg-blue-600 hover:bg-blue-700">
+                            <FileText className="mr-2 size-4" />
+                            Export PDF
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="space-y-6 p-6">
                 {/* ── Header ── */}

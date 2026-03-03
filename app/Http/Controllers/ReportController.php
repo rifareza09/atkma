@@ -363,17 +363,20 @@ class ReportController extends Controller
         $saldoAkhir       = $saldo;
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.barang-bulan-pdf', [
-            'barang'         => $barang,
-            'rows'           => $rows,
-            'saldo_awal'     => $saldoAwal,
-            'total_masuk'    => $totalMasukBulan,
-            'total_keluar'   => $totalKeluarBulan,
-            'saldo_akhir'    => $saldoAkhir,
-            'month'          => $month,
-            'year'           => $year,
-            'month_name'     => $monthNames[$month] ?? '-',
-            'generated_at'   => now()->format('d/m/Y H:i:s'),
-            'signature_date' => now()->locale('id')->isoFormat('D MMMM Y'),
+            'barang'          => $barang,
+            'rows'            => $rows,
+            'saldo_awal'      => $saldoAwal,
+            'total_masuk'     => $totalMasukBulan,
+            'total_keluar'    => $totalKeluarBulan,
+            'saldo_akhir'     => $saldoAkhir,
+            'month'           => $month,
+            'year'            => $year,
+            'month_name'      => $monthNames[$month] ?? '-',
+            'generated_at'    => now()->format('d/m/Y H:i:s'),
+            'signature_date'  => now()->locale('id')->isoFormat('D MMMM Y'),
+            'nama_ppk'        => $request->get('nama_ppk', 'ST. KRIS NUGROHO, SH., MH.'),
+            'nama_mengetahui' => $request->get('nama_mengetahui', 'ASEP NURSOBAH S.AG., MH.'),
+            'nama_pjawab'     => $request->get('nama_pjawab', 'RANO, SE.'),
         ])->setPaper('a4', 'portrait');
 
         $filename = 'kartu-stok-' . \Illuminate\Support\Str::slug($barang->nama)

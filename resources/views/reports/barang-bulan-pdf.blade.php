@@ -191,19 +191,19 @@
                         <div class="sig-city-date">&nbsp;</div>
                         <div class="sig-title">PPK Biaya Proses</div>
                         <div class="sig-line"></div>
-                        <div class="sig-name">ST. KRIS NUGROHO, SH., MH.</div>
+                        <div class="sig-name">{{ $nama_ppk }}</div>
                     </td>
                     <td>
                         <div class="sig-city-date">&nbsp;</div>
                         <div class="sig-title">Mengetahui,<br>Kuasa Pengelola Biaya Proses</div>
                         <div class="sig-line"></div>
-                        <div class="sig-name">ASEP NURSOBAH S.AG., MH.</div>
+                        <div class="sig-name">{{ $nama_mengetahui }}</div>
                     </td>
                     <td>
                         <div class="sig-city-date">Jakarta, {{ $signature_date }}</div>
                         <div class="sig-title">Penanggung Jawab ATK</div>
                         <div class="sig-line"></div>
-                        <div class="sig-name">RANO, SE.</div>
+                        <div class="sig-name">{{ $nama_pjawab }}</div>
                     </td>
                 </tr>
             </table>
