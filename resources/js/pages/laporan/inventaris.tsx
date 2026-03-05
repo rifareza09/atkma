@@ -1,5 +1,5 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { Calendar, Eye, FileText, Download, Filter } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { Eye, FileText, Download } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -51,16 +51,7 @@ interface LaporanInventarisProps {
 
 export default function LaporanInventaris({
     barangs = [],
-    ruangans = [],
-    filters = {},
 }: LaporanInventarisProps) {
-    const [filterForm, setFilterForm] = useState({
-        ruangan_id: filters.ruangan_id || 'all',
-        status: filters.status || 'all',
-        from_date: filters.from_date || '',
-        to_date: filters.to_date || '',
-    });
-
     const currentYear  = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
 
@@ -124,40 +115,8 @@ export default function LaporanInventaris({
         setShowExportDialog(false);
     };
 
-    const applyFilters = () => {
-        const params: Record<string, any> = {};
-
-        if (filterForm.ruangan_id !== 'all') params.ruangan_id = filterForm.ruangan_id;
-        if (filterForm.status !== 'all') params.status = filterForm.status;
-        if (filterForm.from_date) params.from_date = filterForm.from_date;
-        if (filterForm.to_date) params.to_date = filterForm.to_date;
-
-        router.get('/laporan/inventaris', params, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-
-    const resetFilters = () => {
-        setFilterForm({
-            ruangan_id: 'all',
-            status: 'all',
-            from_date: '',
-            to_date: '',
-        });
-        router.get('/laporan/inventaris', {}, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-
     const handleExportExcel = () => {
-        const params = new URLSearchParams();
-        if (filterForm.ruangan_id !== 'all') params.append('ruangan_id', filterForm.ruangan_id);
-        if (filterForm.status !== 'all') params.append('status', filterForm.status);
-        if (filterForm.from_date) params.append('from_date', filterForm.from_date);
-        if (filterForm.to_date) params.append('to_date', filterForm.to_date);
-        window.open(`/reports/inventory/excel?${params.toString()}`, '_blank');
+        window.open('/reports/inventory/excel', '_blank');
     };
 
     return (
@@ -254,115 +213,7 @@ export default function LaporanInventaris({
                 </DialogContent>
             </Dialog>
 
-            <div className="flex h-full flex-1 gap-6 p-6">
-                {/* Filter Sidebar */}
-                <Card className="w-80 h-fit">
-                    <CardContent className="p-6 space-y-6">
-                        <div className="flex items-center gap-2">
-                            <Filter className="h-5 w-5" />
-                            <h3 className="font-bold text-lg">Filter Laporan</h3>
-                        </div>
-
-                        {/* Date Range */}
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold text-gray-600">
-                                PERIODE LAPORAN
-                            </Label>
-                            <div className="space-y-2">
-                                <div className="relative">
-                                    <Label htmlFor="from_date" className="text-sm">
-                                        Dari Tanggal
-                                    </Label>
-                                    <Input
-                                        id="from_date"
-                                        type="date"
-                                        value={filterForm.from_date}
-                                        onChange={(e) =>
-                                            setFilterForm({ ...filterForm, from_date: e.target.value })
-                                        }
-                                        className="text-sm mt-1"
-                                    />
-                                    <Calendar className="absolute right-3 bottom-3 h-4 w-4 text-gray-400 pointer-events-none" />
-                                </div>
-                                <div className="relative">
-                                    <Label htmlFor="to_date" className="text-sm">
-                                        Sampai Tanggal
-                                    </Label>
-                                    <Input
-                                        id="to_date"
-                                        type="date"
-                                        value={filterForm.to_date}
-                                        onChange={(e) =>
-                                            setFilterForm({ ...filterForm, to_date: e.target.value })
-                                        }
-                                        className="text-sm mt-1"
-                                    />
-                                    <Calendar className="absolute right-3 bottom-3 h-4 w-4 text-gray-400 pointer-events-none" />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Unit Kerja */}
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold text-gray-600">UNIT KERJA</Label>
-                            <Select
-                                value={filterForm.ruangan_id}
-                                onValueChange={(value) =>
-                                    setFilterForm({ ...filterForm, ruangan_id: value })
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Semua Unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Semua Unit</SelectItem>
-                                    {ruangans.map((ruangan) => (
-                                        <SelectItem key={ruangan.id} value={ruangan.id.toString()}>
-                                            {ruangan.nama}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Status Barang */}
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold text-gray-600">STATUS BARANG</Label>
-                            <Select
-                                value={filterForm.status}
-                                onValueChange={(value) =>
-                                    setFilterForm({ ...filterForm, status: value })
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Semua Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Semua Status</SelectItem>
-                                    <SelectItem value="1">Aktif</SelectItem>
-                                    <SelectItem value="0">Tidak Aktif</SelectItem>
-                                    <SelectItem value="low_stock">Stok Rendah</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 pt-4">
-                            <Button
-                                onClick={applyFilters}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                            >
-                                Terapkan
-                            </Button>
-                            <Button onClick={resetFilters} variant="outline" className="flex-1">
-                                Reset
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Main Content */}
-                <div className="flex-1 space-y-6">
+            <div className="space-y-6 p-6">
                     {/* Page Header */}
                     <div className="space-y-2">
                         <div className="flex items-start justify-between">
@@ -527,7 +378,6 @@ export default function LaporanInventaris({
                     <div className="text-center text-sm text-muted-foreground py-4">
                         © 2023 Mahkamah Agung Republik Indonesia. Sistem Inventaris ATK v2.1
                     </div>
-                </div>
             </div>
         </AppLayout>
     );
