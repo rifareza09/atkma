@@ -346,3 +346,8 @@
         }
     }
 }
+
+/* Login Page Background */
+.login-bg {
+    background-image: url('/mahkamah-agung-bg.jpg');
+}

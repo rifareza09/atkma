@@ -102,7 +102,7 @@ export function NotificationDropdown({ notifications = [], unreadCount = 0 }: No
                 <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="relative text-white hover:bg-white/10 hover:text-white"
+                    className="relative text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     onClick={() => console.log('Bell button clicked!')}
                 >
                     <Bell className="h-5 w-5" />
