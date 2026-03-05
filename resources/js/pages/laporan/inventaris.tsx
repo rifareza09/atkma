@@ -2,9 +2,17 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Calendar, Eye, FileText, Download, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import {
     Select,
     SelectContent,
@@ -53,6 +61,70 @@ export default function LaporanInventaris({
         to_date: filters.to_date || '',
     });
 
+    const currentYear  = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+
+    const MONTHS = [
+        { value: '1',  label: 'Januari' },
+        { value: '2',  label: 'Februari' },
+        { value: '3',  label: 'Maret' },
+        { value: '4',  label: 'April' },
+        { value: '5',  label: 'Mei' },
+        { value: '6',  label: 'Juni' },
+        { value: '7',  label: 'Juli' },
+        { value: '8',  label: 'Agustus' },
+        { value: '9',  label: 'September' },
+        { value: '10', label: 'Oktober' },
+        { value: '11', label: 'November' },
+        { value: '12', label: 'Desember' },
+    ];
+    const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const allBarangIds = barangs.map((b) => b.id);
+    const isAllSelected = allBarangIds.length > 0 && allBarangIds.every((id) => selectedIds.has(id));
+
+    const toggleSelectAll = () => {
+        if (isAllSelected) setSelectedIds(new Set());
+        else setSelectedIds(new Set(allBarangIds));
+    };
+
+    const toggleId = (id: number) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    // Dialog export per-barang
+    const [showExportDialog, setShowExportDialog] = useState(false);
+    const [exportMonth, setExportMonth]           = useState(String(currentMonth));
+    const [exportYear, setExportYear]             = useState(String(currentYear));
+    const [namaPpk, setNamaPpk]                   = useState('');
+    const [namaMengetahui, setNamaMengetahui]     = useState('');
+    const [namaPjawab, setNamaPjawab]             = useState('');
+
+    const handleOpenExportDialog = () => {
+        if (selectedIds.size === 0) return;
+        setShowExportDialog(true);
+    };
+
+    const handleConfirmExportSelected = () => {
+        const params = new URLSearchParams({
+            month:            exportMonth,
+            year:             exportYear,
+            nama_ppk:         namaPpk,
+            nama_mengetahui:  namaMengetahui,
+            nama_pjawab:      namaPjawab,
+        });
+        selectedIds.forEach((id) => {
+            window.open(`/laporan/barang/${id}/export-pdf?${params.toString()}`, '_blank');
+        });
+        setShowExportDialog(false);
+    };
+
     const applyFilters = () => {
         const params: Record<string, any> = {};
 
@@ -80,24 +152,108 @@ export default function LaporanInventaris({
         });
     };
 
-    const handleExport = (type: 'pdf' | 'excel') => {
+    const handleExportExcel = () => {
         const params = new URLSearchParams();
         if (filterForm.ruangan_id !== 'all') params.append('ruangan_id', filterForm.ruangan_id);
         if (filterForm.status !== 'all') params.append('status', filterForm.status);
         if (filterForm.from_date) params.append('from_date', filterForm.from_date);
         if (filterForm.to_date) params.append('to_date', filterForm.to_date);
-
-        const url =
-            type === 'pdf'
-                ? `/reports/inventory/pdf?${params.toString()}`
-                : `/reports/inventory/excel?${params.toString()}`;
-
-        window.open(url, '_blank');
+        window.open(`/reports/inventory/excel?${params.toString()}`, '_blank');
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Inventaris" />
+
+            {/* Dialog Export Barang Terpilih */}
+            <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <FileText className="size-5 text-blue-600" />
+                            Export PDF — {selectedIds.size} Barang Terpilih
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        {/* Bulan & Tahun */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Bulan
+                                </Label>
+                                <Select value={exportMonth} onValueChange={setExportMonth}>
+                                    <SelectTrigger className="h-9">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {MONTHS.map((m) => (
+                                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Tahun
+                                </Label>
+                                <Select value={exportYear} onValueChange={setExportYear}>
+                                    <SelectTrigger className="h-9">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {YEARS.map((y) => (
+                                            <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Nama Tanda Tangan */}
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                PPK Biaya Proses
+                            </Label>
+                            <Input
+                                value={namaPpk}
+                                onChange={(e) => setNamaPpk(e.target.value)}
+                                placeholder="Nama PPK Biaya Proses"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Mengetahui — Kuasa Pengelola Biaya Proses
+                            </Label>
+                            <Input
+                                value={namaMengetahui}
+                                onChange={(e) => setNamaMengetahui(e.target.value)}
+                                placeholder="Nama Mengetahui"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Penanggung Jawab ATK
+                            </Label>
+                            <Input
+                                value={namaPjawab}
+                                onChange={(e) => setNamaPjawab(e.target.value)}
+                                placeholder="Nama Penanggung Jawab ATK"
+                            />
+                        </div>
+
+                        <p className="text-xs text-muted-foreground">
+                            Akan membuka <strong>{selectedIds.size}</strong> tab PDF sekaligus.
+                        </p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowExportDialog(false)}>Batal</Button>
+                        <Button onClick={handleConfirmExportSelected} className="bg-blue-600 hover:bg-blue-700">
+                            <FileText className="mr-2 size-4" />
+                            Export PDF
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="flex h-full flex-1 gap-6 p-6">
                 {/* Filter Sidebar */}
@@ -219,20 +375,23 @@ export default function LaporanInventaris({
                                 </p>
                             </div>
                             <div className="flex gap-2">
+                                {selectedIds.size > 0 && (
+                                    <Button
+                                        size="sm"
+                                        onClick={handleOpenExportDialog}
+                                        className="bg-blue-600 hover:bg-blue-700 gap-2"
+                                    >
+                                        <FileText className="h-4 w-4" />
+                                        Export PDF Terpilih ({selectedIds.size})
+                                    </Button>
+                                )}
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleExport('pdf')}
+                                    onClick={handleExportExcel}
+                                    className="gap-2"
                                 >
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Export PDF
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('excel')}
-                                >
-                                    <Download className="mr-2 h-4 w-4" />
+                                    <Download className="h-4 w-4" />
                                     Export Excel
                                 </Button>
                             </div>
@@ -299,6 +458,12 @@ export default function LaporanInventaris({
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="bg-gray-50">
+                                            <TableHead className="w-10">
+                                                <Checkbox
+                                                    checked={isAllSelected}
+                                                    onCheckedChange={toggleSelectAll}
+                                                />
+                                            </TableHead>
                                             <TableHead className="font-bold">KODE</TableHead>
                                             <TableHead className="font-bold">NAMA BARANG</TableHead>
                                             <TableHead className="font-bold text-center">
@@ -314,7 +479,7 @@ export default function LaporanInventaris({
                                         {barangs.length === 0 ? (
                                             <TableRow>
                                                 <TableCell
-                                                    colSpan={5}
+                                                    colSpan={6}
                                                     className="text-center py-8 text-muted-foreground"
                                                 >
                                                     Tidak ada data barang
@@ -322,7 +487,16 @@ export default function LaporanInventaris({
                                             </TableRow>
                                         ) : (
                                             barangs.map((barang) => (
-                                                <TableRow key={barang.id}>
+                                                <TableRow
+                                                    key={barang.id}
+                                                    className={selectedIds.has(barang.id) ? 'bg-blue-50' : ''}
+                                                >
+                                                    <TableCell>
+                                                        <Checkbox
+                                                            checked={selectedIds.has(barang.id)}
+                                                            onCheckedChange={() => toggleId(barang.id)}
+                                                        />
+                                                    </TableCell>
                                                     <TableCell className="font-medium">
                                                         {barang.kode}
                                                     </TableCell>

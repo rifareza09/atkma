@@ -3,6 +3,7 @@ import { History, Filter, FileDown, FileSpreadsheet, X, Package, Users, Calendar
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -97,6 +98,24 @@ export default function HistoryIndex({
         ruangan_id: filters.ruangan_id ?? 'all',
     });
 
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const allIds = transactions.map((t) => t.id);
+    const isAllSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+
+    const toggleSelectAll = () => {
+        if (isAllSelected) setSelectedIds(new Set());
+        else setSelectedIds(new Set(allIds));
+    };
+
+    const toggleId = (id: number) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
     const applyFilters = () => {
         const params: Record<string, string> = {};
         if (form.tanggal) {
@@ -118,13 +137,17 @@ export default function HistoryIndex({
 
     const handleExportPdf = () => {
         const params = new URLSearchParams();
-        if (form.tanggal) {
-            params.set('tanggal', form.tanggal);
+        if (selectedIds.size > 0) {
+            selectedIds.forEach((id) => params.append('ids[]', String(id)));
         } else {
-            if (form.bulan && form.bulan !== 'all') params.set('bulan', form.bulan);
-            if (form.tahun && form.tahun !== 'all') params.set('tahun', form.tahun);
+            if (form.tanggal) {
+                params.set('tanggal', form.tanggal);
+            } else {
+                if (form.bulan && form.bulan !== 'all') params.set('bulan', form.bulan);
+                if (form.tahun && form.tahun !== 'all') params.set('tahun', form.tahun);
+            }
+            if (form.ruangan_id !== 'all') params.set('ruangan_id', form.ruangan_id);
         }
-        if (form.ruangan_id !== 'all') params.set('ruangan_id', form.ruangan_id);
         window.open(`/history/export-pdf?${params.toString()}`, '_blank');
     };
 
@@ -166,23 +189,27 @@ export default function HistoryIndex({
                             Riwayat semua transaksi permintaan barang keluar
                         </p>
                     </div>
-                    <Button
-                        onClick={handleExportPdf}
-                        disabled={transactions.length === 0}
-                        className="gap-2"
-                    >
-                        <FileDown className="size-4" />
-                        Export PDF
-                    </Button>
-                    <Button
-                        onClick={handleExportExcel}
-                        disabled={transactions.length === 0}
-                        variant="outline"
-                        className="gap-2"
-                    >
-                        <FileSpreadsheet className="size-4" />
-                        Export Excel
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={handleExportPdf}
+                            disabled={transactions.length === 0}
+                            className={`gap-2${selectedIds.size > 0 ? ' bg-blue-600 hover:bg-blue-700 text-white' : ''}`}
+                        >
+                            <FileDown className="size-4" />
+                            {selectedIds.size > 0
+                                ? `Export Terpilih (${selectedIds.size})`
+                                : 'Export PDF'}
+                        </Button>
+                        <Button
+                            onClick={handleExportExcel}
+                            disabled={transactions.length === 0}
+                            variant="outline"
+                            className="gap-2"
+                        >
+                            <FileSpreadsheet className="size-4" />
+                            Export Excel
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats */}
@@ -353,6 +380,12 @@ export default function HistoryIndex({
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead className="w-10">
+                                                <Checkbox
+                                                    checked={isAllSelected}
+                                                    onCheckedChange={toggleSelectAll}
+                                                />
+                                            </TableHead>
                                             <TableHead className="w-40">No. Transaksi</TableHead>
                                             <TableHead className="w-28">Tanggal</TableHead>
                                             <TableHead className="w-48">Ruangan / Unit Kerja</TableHead>
@@ -367,6 +400,12 @@ export default function HistoryIndex({
                                         {transactions.map((trx) =>
                                             trx.items.length === 0 ? (
                                                 <TableRow key={trx.id}>
+                                                    <TableCell>
+                                                        <Checkbox
+                                                            checked={selectedIds.has(trx.id)}
+                                                            onCheckedChange={() => toggleId(trx.id)}
+                                                        />
+                                                    </TableCell>
                                                     <TableCell className="font-mono text-sm">{trx.kode_transaksi}</TableCell>
                                                     <TableCell>{trx.tanggal}</TableCell>
                                                     <TableCell>{trx.ruangan_nama}</TableCell>
@@ -380,6 +419,15 @@ export default function HistoryIndex({
                                                     <TableRow key={`${trx.id}-${idx}`} className="hover:bg-muted/30">
                                                         {idx === 0 && (
                                                             <>
+                                                                <TableCell
+                                                                    rowSpan={trx.items.length}
+                                                                    className="align-top pt-3"
+                                                                >
+                                                                    <Checkbox
+                                                                        checked={selectedIds.has(trx.id)}
+                                                                        onCheckedChange={() => toggleId(trx.id)}
+                                                                    />
+                                                                </TableCell>
                                                                 <TableCell
                                                                     rowSpan={trx.items.length}
                                                                     className="font-mono text-sm align-top pt-3"

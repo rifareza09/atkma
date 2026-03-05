@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Plus, Pencil, Eye, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Eye, Trash2, FileDown } from 'lucide-react';
 import { useState } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Column } from '@/components/data-table';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
@@ -40,6 +41,30 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
     const userRole = auth?.user?.role;
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
+
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const allIds = ruangans.map((r) => r.id);
+    const isAllSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+
+    const toggleSelectAll = () => {
+        if (isAllSelected) setSelectedIds(new Set());
+        else setSelectedIds(new Set(allIds));
+    };
+
+    const toggleId = (id: number) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const handleExportSelected = () => {
+        selectedIds.forEach((id) => {
+            window.open(`/master/ruangan/${id}/export-pdf`, '_blank');
+        });
+    };
 
     const handleSearch = (search: string) => {
         router.get(
@@ -85,6 +110,17 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
     };
 
     const columns: Column<Ruangan>[] = [
+        {
+            key: 'select',
+            label: '',
+            render: (item) => (
+                <Checkbox
+                    checked={selectedIds.has(item.id)}
+                    onCheckedChange={() => toggleId(item.id)}
+                />
+            ),
+            className: 'w-10',
+        },
         {
             key: 'kode',
             label: 'Kode Ruangan',
@@ -156,12 +192,32 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
                             Kelola data master ruangan
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={ruanganCreate()}>
-                            <Plus className="mr-2 size-4" />
-                            Tambah Ruangan
-                        </Link>
-                    </Button>
+                    <div className="flex gap-2">
+                        {selectedIds.size > 0 && (
+                            <Button
+                                variant="outline"
+                                onClick={handleExportSelected}
+                                className="gap-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                            >
+                                <FileDown className="size-4" />
+                                Export Terpilih ({selectedIds.size})
+                            </Button>
+                        )}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={toggleSelectAll}
+                            className="text-xs"
+                        >
+                            {isAllSelected ? 'Batal Pilih Semua' : 'Pilih Semua'}
+                        </Button>
+                        <Button asChild>
+                            <Link href={ruanganCreate()}>
+                                <Plus className="mr-2 size-4" />
+                                Tambah Ruangan
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Search & Filter */}

@@ -99,6 +99,18 @@ class ReportController extends Controller
      */
     public function exportInventoryPdf(Request $request)
     {
+        $ids = $request->input('ids', []);
+        if (!empty($ids)) {
+            $barangs = Barang::whereIn('id', $ids)->orderBy('nama')->get();
+            $pdf = Pdf::loadView('reports.inventory', [
+                'barangs' => $barangs,
+                'title'   => 'Laporan Inventaris Barang ATK',
+                'date'    => now()->format('d F Y'),
+                'filter'  => 'Barang Terpilih',
+            ]);
+            return $pdf->download('laporan-inventaris-' . now()->format('Y-m-d') . '.pdf');
+        }
+
         $query = Barang::query()->where('is_active', true);
 
         // Apply filters

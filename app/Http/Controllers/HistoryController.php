@@ -88,6 +88,23 @@ class HistoryController extends Controller
 
     public function exportPdf(Request $request)
     {
+        $ids = $request->input('ids', []);
+        if (!empty($ids)) {
+            $transactions = Transaction::with(['items.barang'])
+                ->whereIn('id', $ids)
+                ->where('type', 'keluar')
+                ->orderBy('tanggal', 'desc')
+                ->get();
+            $pdf = Pdf::loadView('exports.history-pdf', [
+                'transactions'  => $transactions,
+                'period_label'  => 'Transaksi Terpilih (' . count($ids) . ')',
+                'ruangan_nama'  => null,
+                'generated_at'  => now()->format('d F Y H:i:s'),
+            ]);
+            $pdf->setPaper('a4', 'landscape');
+            return $pdf->download('history-transaksi-' . now()->format('Ymd_His') . '.pdf');
+        }
+
         $filters = $request->only(['tanggal', 'bulan', 'tahun', 'ruangan_id']);
 
         $query = Transaction::with(['items.barang'])
