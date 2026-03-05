@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { Search, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import {
     DropdownMenu,
@@ -46,32 +46,8 @@ export function AppSidebarHeader({
                 </div>
             </div>
             
-            {/* Center Section - Search Bar */}
-            <div className="hidden lg:flex flex-1 max-w-md mx-4">
-                <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search"
-                        className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 
-                                 bg-gray-50 text-sm text-gray-700 placeholder:text-gray-400
-                                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                 transition-all"
-                    />
-                </div>
-            </div>
-            
             {/* Right Section - Icons & Profile */}
             <div className="flex items-center gap-3">
-                {/* Search Icon - Mobile */}
-                <button 
-                    className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    aria-label="Search"
-                    title="Search"
-                >
-                    <Search className="h-5 w-5 text-gray-600" />
-                </button>
-                
                 {/* Notification */}
                 <NotificationDropdown />
                 
