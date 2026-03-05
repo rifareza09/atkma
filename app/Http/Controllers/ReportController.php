@@ -101,14 +101,54 @@ class ReportController extends Controller
     {
         $ids = $request->input('ids', []);
         if (!empty($ids)) {
-            $barangs = Barang::whereIn('id', $ids)->orderBy('nama')->get();
-            $pdf = Pdf::loadView('reports.inventory', [
-                'barangs' => $barangs,
-                'title'   => 'Laporan Inventaris Barang ATK',
-                'date'    => now()->format('d F Y'),
-                'filter'  => 'Barang Terpilih',
-            ]);
-            return $pdf->download('laporan-inventaris-' . now()->format('Y-m-d') . '.pdf');
+            $month = (int) $request->get('month', now()->month);
+            $year  = (int) $request->get('year',  now()->year);
+
+            $monthNames = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret',    4 => 'April',
+                5 => 'Mei',     6 => 'Juni',      7 => 'Juli',     8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+            ];
+
+            $barangList = Barang::whereIn('id', $ids)->orderBy('nama')->get();
+
+            $barangs = $barangList->map(function ($barang) use ($month, $year) {
+                $requests = TransactionItem::where('barang_id', $barang->id)
+                    ->whereHas('transaction', fn ($q) => $q
+                        ->where('type', 'keluar')
+                        ->whereMonth('tanggal', $month)
+                        ->whereYear('tanggal', $year)
+                    )
+                    ->with('transaction')
+                    ->get()
+                    ->sortBy('transaction.tanggal')
+                    ->values()
+                    ->map(fn ($item) => [
+                        'tanggal'      => $item->transaction->tanggal,
+                        'ruangan'      => $item->transaction->ruangan_nama ?? '-',
+                        'nama_peminta' => $item->transaction->nama_peminta ?? '',
+                        'jumlah'       => $item->jumlah,
+                    ]);
+
+                return [
+                    'barang'   => $barang,
+                    'requests' => $requests,
+                ];
+            });
+
+            $pdf = Pdf::loadView('reports.inventory-permintaan-pdf', [
+                'barangs'         => $barangs,
+                'month'           => $month,
+                'year'            => $year,
+                'month_name'      => $monthNames[$month] ?? '-',
+                'generated_at'    => now()->format('d/m/Y H:i:s'),
+                'signature_date'  => now()->locale('id')->isoFormat('D MMMM Y'),
+                'nama_ppk'        => $request->input('nama_ppk', 'ST. KRIS NUGROHO, SH., MH.'),
+                'nama_mengetahui' => $request->input('nama_mengetahui', 'ASEP NURSOBAH S.AG., MH.'),
+                'nama_pjawab'     => $request->input('nama_pjawab', 'RANO, SE.'),
+            ])->setPaper('a4', 'portrait');
+
+            return $pdf->download('laporan-permintaan-barang-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . $year . '.pdf');
         }
 
         $query = Barang::query()->where('is_active', true);

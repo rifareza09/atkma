@@ -170,11 +170,41 @@
     </div>
 
     <div class="signature">
+        @if(!empty($nama_ppk ?? '') || !empty($nama_mengetahui ?? '') || !empty($nama_pjawab ?? ''))
+        <div style="display: flex; justify-content: space-around; margin-top: 50px;">
+            @if(!empty($nama_ppk ?? ''))
+            <div style="text-align: center;">
+                <p>PPK Biaya Proses,</p>
+                <div class="signature-line">
+                    <strong>{{ $nama_ppk }}</strong>
+                </div>
+            </div>
+            @endif
+            @if(!empty($nama_mengetahui ?? ''))
+            <div style="text-align: center;">
+                <p>Mengetahui,</p>
+                <p>Kuasa Pengelola Biaya Proses</p>
+                <div class="signature-line">
+                    <strong>{{ $nama_mengetahui }}</strong>
+                </div>
+            </div>
+            @endif
+            @if(!empty($nama_pjawab ?? ''))
+            <div style="text-align: center;">
+                <p>Penanggung Jawab ATK,</p>
+                <div class="signature-line">
+                    <strong>{{ $nama_pjawab }}</strong>
+                </div>
+            </div>
+            @endif
+        </div>
+        @else
         <p>Mengetahui,</p>
         <p>Penanggung Jawab ATK</p>
         <div class="signature-line">
             <strong>(.............................)</strong>
         </div>
+        @endif
     </div>
 </body>
 </html>

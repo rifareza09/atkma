@@ -113,15 +113,16 @@ export default function LaporanInventaris({
 
     const handleConfirmExportSelected = () => {
         const params = new URLSearchParams({
-            month:            exportMonth,
-            year:             exportYear,
-            nama_ppk:         namaPpk,
-            nama_mengetahui:  namaMengetahui,
-            nama_pjawab:      namaPjawab,
+            month:           exportMonth,
+            year:            exportYear,
+            nama_ppk:        namaPpk,
+            nama_mengetahui: namaMengetahui,
+            nama_pjawab:     namaPjawab,
         });
         selectedIds.forEach((id) => {
-            window.open(`/laporan/barang/${id}/export-pdf?${params.toString()}`, '_blank');
+            params.append('ids[]', String(id));
         });
+        window.open(`/reports/inventory/pdf?${params.toString()}`, '_blank');
         setShowExportDialog(false);
     };
 
@@ -242,7 +243,7 @@ export default function LaporanInventaris({
                         </div>
 
                         <p className="text-xs text-muted-foreground">
-                            Akan membuka <strong>{selectedIds.size}</strong> tab PDF sekaligus.
+                            Akan mengunduh <strong>1 file PDF</strong> berisi <strong>{selectedIds.size}</strong> halaman (1 barang per halaman).
                         </p>
                     </div>
                     <DialogFooter>
