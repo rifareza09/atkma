@@ -135,7 +135,7 @@
         <div class="kop">
             <div class="instansi">MAHKAMAH AGUNG REPUBLIK INDONESIA</div>
             <div class="sub-instansi">Pengadilan Agama Jakarta Pusat</div>
-            <div class="judul">DAFTAR PERMINTAAN BARANG ATK</div>
+            <div class="judul">{{ $judul_laporan }}</div>
         </div>
 
         {{-- INFO HEADER --}}
@@ -169,43 +169,58 @@
             <thead>
                 <tr>
                     <th style="width:5%;">NO</th>
-                    <th style="width:20%;">TANGGAL</th>
-                    <th style="width:35%;">NAMA RUANGAN / UNIT</th>
-                    <th>NAMA PEMINTA</th>
-                    <th style="width:12%;">JUMLAH</th>
-                    <th style="width:8%;">SAT</th>
+                    <th style="width:18%;">TANGGAL</th>
+                    <th style="width:37%;">URAIAN</th>
+                    <th style="width:10%;">MASUK</th>
+                    <th style="width:10%;">KELUAR</th>
+                    <th style="width:10%;">SALDO</th>
+                    <th style="width:10%;">KET</th>
                 </tr>
             </thead>
             <tbody>
-                @if($item['requests']->isEmpty())
+                {{-- Saldo Awal --}}
+                <tr style="font-style:italic;">
+                    <td class="center"></td>
+                    <td class="center"></td>
+                    <td>Saldo Awal {{ $month_name }} {{ $year }}</td>
+                    <td class="center bold">{{ $item['saldo_awal'] }}</td>
+                    <td class="center"></td>
+                    <td class="center bold">{{ $item['saldo_awal'] }}</td>
+                    <td class="center">{{ strtoupper($item['barang']->satuan) }}</td>
+                </tr>
+
+                @if($item['rows']->isEmpty())
                 <tr>
-                    <td colspan="6" class="center" style="padding:12px; font-style:italic; color:#666;">
-                        Tidak ada permintaan pada {{ $month_name }} {{ $year }}
+                    <td colspan="7" class="center" style="padding:12px; font-style:italic; color:#666;">
+                        Tidak ada transaksi pada {{ $month_name }} {{ $year }}
                     </td>
                 </tr>
                 @else
-                    @foreach($item['requests'] as $i => $req)
+                    @foreach($item['rows'] as $i => $row)
                     <tr>
                         <td class="center">{{ $i + 1 }}</td>
-                        <td class="center">{{ \Carbon\Carbon::parse($req['tanggal'])->locale('id')->isoFormat('D MMMM Y') }}</td>
-                        <td>{{ strtoupper($req['ruangan']) }}</td>
-                        <td>{{ $req['nama_peminta'] ?: '-' }}</td>
-                        <td class="center bold">{{ $req['jumlah'] }}</td>
+                        <td class="center">{{ \Carbon\Carbon::parse($row['tanggal'])->locale('id')->isoFormat('D MMMM Y') }}</td>
+                        <td>{{ strtoupper($row['uraian']) }}</td>
+                        <td class="center bold">{{ $row['masuk'] > 0 ? $row['masuk'] : '' }}</td>
+                        <td class="center bold">{{ $row['keluar'] > 0 ? $row['keluar'] : '' }}</td>
+                        <td class="center bold">{{ $row['saldo'] }}</td>
                         <td class="center">{{ strtoupper($item['barang']->satuan) }}</td>
                     </tr>
                     @endforeach
 
-                    @for($e = 0; $e < max(3, 10 - $item['requests']->count()); $e++)
+                    @for($e = 0; $e < max(3, 10 - $item['rows']->count()); $e++)
                     <tr class="empty-row">
-                        <td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                     </tr>
                     @endfor
                 @endif
 
                 {{-- Total --}}
                 <tr class="total-row">
-                    <td colspan="4" class="center bold">TOTAL PERMINTAAN</td>
-                    <td class="center">{{ $item['requests']->sum('jumlah') }}</td>
+                    <td colspan="3" class="center bold">TOTAL</td>
+                    <td class="center bold">{{ $item['saldo_awal'] + $item['total_masuk_bulan'] }}</td>
+                    <td class="center bold">{{ $item['total_keluar'] }}</td>
+                    <td class="center bold">{{ $item['saldo_akhir'] }}</td>
                     <td class="center">{{ strtoupper($item['barang']->satuan) }}</td>
                 </tr>
             </tbody>
@@ -228,7 +243,7 @@
                         <div class="sig-name">{{ $nama_mengetahui }}</div>
                     </td>
                     <td>
-                        <div class="sig-city-date">Jakarta, {{ $signature_date }}</div>
+                        <div class="sig-city-date">{{ $signature_place_date }}</div>
                         <div class="sig-title">Penanggung Jawab ATK</div>
                         <div class="sig-line"></div>
                         <div class="sig-name">{{ $nama_pjawab }}</div>

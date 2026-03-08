@@ -200,7 +200,7 @@
                         <div class="sig-name">{{ $nama_mengetahui }}</div>
                     </td>
                     <td>
-                        <div class="sig-city-date">Jakarta, {{ $signature_date }}</div>
+                        <div class="sig-city-date">{{ $signature_place_date }}</div>
                         <div class="sig-title">Penanggung Jawab ATK</div>
                         <div class="sig-line"></div>
                         <div class="sig-name">{{ $nama_pjawab }}</div>

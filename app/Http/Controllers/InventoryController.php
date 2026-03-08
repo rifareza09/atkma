@@ -17,7 +17,7 @@ class InventoryController extends Controller
     {
         $barangs = Barang::query()
             ->where('is_active', true)
-            ->orderBy('nama')
+            ->orderBy('kode')
             ->get();
 
         $ruangans = Ruangan::query()

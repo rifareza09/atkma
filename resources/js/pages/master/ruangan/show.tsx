@@ -46,7 +46,13 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
 
     // Kumpulkan semua tahun yang ada di data transaksi
     const availableYears = useMemo(() => {
-        const years = new Set(transactions.map((t) => t.tanggal.substring(0, 4)));
+        const years = new Set(transactions.map((t) => {
+            const raw = t.tanggal ?? '';
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+                return raw.substring(6, 10); // ambil tahun dari DD/MM/YYYY
+            }
+            return raw.substring(0, 4); // ambil tahun dari YYYY-MM-DD
+        }));
         return Array.from(years).sort((a, b) => Number(b) - Number(a));
     }, [transactions]);
 

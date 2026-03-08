@@ -93,6 +93,10 @@ export default function BarangBulanDetail({ barang, ruangans, grand_total, month
     ];
 
     const [showDialog, setShowDialog] = useState(false);
+    const [signaturePlaceDate, setSignaturePlaceDate] = useState(() => {
+        const d = new Date();
+        return 'Jakarta, ' + d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    });
     const [namaPpk, setNamaPpk] = useState('');
     const [namaMengetahui, setNamaMengetahui] = useState('');
     const [namaPjawab, setNamaPjawab] = useState('');
@@ -105,6 +109,7 @@ export default function BarangBulanDetail({ barang, ruangans, grand_total, month
         const params = new URLSearchParams({
             month: String(month),
             year: String(year),
+            signature_place_date: signaturePlaceDate,
             nama_ppk: namaPpk,
             nama_mengetahui: namaMengetahui,
             nama_pjawab: namaPjawab,
@@ -129,6 +134,16 @@ export default function BarangBulanDetail({ barang, ruangans, grand_total, month
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Tempat &amp; Tanggal
+                            </Label>
+                            <Input
+                                value={signaturePlaceDate}
+                                onChange={e => setSignaturePlaceDate(e.target.value)}
+                                placeholder="Jakarta, 9 Maret 2026"
+                            />
+                        </div>
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 PPK Biaya Proses

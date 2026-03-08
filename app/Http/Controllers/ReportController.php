@@ -113,7 +113,41 @@ class ReportController extends Controller
             $barangList = Barang::whereIn('id', $ids)->orderBy('nama')->get();
 
             $barangs = $barangList->map(function ($barang) use ($month, $year) {
-                $requests = TransactionItem::where('barang_id', $barang->id)
+                $startOfMonth = Carbon::create($year, $month, 1)->startOfDay();
+
+                // Hitung saldo awal: stok_sekarang - masuk_incoming_sejak_awal_bulan + keluar_sejak_awal_bulan
+                $totalMasukSejak = IncomingStock::where('barang_id', $barang->id)
+                    ->where('status', 'approved')
+                    ->where('tanggal_masuk', '>=', $startOfMonth)
+                    ->sum('jumlah');
+
+                $totalKeluarSejak = TransactionItem::where('barang_id', $barang->id)
+                    ->whereHas('transaction', fn ($q) => $q
+                        ->where('type', 'keluar')
+                        ->where('tanggal', '>=', $startOfMonth)
+                    )
+                    ->sum('jumlah');
+
+                $saldoAwal = $barang->stok - $totalMasukSejak + $totalKeluarSejak;
+
+                // Fetch MASUK (IncomingStock) bulan ini
+                $masuks = IncomingStock::where('barang_id', $barang->id)
+                    ->where('status', 'approved')
+                    ->whereMonth('tanggal_masuk', $month)
+                    ->whereYear('tanggal_masuk', $year)
+                    ->orderBy('tanggal_masuk')
+                    ->get()
+                    ->map(fn ($m) => [
+                        'type'   => 'masuk',
+                        'tanggal' => $m->tanggal_masuk,
+                        'uraian'  => trim(($m->sumber ?? 'Barang Masuk') . ($m->nomor_dokumen ? ', ' . $m->nomor_dokumen : '')),
+                        'masuk'  => $m->jumlah,
+                        'keluar' => 0,
+                        'saldo'  => 0,
+                    ]);
+
+                // Fetch KELUAR (TransactionItem) bulan ini
+                $keluars = TransactionItem::where('barang_id', $barang->id)
                     ->whereHas('transaction', fn ($q) => $q
                         ->where('type', 'keluar')
                         ->whereMonth('tanggal', $month)
@@ -124,28 +158,51 @@ class ReportController extends Controller
                     ->sortBy('transaction.tanggal')
                     ->values()
                     ->map(fn ($item) => [
-                        'tanggal'      => $item->transaction->tanggal,
-                        'ruangan'      => $item->transaction->ruangan_nama ?? '-',
-                        'nama_peminta' => $item->transaction->nama_peminta ?? '',
-                        'jumlah'       => $item->jumlah,
+                        'type'   => 'keluar',
+                        'tanggal' => $item->transaction->tanggal,
+                        'uraian'  => $item->transaction->ruangan_nama ?? '-',
+                        'masuk'  => 0,
+                        'keluar' => $item->jumlah,
+                        'saldo'  => 0,
                     ]);
 
+                // Gabung, urutkan berdasarkan tanggal, hitung running saldo
+                $rows = $masuks->concat($keluars)
+                    ->sortBy(fn ($r) => $r['tanggal'])
+                    ->values();
+
+                $saldo = $saldoAwal;
+                $rows = $rows->map(function ($r) use (&$saldo) {
+                    $saldo += $r['masuk'] - $r['keluar'];
+                    $r['saldo'] = $saldo;
+                    return $r;
+                });
+
+                $totalMasukBulan  = $masuks->sum('masuk');
+                $totalKeluarBulan = $keluars->sum('keluar');
+                $saldoAkhir       = $saldoAwal + $totalMasukBulan - $totalKeluarBulan;
+
                 return [
-                    'barang'   => $barang,
-                    'requests' => $requests,
+                    'barang'           => $barang,
+                    'saldo_awal'       => $saldoAwal,
+                    'rows'             => $rows,
+                    'total_masuk_bulan' => $totalMasukBulan,
+                    'total_keluar'     => $totalKeluarBulan,
+                    'saldo_akhir'      => $saldoAkhir,
                 ];
             });
 
             $pdf = Pdf::loadView('reports.inventory-permintaan-pdf', [
-                'barangs'         => $barangs,
-                'month'           => $month,
-                'year'            => $year,
-                'month_name'      => $monthNames[$month] ?? '-',
-                'generated_at'    => now()->format('d/m/Y H:i:s'),
-                'signature_date'  => now()->locale('id')->isoFormat('D MMMM Y'),
-                'nama_ppk'        => $request->input('nama_ppk', 'ST. KRIS NUGROHO, SH., MH.'),
-                'nama_mengetahui' => $request->input('nama_mengetahui', 'ASEP NURSOBAH S.AG., MH.'),
-                'nama_pjawab'     => $request->input('nama_pjawab', 'RANO, SE.'),
+                'barangs'              => $barangs,
+                'month'                => $month,
+                'year'                 => $year,
+                'month_name'           => $monthNames[$month] ?? '-',
+                'generated_at'         => now()->format('d/m/Y H:i:s'),
+                'judul_laporan'        => $request->input('judul_laporan', 'DAFTAR PERMINTAAN BARANG ATK'),
+                'signature_place_date' => $request->input('signature_place_date') ?: 'Jakarta, ' . now()->locale('id')->isoFormat('D MMMM Y'),
+                'nama_ppk'             => $request->input('nama_ppk', 'ST. KRIS NUGROHO, SH., MH.'),
+                'nama_mengetahui'      => $request->input('nama_mengetahui', 'ASEP NURSOBAH S.AG., MH.'),
+                'nama_pjawab'          => $request->input('nama_pjawab', 'RANO, SE.'),
             ])->setPaper('a4', 'portrait');
 
             return $pdf->download('laporan-permintaan-barang-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . $year . '.pdf');
@@ -425,10 +482,10 @@ class ReportController extends Controller
             'year'            => $year,
             'month_name'      => $monthNames[$month] ?? '-',
             'generated_at'    => now()->format('d/m/Y H:i:s'),
-            'signature_date'  => now()->locale('id')->isoFormat('D MMMM Y'),
-            'nama_ppk'        => $request->get('nama_ppk', 'ST. KRIS NUGROHO, SH., MH.'),
-            'nama_mengetahui' => $request->get('nama_mengetahui', 'ASEP NURSOBAH S.AG., MH.'),
-            'nama_pjawab'     => $request->get('nama_pjawab', 'RANO, SE.'),
+            'signature_place_date' => $request->get('signature_place_date') ?: 'Jakarta, ' . now()->locale('id')->isoFormat('D MMMM Y'),
+            'nama_ppk'             => $request->get('nama_ppk', 'ST. KRIS NUGROHO, SH., MH.'),
+            'nama_mengetahui'      => $request->get('nama_mengetahui', 'ASEP NURSOBAH S.AG., MH.'),
+            'nama_pjawab'          => $request->get('nama_pjawab', 'RANO, SE.'),
         ])->setPaper('a4', 'portrait');
 
         $filename = 'kartu-stok-' . \Illuminate\Support\Str::slug($barang->nama)
