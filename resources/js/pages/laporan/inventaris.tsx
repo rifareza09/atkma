@@ -110,10 +110,8 @@ export default function LaporanInventaris({
             nama_mengetahui:      namaMengetahui,
             nama_pjawab:          namaPjawab,
         });
-        selectedIds.forEach((id) => {
-            params.append('ids[]', String(id));
-        });
-        window.open(`/reports/inventory/pdf?${params.toString()}`, '_blank');
+        selectedIds.forEach((id) => params.append('ids[]', String(id)));
+        window.open(`/laporan/barang/export-pdf-bulk?${params.toString()}`, '_blank');
         setShowExportDialog(false);
     };
 
