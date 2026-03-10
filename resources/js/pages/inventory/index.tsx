@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Crown, Search, Plus, Minus, Camera, ArrowRight, PackagePlus, LayoutGrid, List } from 'lucide-react';
+import { Search, Plus, Minus, Camera, ArrowRight, PackagePlus, LayoutGrid, List } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,14 +36,6 @@ interface CartItem extends Barang {
     quantity: number;
 }
 
-const categories = [
-    { value: 'all', label: 'Semua' },
-    { value: 'kertas', label: 'Kertas' },
-    { value: 'alat-tulis', label: 'Alat Tulis' },
-    { value: 'pengarsipan', label: 'Pengarsipan' },
-    { value: 'teknologi', label: 'Teknologi' },
-];
-
 export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProps) {
     const { toast } = useToast();
     const { auth } = usePage<SharedData>().props;
@@ -51,7 +43,6 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const isSuperadmin = userRole === 'superadmin';
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeCategory, setActiveCategory] = useState('all');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [transactionMode, setTransactionMode] = useState<'masuk' | 'keluar'>('keluar'); // 'masuk' = Tambah Stock, 'keluar' = Permintaan Barang
     const [formData, setFormData] = useState({
@@ -239,45 +230,8 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                             />
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                {categories.map((cat) => (
-                                    <Button
-                                        key={cat.value}
-                                        variant={
-                                            activeCategory === cat.value
-                                                ? 'default'
-                                                : 'outline'
-                                        }
-                                        size="sm"
-                                        onClick={() => setActiveCategory(cat.value)}
-                                        className={
-                                            activeCategory === cat.value
-                                                ? 'bg-black text-white hover:bg-black/90 whitespace-nowrap'
-                                                : 'whitespace-nowrap'
-                                        }
-                                    >
-                                        {cat.label}
-                                    </Button>
-                                ))}
-                            </div>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
                             <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm">
-                                    <svg
-                                        className="w-4 h-4 mr-2"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                                        />
-                                    </svg>
-                                    Filter
-                                </Button>
                                 {/* View Toggle */}
                                 <div className="flex items-center border rounded-md overflow-hidden">
                                     <button
@@ -541,7 +495,6 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                     <Card>
                         <CardContent className="p-4 sm:p-6 space-y-4 overflow-y-auto max-h-[calc(100vh-8rem)] lg:max-h-none">
                             <div className="flex items-center gap-2">
-                                <Crown className="h-5 w-5 text-yellow-500" />
                                 <h3 className="font-bold text-lg">
                                     {transactionMode === 'masuk' ? 'Ringkasan Tambah Stock' : 'Ringkasan Permintaan'}
                                 </h3>

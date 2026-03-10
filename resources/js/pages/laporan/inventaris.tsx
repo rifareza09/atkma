@@ -6,6 +6,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { AutocompleteInput } from '@/components/autocomplete-input';
+import { useNameHistory } from '@/hooks/useNameHistory';
 import {
     Dialog,
     DialogContent,
@@ -95,12 +97,22 @@ export default function LaporanInventaris({
     const [namaMengetahui, setNamaMengetahui]     = useState('');
     const [namaPjawab, setNamaPjawab]             = useState('');
 
+    // History untuk autocomplete nama
+    const ppkHistory = useNameHistory('laporan_ppk_history');
+    const mengetahuiHistory = useNameHistory('laporan_mengetahui_history');
+    const pjawabHistory = useNameHistory('laporan_pjawab_history');
+
     const handleOpenExportDialog = () => {
         if (selectedIds.size === 0) return;
         setShowExportDialog(true);
     };
 
     const handleConfirmExportSelected = () => {
+        // Simpan nama ke history
+        if (namaPpk.trim()) ppkHistory.addToHistory(namaPpk);
+        if (namaMengetahui.trim()) mengetahuiHistory.addToHistory(namaMengetahui);
+        if (namaPjawab.trim()) pjawabHistory.addToHistory(namaPjawab);
+
         const params = new URLSearchParams({
             month:                exportMonth,
             year:                 exportYear,
@@ -192,9 +204,10 @@ export default function LaporanInventaris({
                             <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 PPK Biaya Proses
                             </Label>
-                            <Input
+                            <AutocompleteInput
                                 value={namaPpk}
-                                onChange={(e) => setNamaPpk(e.target.value)}
+                                onChange={setNamaPpk}
+                                suggestions={ppkHistory.history}
                                 placeholder="Nama PPK Biaya Proses"
                             />
                         </div>
@@ -202,9 +215,10 @@ export default function LaporanInventaris({
                             <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 Mengetahui — Kuasa Pengelola Biaya Proses
                             </Label>
-                            <Input
+                            <AutocompleteInput
                                 value={namaMengetahui}
-                                onChange={(e) => setNamaMengetahui(e.target.value)}
+                                onChange={setNamaMengetahui}
+                                suggestions={mengetahuiHistory.history}
                                 placeholder="Nama Mengetahui"
                             />
                         </div>
@@ -212,9 +226,10 @@ export default function LaporanInventaris({
                             <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 Penanggung Jawab ATK
                             </Label>
-                            <Input
+                            <AutocompleteInput
                                 value={namaPjawab}
-                                onChange={(e) => setNamaPjawab(e.target.value)}
+                                onChange={setNamaPjawab}
+                                suggestions={pjawabHistory.history}
                                 placeholder="Nama Penanggung Jawab ATK"
                             />
                         </div>

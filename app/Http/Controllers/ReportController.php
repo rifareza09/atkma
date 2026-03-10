@@ -592,4 +592,104 @@ class ReportController extends Controller
         $filename = 'kartu-stok-bulk-' . $monthNames[$month] . '-' . $year . '-' . now()->format('His') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export kartu stok 1 barang untuk SEMUA bulan dalam 1 tahun (12 bulan = 12 halaman)
+     */
+    public function exportBarangAllMonthsPdf(Request $request, Barang $barang)
+    {
+        $year = (int) $request->get('year', now()->year);
+
+        $monthNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',    4 => 'April',
+            5 => 'Mei',     6 => 'Juni',      7 => 'Juli',     8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+
+        $months_data = [];
+
+        // Loop untuk setiap bulan (1-12)
+        for ($month = 1; $month <= 12; $month++) {
+            $startOfMonth = Carbon::create($year, $month, 1)->startOfDay();
+
+            // Hitung saldo awal bulan
+            $totalMasukSejak = IncomingStock::where('barang_id', $barang->id)
+                ->where('status', 'approved')
+                ->where('tanggal_masuk', '>=', $startOfMonth)
+                ->sum('jumlah');
+
+            $totalKeluarSejak = TransactionItem::where('barang_id', $barang->id)
+                ->whereHas('transaction', fn ($q) => $q->where('type', 'keluar')
+                    ->where('tanggal', '>=', $startOfMonth))
+                ->sum('jumlah');
+
+            $saldoAwal = $barang->stok - $totalMasukSejak + $totalKeluarSejak;
+
+            // Ambil transaksi MASUK bulan ini
+            $masuks = IncomingStock::where('barang_id', $barang->id)
+                ->where('status', 'approved')
+                ->whereMonth('tanggal_masuk', $month)
+                ->whereYear('tanggal_masuk', $year)
+                ->orderBy('tanggal_masuk')
+                ->get()
+                ->map(fn ($m) => [
+                    'type'    => 'masuk',
+                    'tanggal' => $m->tanggal_masuk,
+                    'uraian'  => $m->keterangan ?: ($m->sumber ?: 'Penerimaan Barang'),
+                    'masuk'   => $m->jumlah,
+                    'keluar'  => 0,
+                ]);
+
+            // Ambil transaksi KELUAR bulan ini
+            $keluars = TransactionItem::where('barang_id', $barang->id)
+                ->whereHas('transaction', fn ($q) => $q->where('type', 'keluar')
+                    ->whereMonth('tanggal', $month)
+                    ->whereYear('tanggal', $year))
+                ->with('transaction')
+                ->get()
+                ->sortBy('transaction.tanggal')
+                ->values()
+                ->map(fn ($item) => [
+                    'type'    => 'keluar',
+                    'tanggal' => $item->transaction->tanggal,
+                    'uraian'  => $item->transaction->ruangan_nama ?? 'Tidak Diketahui',
+                    'masuk'   => 0,
+                    'keluar'  => $item->jumlah,
+                ]);
+
+            // Gabung dan hitung running saldo
+            $rows  = $masuks->concat($keluars)->sortBy(fn ($r) => $r['tanggal'])->values();
+            $saldo = $saldoAwal;
+            $rows  = $rows->map(function ($r) use (&$saldo) {
+                $saldo += $r['masuk'] - $r['keluar'];
+                $r['saldo'] = $saldo;
+                return $r;
+            });
+
+            $months_data[] = [
+                'month'         => $month,
+                'month_name'    => $monthNames[$month],
+                'rows'          => $rows,
+                'saldo_awal'    => $saldoAwal,
+                'total_masuk'   => $rows->sum('masuk'),
+                'total_keluar'  => $rows->sum('keluar'),
+                'saldo_akhir'   => $saldo,
+            ];
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.barang-all-months-pdf', [
+            'barang'               => $barang,
+            'months_data'          => $months_data,
+            'year'                 => $year,
+            'generated_at'         => now()->format('d/m/Y H:i:s'),
+            'signature_place_date' => $request->get('signature_place_date') ?: 'Jakarta, ' . now()->locale('id')->isoFormat('D MMMM Y'),
+            'nama_ppk'             => $request->get('nama_ppk', ''),
+            'nama_mengetahui'      => $request->get('nama_mengetahui', ''),
+            'nama_pjawab'          => $request->get('nama_pjawab', ''),
+        ])->setPaper('a4', 'portrait');
+
+        $filename = 'kartu-stok-' . \Illuminate\Support\Str::slug($barang->nama) . '-all-months-' . $year . '.pdf';
+
+        return $pdf->download($filename);
     }}
