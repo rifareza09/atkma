@@ -163,26 +163,60 @@ class TransactionController extends Controller
      */
     public function edit(Transaction $permintaan): Response
     {
-        // Prevent editing of completed transactions
-        if (in_array($permintaan->status, ['approved', 'rejected'])) {
-            abort(403, 'Transaksi yang sudah ' . $permintaan->status . ' tidak dapat diedit');
-        }
+        $permintaan->load(['items.barang']);
 
-        abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
+        $ruangans = Ruangan::where('is_active', true)
+            ->select('id', 'nama', 'kode')
+            ->orderBy('nama')
+            ->get();
+
+        $barangs = Barang::where('is_active', true)
+            ->select('id', 'nama', 'kode', 'satuan', 'stok')
+            ->orderBy('nama')
+            ->get();
+
+        return Inertia::render('transaksi/permintaan/edit', [
+            'transaction' => [
+                'id'            => $permintaan->id,
+                'kode_transaksi'=> $permintaan->kode_transaksi,
+                'ruangan_nama'  => $permintaan->ruangan_nama ?? '',
+                'nama_peminta'  => $permintaan->nama_peminta ?? '',
+                'type'          => $permintaan->type?->value ?? 'keluar',
+                'tanggal'       => $permintaan->tanggal?->format('Y-m-d') ?? now()->format('Y-m-d'),
+                'keterangan'    => $permintaan->keterangan ?? '',
+                'items'         => $permintaan->items->map(fn ($item) => [
+                    'barang_id' => $item->barang_id,
+                    'jumlah'    => (int) $item->jumlah,
+                    'keterangan'=> '',
+                ])->values()->toArray(),
+            ],
+            'ruangans' => $ruangans,
+            'barangs'  => $barangs,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Transaction $permintaan)
+    public function update(TransactionRequest $request, Transaction $permintaan)
     {
-        // Prevent editing of completed transactions
-        if (in_array($permintaan->status, ['approved', 'rejected'])) {
-            abort(403, 'Transaksi yang sudah ' . $permintaan->status . ' tidak dapat diedit');
-        }
+        $validated = $request->validated();
 
-        // Transactions should not be editable for audit trail integrity
-        abort(403, 'Transaksi tidak dapat diedit untuk menjaga integritas data');
+        try {
+            $this->transactionService->updateTransaction(
+                $permintaan,
+                $validated,
+                $request->user()
+            );
+
+            return redirect()
+                ->route('permintaan.show', $permintaan->id)
+                ->with('success', 'Transaksi berhasil diperbarui');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Gagal memperbarui transaksi: ' . $e->getMessage()]);
+        }
     }
 
     /**

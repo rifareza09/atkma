@@ -15,11 +15,16 @@ class HistoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $filters = $request->only(['tanggal', 'bulan', 'tahun', 'ruangan_id']);
+        $filters = $request->only(['tanggal', 'bulan', 'tahun', 'ruangan_id', 'sort']);
 
-        $query = Transaction::with(['items.barang'])
+        $sortDir = ($filters['sort'] ?? 'asc') === 'asc' ? 'asc' : 'desc';
+
+        $query = Transaction::with(['items' => function ($q) {
+                $q->orderBy('id', 'asc');
+            }, 'items.barang'])
             ->where('type', 'keluar')
-            ->orderBy('tanggal', 'desc');
+            ->orderBy('tanggal', $sortDir)
+            ->orderBy('id', $sortDir);
 
         // Filter tanggal spesifik
         if (!empty($filters['tanggal'])) {
@@ -70,10 +75,10 @@ class HistoryController extends Controller
             ->pluck('year');
 
         return Inertia::render('history/index', [
-            'transactions'   => $transactions,
-            'ruangans'       => $ruangans,
+            'transactions'    => $transactions,
+            'ruangans'        => $ruangans,
             'available_years' => $availableYears,
-            'filters'        => $filters,
+            'filters'         => $filters,
         ]);
     }
 

@@ -55,25 +55,26 @@ class Transaction extends Model
 
     /**
      * Generate transaction code
-     * Format: TRX-YYYYMMDD-XXX
+     * Format: TRX-YYYYMMDD-XXX (nomor urut reset setiap bulan)
      */
     public static function generateKode(): string
     {
-        $date = now()->format('Ymd');
-        $prefix = "TRX-{$date}-";
+        $date  = now()->format('Ymd');
+        $month = now()->format('Ym');
 
-        $lastTransaction = static::where('kode_transaksi', 'like', "{$prefix}%")
-            ->orderBy('kode_transaksi', 'desc')
+        // Cari transaksi terakhir di bulan yang sama (prefix TRX-YYYYMM)
+        $lastTransaction = static::where('kode_transaksi', 'like', "TRX-{$month}%")
+            ->orderByRaw('CAST(SUBSTRING_INDEX(kode_transaksi, \'-\', -1) AS UNSIGNED) DESC')
             ->first();
 
         if ($lastTransaction) {
             $lastNumber = (int) substr($lastTransaction->kode_transaksi, -3);
-            $newNumber = $lastNumber + 1;
+            $newNumber  = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
 
-        return $prefix . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        return "TRX-{$date}-" . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 
     /**

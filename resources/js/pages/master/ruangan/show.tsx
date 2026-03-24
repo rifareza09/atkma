@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Pencil, Building2, Package, CalendarDays, X, FileDown } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, Pencil, Trash2, Building2, Package, CalendarDays, X, FileDown } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,19 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
     const [filterTanggal, setFilterTanggal] = useState('');
     const [filterBulan, setFilterBulan] = useState(currentMonth);
     const [filterTahun, setFilterTahun] = useState(currentYear);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+
+    const handleDelete = (id: number) => {
+        setDeletingId(id);
+        router.delete(`/transaksi/permintaan/${id}`, {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeletingId(null);
+                setConfirmDeleteId(null);
+            },
+        });
+    };
 
     const MONTHS = [
         { value: '01', label: 'Januari' },
@@ -223,9 +236,9 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
                                     <p className="text-sm text-muted-foreground">Kode</p>
                                     <p className="text-xl font-bold">{ruangan.kode}</p>
                                 </div>
-                                
+
                                 <Separator />
-                                
+
                                 <div>
                                     <p className="text-sm text-muted-foreground">Total Transaksi</p>
                                     <p className="text-2xl font-bold">
@@ -361,6 +374,7 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
                                             <th className="pb-3 pr-4 font-semibold">Nama Barang</th>
                                             <th className="pb-3 pr-4 font-semibold text-right">Jumlah</th>
                                             <th className="pb-3 font-semibold">Satuan</th>
+                                            <th className="pb-3 font-semibold text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -371,6 +385,40 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
                                                     <td className="py-3 pr-4">{trx.tanggal}</td>
                                                     <td className="py-3 pr-4">{trx.nama_peminta}</td>
                                                     <td colSpan={4} className="py-3 text-muted-foreground italic">Tidak ada item</td>
+                                                    <td className="py-3 text-center">
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            <Link href={`/transaksi/permintaan/${trx.id}/edit`}>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                                                    <Pencil className="size-3.5" />
+                                                                </Button>
+                                                            </Link>
+                                                            {confirmDeleteId === trx.id ? (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Button
+                                                                        variant="destructive"
+                                                                        size="sm"
+                                                                        className="h-7 text-xs px-2"
+                                                                        disabled={deletingId === trx.id}
+                                                                        onClick={() => handleDelete(trx.id)}
+                                                                    >
+                                                                        {deletingId === trx.id ? 'Menghapus...' : 'Ya, Hapus'}
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => setConfirmDeleteId(null)}>
+                                                                        Batal
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-7 w-7 text-destructive hover:text-destructive hover:bg-red-50"
+                                                                    onClick={() => setConfirmDeleteId(trx.id)}
+                                                                >
+                                                                    <Trash2 className="size-3.5" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ) : (
                                                 trx.items.map((item, idx) => (
@@ -392,6 +440,42 @@ export default function RuanganShow({ ruangan, transactions }: RuanganShowProps)
                                                         <td className="py-3 pr-4">{item.nama_barang}</td>
                                                         <td className="py-3 pr-4 text-right font-semibold">{item.jumlah}</td>
                                                         <td className="py-3">{item.satuan}</td>
+                                                        {idx === 0 && (
+                                                            <td className="py-3 text-center align-top" rowSpan={trx.items.length}>
+                                                                <div className="flex items-center justify-center gap-1">
+                                                                    <Link href={`/transaksi/permintaan/${trx.id}/edit`}>
+                                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                                                            <Pencil className="size-3.5" />
+                                                                        </Button>
+                                                                    </Link>
+                                                                    {confirmDeleteId === trx.id ? (
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Button
+                                                                                variant="destructive"
+                                                                                size="sm"
+                                                                                className="h-7 text-xs px-2"
+                                                                                disabled={deletingId === trx.id}
+                                                                                onClick={() => handleDelete(trx.id)}
+                                                                            >
+                                                                                {deletingId === trx.id ? 'Menghapus...' : 'Ya, Hapus'}
+                                                                            </Button>
+                                                                            <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => setConfirmDeleteId(null)}>
+                                                                                Batal
+                                                                            </Button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-red-50"
+                                                                            onClick={() => setConfirmDeleteId(trx.id)}
+                                                                        >
+                                                                            <Trash2 className="size-3.5" />
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 ))
                                             )

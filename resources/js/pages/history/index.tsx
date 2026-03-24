@@ -1,6 +1,6 @@
-import { Head, router } from '@inertiajs/react';
-import { History, Filter, FileDown, FileSpreadsheet, X, Package, Users, CalendarDays } from 'lucide-react';
-import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import { History, Filter, FileDown, FileSpreadsheet, X, Package, Users, CalendarDays, ArrowUp, ArrowDown, Pencil, Trash2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -79,6 +79,7 @@ interface HistoryIndexProps {
         bulan?: string;
         tahun?: string;
         ruangan_id?: string;
+        sort?: string;
     };
 }
 
@@ -98,6 +99,8 @@ export default function HistoryIndex({
         ruangan_id: filters.ruangan_id ?? 'all',
     });
 
+    const [sort, setSort] = useState<'asc' | 'desc'>(filters.sort === 'desc' ? 'desc' : 'asc');
+
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const allIds = transactions.map((t) => t.id);
     const isAllSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
@@ -116,7 +119,21 @@ export default function HistoryIndex({
         });
     };
 
-    const applyFilters = () => {
+    const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+
+    const handleDelete = (id: number) => {
+        setDeletingId(id);
+        router.delete(`/transaksi/permintaan/${id}`, {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeletingId(null);
+                setConfirmDeleteId(null);
+            },
+        });
+    };
+
+    const applyFilters = (overrideSort?: 'asc' | 'desc') => {
         const params: Record<string, string> = {};
         if (form.tanggal) {
             params.tanggal = form.tanggal;
@@ -125,13 +142,21 @@ export default function HistoryIndex({
             if (form.tahun && form.tahun !== 'all') params.tahun = form.tahun;
         }
         if (form.ruangan_id !== 'all') params.ruangan_id = form.ruangan_id;
-
+        const activeSort = overrideSort ?? sort;
+        if (activeSort === 'desc') params.sort = 'desc';
         router.get(historyIndex(), params, { preserveState: true, preserveScroll: true });
+    };
+
+    const toggleSort = () => {
+        const newSort = sort === 'asc' ? 'desc' : 'asc';
+        setSort(newSort);
+        applyFilters(newSort);
     };
 
     const resetFilters = () => {
         const defaults = { tanggal: '', bulan: currentMonth, tahun: currentYear, ruangan_id: 'all' };
         setForm(defaults);
+        setSort('asc');
         router.get(historyIndex(), { bulan: currentMonth, tahun: currentYear }, { preserveState: true, preserveScroll: true });
     };
 
@@ -171,6 +196,101 @@ export default function HistoryIndex({
         form.bulan !== currentMonth ||
         form.tahun !== currentYear ||
         form.ruangan_id !== 'all';
+
+    // Bangun baris tabel: flat per transaksi DB, pemisah bulan, nomor reset per bulan
+    const MONTH_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const tableRows: React.ReactNode[] = [];
+    let prevMonthKey = '';
+    let monthCounter = 0;
+
+    transactions.forEach((trx, tIdx) => {
+        const isSelected = selectedIds.has(trx.id);
+        const parts = trx.tanggal.split('/'); // ['dd','mm','YYYY']
+        const thisMonthKey = parts.length === 3 ? `${parts[1]}/${parts[2]}` : trx.tanggal;
+
+        if (thisMonthKey !== prevMonthKey) {
+            prevMonthKey = thisMonthKey;
+            monthCounter = 0;
+            const monthNum = parts.length === 3 ? parseInt(parts[1]) - 1 : -1;
+            const monthLabel = monthNum >= 0 ? `${MONTH_ID[monthNum]} ${parts[2]}` : thisMonthKey;
+            tableRows.push(
+                <TableRow key={`month-${thisMonthKey}-${tIdx}`} className="bg-muted/60 hover:bg-muted/60 border-0">
+                    <TableCell colSpan={9} className="py-2 px-4">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            📅 {monthLabel}
+                        </span>
+                    </TableCell>
+                </TableRow>
+            );
+        }
+        monthCounter += 1;
+        const trxNo = monthCounter;
+        const rowCount = Math.max(trx.items.length, 1);
+
+        const aksiCell = (
+            <TableCell key={`aksi-${trx.id}`} rowSpan={rowCount} className="align-top pt-2">
+                <div className="flex flex-col gap-1 items-start">
+                    <Link href={`/transaksi/permintaan/${trx.id}/edit`}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600 hover:bg-blue-50">
+                            <Pencil className="size-3.5" />
+                        </Button>
+                    </Link>
+                    {confirmDeleteId === trx.id ? (
+                        <div className="flex flex-col gap-1">
+                            <Button variant="destructive" size="sm" className="h-7 text-xs px-2"
+                                disabled={deletingId === trx.id} onClick={() => handleDelete(trx.id)}>
+                                {deletingId === trx.id ? '...' : 'Hapus'}
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 text-xs px-2"
+                                onClick={() => setConfirmDeleteId(null)}>
+                                Batal
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-red-50"
+                            onClick={() => setConfirmDeleteId(trx.id)}>
+                            <Trash2 className="size-3.5" />
+                        </Button>
+                    )}
+                </div>
+            </TableCell>
+        );
+
+        if (trx.items.length === 0) {
+            tableRows.push(
+                <TableRow key={`trx-${trx.id}`}>
+                    <TableCell><Checkbox checked={isSelected} onCheckedChange={() => toggleId(trx.id)} /></TableCell>
+                    <TableCell className="text-center text-sm font-semibold">{trxNo}</TableCell>
+                    <TableCell className="text-sm">{trx.tanggal}</TableCell>
+                    <TableCell className="font-medium">{trx.ruangan_nama}</TableCell>
+                    <TableCell colSpan={4} className="text-muted-foreground italic text-xs">Tidak ada item</TableCell>
+                    {aksiCell}
+                </TableRow>
+            );
+        } else {
+            trx.items.forEach((item, itemIdx) => {
+                tableRows.push(
+                    <TableRow key={`trx-${trx.id}-i${itemIdx}`} className="hover:bg-muted/30">
+                        {itemIdx === 0 && (
+                            <>
+                                <TableCell rowSpan={rowCount} className="align-top pt-3">
+                                    <Checkbox checked={isSelected} onCheckedChange={() => toggleId(trx.id)} />
+                                </TableCell>
+                                <TableCell rowSpan={rowCount} className="text-center text-sm font-semibold align-top pt-3">{trxNo}</TableCell>
+                                <TableCell rowSpan={rowCount} className="align-top pt-3 text-sm">{trx.tanggal}</TableCell>
+                                <TableCell rowSpan={rowCount} className="align-top pt-3 font-medium">{trx.ruangan_nama}</TableCell>
+                            </>
+                        )}
+                        <TableCell className="text-center text-xs text-muted-foreground">{itemIdx + 1}</TableCell>
+                        <TableCell>{item.nama_barang}</TableCell>
+                        <TableCell className="text-right font-semibold">{item.jumlah}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs">{item.satuan}</TableCell>
+                        {itemIdx === 0 && aksiCell}
+                    </TableRow>
+                );
+            });
+        }
+    });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -345,7 +465,7 @@ export default function HistoryIndex({
 
                             {/* Action buttons */}
                             <div className="flex gap-2">
-                                <Button onClick={applyFilters} size="sm" className="h-9 flex-1">
+                                <Button onClick={() => applyFilters()} size="sm" className="h-9 flex-1">
                                     <Filter className="size-3 mr-1" />
                                     Terapkan
                                 </Button>
@@ -361,7 +481,7 @@ export default function HistoryIndex({
 
                 {/* Table */}
                 <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="flex items-center gap-2 text-base">
                             <CalendarDays className="size-5" />
                             Riwayat Transaksi
@@ -369,6 +489,18 @@ export default function HistoryIndex({
                                 {transactions.length} transaksi
                             </Badge>
                         </CardTitle>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 text-xs h-8"
+                            onClick={toggleSort}
+                        >
+                            {sort === 'desc' ? (
+                                <><ArrowDown className="size-3.5" /> Terbaru dulu</>
+                            ) : (
+                                <><ArrowUp className="size-3.5" /> Terlama dulu</>
+                            )}
+                        </Button>
                     </CardHeader>
                     <CardContent>
                         {transactions.length === 0 ? (
@@ -386,88 +518,18 @@ export default function HistoryIndex({
                                                     onCheckedChange={toggleSelectAll}
                                                 />
                                             </TableHead>
-                                            <TableHead className="w-40">No. Transaksi</TableHead>
+                                            <TableHead className="w-16 text-center">Transaksi</TableHead>
                                             <TableHead className="w-28">Tanggal</TableHead>
-                                            <TableHead className="w-48">Ruangan / Unit Kerja</TableHead>
-                                            <TableHead className="w-40">Nama Peminta</TableHead>
-                                            <TableHead className="w-32">Kode Barang</TableHead>
+                                            <TableHead className="w-44">Ruangan / Unit Kerja</TableHead>
+                                            <TableHead className="w-8 text-center text-muted-foreground">No.</TableHead>
                                             <TableHead>Nama Barang</TableHead>
                                             <TableHead className="text-right w-24">Jumlah</TableHead>
                                             <TableHead className="w-20">Satuan</TableHead>
+                                            <TableHead className="w-24">Aksi</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {transactions.map((trx) =>
-                                            trx.items.length === 0 ? (
-                                                <TableRow key={trx.id}>
-                                                    <TableCell>
-                                                        <Checkbox
-                                                            checked={selectedIds.has(trx.id)}
-                                                            onCheckedChange={() => toggleId(trx.id)}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-sm">{trx.kode_transaksi}</TableCell>
-                                                    <TableCell>{trx.tanggal}</TableCell>
-                                                    <TableCell>{trx.ruangan_nama}</TableCell>
-                                                    <TableCell>{trx.nama_peminta}</TableCell>
-                                                    <TableCell colSpan={4} className="text-muted-foreground italic text-xs">
-                                                        Tidak ada item
-                                                    </TableCell>
-                                                </TableRow>
-                                            ) : (
-                                                trx.items.map((item, idx) => (
-                                                    <TableRow key={`${trx.id}-${idx}`} className="hover:bg-muted/30">
-                                                        {idx === 0 && (
-                                                            <>
-                                                                <TableCell
-                                                                    rowSpan={trx.items.length}
-                                                                    className="align-top pt-3"
-                                                                >
-                                                                    <Checkbox
-                                                                        checked={selectedIds.has(trx.id)}
-                                                                        onCheckedChange={() => toggleId(trx.id)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell
-                                                                    rowSpan={trx.items.length}
-                                                                    className="font-mono text-sm align-top pt-3"
-                                                                >
-                                                                    {trx.kode_transaksi}
-                                                                </TableCell>
-                                                                <TableCell
-                                                                    rowSpan={trx.items.length}
-                                                                    className="align-top pt-3 text-sm"
-                                                                >
-                                                                    {trx.tanggal}
-                                                                </TableCell>
-                                                                <TableCell
-                                                                    rowSpan={trx.items.length}
-                                                                    className="align-top pt-3 font-medium"
-                                                                >
-                                                                    {trx.ruangan_nama}
-                                                                </TableCell>
-                                                                <TableCell
-                                                                    rowSpan={trx.items.length}
-                                                                    className="align-top pt-3 text-sm text-muted-foreground"
-                                                                >
-                                                                    {trx.nama_peminta}
-                                                                </TableCell>
-                                                            </>
-                                                        )}
-                                                        <TableCell className="font-mono text-xs text-muted-foreground">
-                                                            {item.kode_barang}
-                                                        </TableCell>
-                                                        <TableCell>{item.nama_barang}</TableCell>
-                                                        <TableCell className="text-right font-semibold">
-                                                            {item.jumlah}
-                                                        </TableCell>
-                                                        <TableCell className="text-muted-foreground text-xs">
-                                                            {item.satuan}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))
-                                            ),
-                                        )}
+                                        {tableRows}
                                     </TableBody>
                                 </Table>
                             </div>

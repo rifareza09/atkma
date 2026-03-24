@@ -125,6 +125,59 @@ class TransactionService
     }
 
     /**
+     * Update transaction: reverse old stock movements, delete old items, re-process new items
+     */
+    public function updateTransaction(Transaction $transaction, array $data, User $user): Transaction
+    {
+        return DB::transaction(function () use ($transaction, $data, $user) {
+            $type = TransactionType::from($data['type'] ?? $transaction->type->value);
+
+            // Reverse stock for all existing items first
+            foreach ($transaction->items()->with('barang')->get() as $item) {
+                $barang = $item->barang;
+                if (!$barang) continue;
+
+                if ($type === TransactionType::KELUAR) {
+                    // Add back the stock that was taken (increment langsung ke DB)
+                    $barang->addStock($item->jumlah);
+                } elseif ($type === TransactionType::MASUK) {
+                    $barang->reduceStock($item->jumlah);
+                }
+                // Tidak perlu $barang->save() karena addStock/reduceStock pakai increment/decrement
+            }
+
+            // Delete old stock movements & items
+            $transaction->stockMovements()->delete();
+            $transaction->items()->delete();
+
+            // Validate new items AFTER reversal (stok sudah dikembalikan)
+            if ($type === TransactionType::KELUAR) {
+                foreach ($data['items'] as $itemData) {
+                    $barang = \App\Models\Barang::find($itemData['barang_id']);
+                    if ($barang && $barang->fresh()->stok < $itemData['jumlah']) {
+                        throw new \Exception(
+                            "Stok {$barang->nama} tidak mencukupi. Tersedia: {$barang->fresh()->stok}, diminta: {$itemData['jumlah']}"
+                        );
+                    }
+                }
+            }
+
+            // Update transaction header
+            $transaction->update([
+                'ruangan_nama' => $data['ruangan_nama'],
+                'nama_peminta' => $data['nama_peminta'] ?? null,
+                'tanggal'      => $data['tanggal'],
+                'keterangan'   => $data['keperluan'] ?? $data['keterangan'] ?? null,
+            ]);
+
+            // Re-process with new items & update stock
+            $this->processItems($transaction, $data['items']);
+
+            return $transaction->load(['items.barang', 'user']);
+        });
+    }
+
+    /**
      * Get transactions with filters
      *
      * @param array $filters
