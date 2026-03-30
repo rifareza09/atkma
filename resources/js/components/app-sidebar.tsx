@@ -37,7 +37,7 @@ import AppLogo from './app-logo';
 const settingsNavItems: NavItem[] = [
     {
         title: 'Settings',
-        href: '#',
+        href: '/settings/profile',
         icon: Settings,
     },
 ];

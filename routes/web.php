@@ -118,11 +118,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('rekonsiliasi', StockReconciliationController::class)->except(['edit', 'update']);
 
         // Incoming Stock (Barang Masuk) - Admin can CRUD, Super Admin read-only
+        Route::get('barang-masuk/export', [IncomingStockController::class, 'export'])
+            ->name('barang-masuk.export');
+        Route::put('barang-masuk/item/{incomingStock}', [IncomingStockController::class, 'updateItem'])
+            ->name('barang-masuk.update-item');
         Route::resource('barang-masuk', IncomingStockController::class)->parameters([
             'barang-masuk' => 'barangMasuk'
         ]);
-        Route::get('barang-masuk/export', [IncomingStockController::class, 'export'])
-            ->name('barang-masuk.export');
     });
 
     // Laporan Pages - View reports with filters

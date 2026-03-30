@@ -39,6 +39,9 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
     const [tanggal, setTanggal] = useState(today);
     const [sumberTujuan, setSumberTujuan] = useState('');
     const [nomorReferensi, setNomorReferensi] = useState('');
+    const [nomorFaktur, setNomorFaktur] = useState('');
+    const [nomorSuratJalan, setNomorSuratJalan] = useState('');
+    const [tanggalFaktur, setTanggalFaktur] = useState('');
     const [keterangan, setKeterangan] = useState('');
     const [items, setItems] = useState<ItemRow[]>([{ barang_id: 0, jumlah: 1 }]);
     const [openStates, setOpenStates] = useState<boolean[]>([false]);
@@ -75,6 +78,9 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
                 tanggal,
                 sumber_tujuan: sumberTujuan,
                 nomor_referensi: nomorReferensi,
+                nomor_faktur: nomorFaktur,
+                nomor_surat_jalan: nomorSuratJalan,
+                tanggal_faktur: tanggalFaktur,
                 keterangan,
                 items,
             },
@@ -143,6 +149,27 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
                                     onChange={(e) => setNomorReferensi(e.target.value)}
                                     error={errors.nomor_referensi}
                                     placeholder="Contoh: PO-2024-001"
+                                />
+                                <InputWithLabel
+                                    label="Nomor Surat Jalan"
+                                    value={nomorSuratJalan}
+                                    onChange={(e) => setNomorSuratJalan(e.target.value)}
+                                    error={errors.nomor_surat_jalan}
+                                    placeholder="Contoh: SJ-2024-001"
+                                />
+                                <InputWithLabel
+                                    label="Nomor Faktur"
+                                    value={nomorFaktur}
+                                    onChange={(e) => setNomorFaktur(e.target.value)}
+                                    error={errors.nomor_faktur}
+                                    placeholder="Contoh: INV-2024-001"
+                                />
+                                <InputWithLabel
+                                    label="Tanggal Faktur"
+                                    type="date"
+                                    value={tanggalFaktur}
+                                    onChange={(e) => setTanggalFaktur(e.target.value)}
+                                    error={errors.tanggal_faktur}
                                 />
                                 <div className="md:col-span-2">
                                     <TextareaWithLabel
