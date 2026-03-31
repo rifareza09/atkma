@@ -97,6 +97,11 @@ export function AppSidebar() {
                 href: laporanInventaris(),
                 icon: FileText,
             },
+            {
+                title: 'Cetakan Faktur',
+                href: '/laporan/cetak-faktur',
+                icon: FileText,
+            },
         ];
     };
 

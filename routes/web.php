@@ -130,6 +130,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Laporan Pages - View reports with filters
     Route::prefix('laporan')->group(function () {
         Route::get('/inventaris', [ReportController::class, 'inventaris'])->name('laporan.inventaris');
+        Route::get('/cetak-faktur', function() {
+            return Inertia::render('cetak-faktur/Index');
+        })->name('cetak-faktur');
+        Route::get('/cetak-faktur/create', function() {
+            return Inertia::render('cetak-faktur/Create');
+        })->name('cetak-faktur.create');
+        Route::get('/cetak-faktur/{id}/edit', function($id) {
+            return Inertia::render('cetak-faktur/Edit', ['id' => $id]);
+        })->name('cetak-faktur.edit');
         Route::get('/transaksi', [ReportController::class, 'transaksi'])->name('laporan.transaksi');
         Route::get('/barang/{barang}/bulan', [ReportController::class, 'barangBulan'])->name('laporan.barang.bulan');
         Route::get('/barang/{barang}/bulan/{month}/{year}', [ReportController::class, 'barangBulanDetail'])->name('laporan.barang.bulan.detail');
