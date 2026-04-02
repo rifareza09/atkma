@@ -69,6 +69,9 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!confirm("Apakah Anda yakin ingin menyimpan transaksi barang masuk ini?")) return;
+
         setProcessing(true);
         setErrors({});
 

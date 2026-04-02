@@ -26,9 +26,7 @@ export default function CetakFaktur() {
 
     // Form inputs matching the requirements
     const [tanggalTransaksi, setTanggalTransaksi] = useState(() => new Date().toISOString().split('T')[0]); // Added: specific date for sorting/table
-    const [kopPerusahaan, setKopPerusahaan] = useState('');
     const [tanggalSurat, setTanggalSurat] = useState('');
-    const [kepadaYth, setKepadaYth] = useState('');
     const [nomorFaktur, setNomorFaktur] = useState('');
 
     // Signatures
@@ -39,8 +37,6 @@ export default function CetakFaktur() {
     const [items, setItems] = useState<InvoiceItem[]>([
         { banyaknya: 0, volume: '', namaBarang: '', hargaSatuan: 0 },
     ]);
-
-    const [terbilang, setTerbilang] = useState('');
 
     const handleAddItem = () => {
         setItems([...items, { banyaknya: 0, volume: '', namaBarang: '', hargaSatuan: 0 }]);
@@ -69,12 +65,14 @@ export default function CetakFaktur() {
         }).format(amount);
     };
 
-    const handlePrintAndSave = () => {
+    const handleSave = () => {
+        if (!confirm("Apakah Anda yakin ingin menyimpan faktur ini?")) return;
+
         // Save to localStorage
         const existingFakturs = JSON.parse(localStorage.getItem('cetak_fakturs') || '[]');
 
-        // Extract supplier name from kopPerusahaan (usually the first line)
-        const supplierName = kopPerusahaan.split('\n')[0] || 'Supplier Tidak Diketahui';
+        // Extract supplier name from hormatKami as Kop is removed
+        const supplierName = hormatKami || 'Supplier Tidak Diketahui';
 
         // Simple distinct ID
         const dateObj = new Date();
@@ -90,17 +88,28 @@ export default function CetakFaktur() {
             totalQty: items.reduce((acc, item) => acc + (item.banyaknya || 0), 0),
             createdAt: new Date(tanggalTransaksi).toISOString(), // Updated to use the selected date
             raw_data: {
-                kopPerusahaan, tanggalSurat, kepadaYth, nomorFaktur, hormatKami, direktur, items, terbilang, tanggalTransaksi
+                tanggalSurat, nomorFaktur, hormatKami, direktur, items, tanggalTransaksi
             }
         };
 
         existingFakturs.unshift(newFaktur);
         localStorage.setItem('cetak_fakturs', JSON.stringify(existingFakturs));
+        alert("Faktur berhasil disimpan!");
+        // return id to be used if needed
+        return id;
+    };
 
-        // Let UI update just briefly if needed, then print
-        setTimeout(() => {
-            window.print();
-        }, 100);
+    const handlePrintAndSave = () => {
+        const id = handleSave();
+        if (id) {
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+    };
+
+    const handlePrintOnly = () => {
+        window.print();
     };
 
     return (
@@ -118,9 +127,12 @@ export default function CetakFaktur() {
                         <Button variant="outline" onClick={() => window.location.href = '/laporan/cetak-faktur'}>
                             Kembali
                         </Button>
-                        <Button onClick={handlePrintAndSave}>
+                        <Button variant="secondary" onClick={handleSave}>
+                            Simpan
+                        </Button>
+                        <Button onClick={handlePrintOnly}>
                             <Printer className="mr-2 size-4" />
-                            Simpan & Cetak
+                            Cetak
                         </Button>
                     </div>
                 </div>
@@ -140,18 +152,9 @@ export default function CetakFaktur() {
                                     onChange={(e) => setTanggalTransaksi(e.target.value)}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label>Kop Surat</Label>
-                                <Textarea
-                                    rows={5}
-                                    value={kopPerusahaan}
-                                    onChange={(e) => setKopPerusahaan(e.target.value)}
-                                    placeholder="Contoh:&#10;CV. TAMADO JAYA&#10;CONTRACTOR - SUPPLIER - PERDAGANGAN UMUM&#10;Jl. Rawa Bambu Raya No. 14D Lt. IV, Pasar Minggu, Jakarta..."
-                                />
-                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Tanggal</Label>
+                                    <Label>Tanggal Surat</Label>
                                     <Input
                                         value={tanggalSurat}
                                         onChange={(e) => setTanggalSurat(e.target.value)}
@@ -166,15 +169,6 @@ export default function CetakFaktur() {
                                         placeholder="Contoh: TMDJ/F/036.12.2025"
                                     />
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Kepada Yth.</Label>
-                                <Textarea
-                                    rows={4}
-                                    value={kepadaYth}
-                                    onChange={(e) => setKepadaYth(e.target.value)}
-                                    placeholder="Contoh:&#10;Petugas Pembuat Komitmen Biaya Proses&#10;Mahkamah Agung RI&#10;Jl. Medan Merdeka Utara 9-13&#10;Jakarta"
-                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -193,14 +187,6 @@ export default function CetakFaktur() {
                                         placeholder="Contoh: Drs. SAUT SINAGA"
                                     />
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Terbilang</Label>
-                                <Input
-                                    value={terbilang}
-                                    onChange={(e) => setTerbilang(e.target.value)}
-                                    placeholder="Contoh: Enam puluh sembilan juta seratus lima puluh tiga ribu rupiah"
-                                />
                             </div>
                         </CardContent>
                     </Card>
@@ -249,7 +235,7 @@ export default function CetakFaktur() {
                                             <Label>Banyaknya</Label>
                                             <Input
                                                 type="number"
-                                                value={item.banyaknya}
+                                                value={item.banyaknya || ''}
                                                 onChange={(e) => updateItem(index, 'banyaknya', parseFloat(e.target.value) || 0)}
                                             />
                                         </div>
@@ -257,7 +243,7 @@ export default function CetakFaktur() {
                                             <Label>Harga Satuan</Label>
                                             <Input
                                                 type="number"
-                                                value={item.hargaSatuan}
+                                                value={item.hargaSatuan || ''}
                                                 onChange={(e) => updateItem(index, 'hargaSatuan', parseFloat(e.target.value) || 0)}
                                             />
                                         </div>
@@ -343,27 +329,10 @@ export default function CetakFaktur() {
             </style>
 
             <div id="print-faktur">
-                {/* Header Kop */}
-                <div className="text-center font-bold" style={{ lineHeight: '1.2' }}>
-                    {kopPerusahaan.split('\n').map((line, idx) => {
-                        // Make first line title-like
-                        if (idx === 0) {
-                            return <div key={idx} style={{ fontSize: '24px', whiteSpace: 'pre-wrap' }}>{line}</div>;
-                        }
-                        return <div key={idx} style={{ fontSize: '13px', whiteSpace: 'pre-wrap', fontWeight: 'normal' }}>{line}</div>;
-                    })}
-                </div>
-
-                <div className="hr-double"></div>
-
                 {/* Surat Info */}
                 <div className="w-full" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
                     <div style={{ width: '45%' }}>
                         <div>{tanggalSurat}</div>
-                        <div className="mt-4">Kepada Yth.</div>
-                        <div style={{ whiteSpace: 'pre-wrap' }}>
-                            {kepadaYth}
-                        </div>
                     </div>
                 </div>
 
@@ -436,11 +405,6 @@ export default function CetakFaktur() {
                         </tr>
                     </tfoot>
                 </table>
-
-                {/* Terbilang */}
-                <div className="terbilang-text">
-                    Terbilang : {terbilang.charAt(0).toUpperCase() + terbilang.slice(1)}
-                </div>
 
                 {/* Tanda Tangan */}
                 <div className="ttd-box-right mb-4">

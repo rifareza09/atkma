@@ -120,8 +120,8 @@
             <tbody>
                 @php $total_all_items = 0; @endphp
                 @forelse($transactions as $index => $transaction)
-                @php 
-                    $txTotal = $transaction->sum('jumlah'); 
+                @php
+                    $txTotal = $transaction->sum('jumlah');
                     $total_all_items += $txTotal;
                 @endphp
                 <tr>
@@ -145,9 +145,18 @@
                     <td class="center bold">{{ $transaction->first()->kode_barang_masuk }}</td>
                     <td>
                         <ul>
-                            @foreach($transaction as $item)
+                            @php
+                                $groupedItems = $transaction->groupBy('barang_id')->map(function($g) {
+                                    return (object)[
+                                        'barang_nama' => $g->first()->barang->nama,
+                                        'jumlah' => $g->sum('jumlah'),
+                                        'satuan' => $g->first()->barang->satuan,
+                                    ];
+                                });
+                            @endphp
+                            @foreach($groupedItems as $item)
                             <li>
-                                {{ $item->barang->nama }} ({{ number_format($item->jumlah) }} {{ $item->barang->satuan }})
+                                {{ $item->barang_nama }} ({{ number_format($item->jumlah) }} {{ $item->satuan }})
                             </li>
                             @endforeach
                         </ul>

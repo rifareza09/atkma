@@ -26,9 +26,7 @@ export default function CetakFakturEdit({ id }: { id: string }) {
 
     // Form inputs initialized empty, wait for load
     const [tanggalTransaksi, setTanggalTransaksi] = useState('');
-    const [kopPerusahaan, setKopPerusahaan] = useState('');
     const [tanggalSurat, setTanggalSurat] = useState('');
-    const [kepadaYth, setKepadaYth] = useState('');
     const [nomorFaktur, setNomorFaktur] = useState('');
 
     // Signatures
@@ -37,7 +35,6 @@ export default function CetakFakturEdit({ id }: { id: string }) {
 
     // Items
     const [items, setItems] = useState<InvoiceItem[]>([]);
-    const [terbilang, setTerbilang] = useState('');
 
     useEffect(() => {
         const stored = localStorage.getItem('cetak_fakturs');
@@ -48,13 +45,10 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                 const f = fakturs.find((fk: any) => fk.id === id);
                 if (f && f.raw_data) {
                     setTanggalTransaksi(f.tanggalTransaksi || f.raw_data.tanggalTransaksi || f.createdAt.split('T')[0] || '');
-                    setKopPerusahaan(f.raw_data.kopPerusahaan || '');
                     setTanggalSurat(f.raw_data.tanggalSurat || '');
-                    setKepadaYth(f.raw_data.kepadaYth || '');
                     setNomorFaktur(f.raw_data.nomorFaktur || '');
                     setHormatKami(f.raw_data.hormatKami || '');
                     setDirektur(f.raw_data.direktur || '');
-                    setTerbilang(f.raw_data.terbilang || '');
                     setItems(f.raw_data.items || []);
                 }
             } catch (e) {
@@ -90,12 +84,14 @@ export default function CetakFakturEdit({ id }: { id: string }) {
         }).format(amount);
     };
 
-    const handlePrintAndSave = () => {
+    const handleSave = () => {
+        if (!confirm("Apakah Anda yakin ingin menyimpan perubahan faktur ini?")) return false;
+
         // Save back to localStorage
         const stored = localStorage.getItem('cetak_fakturs');
         if (stored) {
             let existingFakturs = JSON.parse(stored);
-            const supplierName = kopPerusahaan.split('\n')[0] || 'Supplier Tidak Diketahui';
+            const supplierName = hormatKami || 'Supplier Tidak Diketahui';
 
             existingFakturs = existingFakturs.map((f: any) => {
                 if (f.id === id) {
@@ -109,7 +105,7 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                         totalQty: items.reduce((acc, item: any) => acc + (item.banyaknya || 0), 0),
                         createdAt: f.createdAt, // keep original timestamp or could update to new Date(tanggalTransaksi).toISOString()
                         raw_data: {
-                            kopPerusahaan, tanggalSurat, kepadaYth, nomorFaktur, hormatKami, direktur, items, terbilang, tanggalTransaksi
+                            tanggalSurat, nomorFaktur, hormatKami, direktur, items, tanggalTransaksi
                         }
                     };
                 }
@@ -117,11 +113,22 @@ export default function CetakFakturEdit({ id }: { id: string }) {
             });
 
             localStorage.setItem('cetak_fakturs', JSON.stringify(existingFakturs));
+            alert("Perubahan faktur berhasil disimpan!");
         }
+        return true;
+    };
 
-        setTimeout(() => {
-            window.print();
-        }, 100);
+    const handlePrintAndSave = () => {
+        const saved = handleSave();
+        if (saved) {
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+    };
+
+    const handlePrintOnly = () => {
+        window.print();
     };
 
     return (
@@ -161,14 +168,6 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                                     onChange={(e) => setTanggalTransaksi(e.target.value)}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label>Kop Surat</Label>
-                                <Textarea
-                                    rows={5}
-                                    value={kopPerusahaan}
-                                    onChange={(e) => setKopPerusahaan(e.target.value)}
-                                />
-                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Tanggal</Label>
@@ -187,14 +186,6 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Kepada Yth.</Label>
-                                <Textarea
-                                    rows={4}
-                                    value={kepadaYth}
-                                    onChange={(e) => setKepadaYth(e.target.value)}
-                                />
-                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Nama Penyetuju / Hormat Kami</Label>
@@ -210,13 +201,6 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                                         onChange={(e) => setDirektur(e.target.value)}
                                     />
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Terbilang</Label>
-                                <Input
-                                    value={terbilang}
-                                    onChange={(e) => setTerbilang(e.target.value)}
-                                />
                             </div>
                         </CardContent>
                     </Card>
@@ -264,7 +248,7 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                                             <Label>Banyaknya</Label>
                                             <Input
                                                 type="number"
-                                                value={item.banyaknya}
+                                                value={item.banyaknya || ''}
                                                 onChange={(e) => updateItem(index, 'banyaknya', parseFloat(e.target.value) || 0)}
                                             />
                                         </div>
@@ -272,7 +256,7 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                                             <Label>Harga Satuan</Label>
                                             <Input
                                                 type="number"
-                                                value={item.hargaSatuan}
+                                                value={item.hargaSatuan || ''}
                                                 onChange={(e) => updateItem(index, 'hargaSatuan', parseFloat(e.target.value) || 0)}
                                             />
                                         </div>
@@ -357,27 +341,10 @@ export default function CetakFakturEdit({ id }: { id: string }) {
             </style>
 
             <div id="print-faktur">
-                {/* Header Kop */}
-                <div className="text-center font-bold" style={{ lineHeight: '1.2' }}>
-                    {kopPerusahaan.split('\n').map((line, idx) => {
-                        // Make first line title-like
-                        if (idx === 0) {
-                            return <div key={idx} style={{ fontSize: '24px', whiteSpace: 'pre-wrap' }}>{line}</div>;
-                        }
-                        return <div key={idx} style={{ fontSize: '13px', whiteSpace: 'pre-wrap', fontWeight: 'normal' }}>{line}</div>;
-                    })}
-                </div>
-
-                <div className="hr-double"></div>
-
                 {/* Surat Info */}
                 <div className="w-full" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
                     <div style={{ width: '45%' }}>
                         <div>{tanggalSurat}</div>
-                        <div className="mt-4">Kepada Yth.</div>
-                        <div style={{ whiteSpace: 'pre-wrap' }}>
-                            {kepadaYth}
-                        </div>
                     </div>
                 </div>
 
@@ -450,11 +417,6 @@ export default function CetakFakturEdit({ id }: { id: string }) {
                         </tr>
                     </tfoot>
                 </table>
-
-                {/* Terbilang */}
-                <div className="terbilang-text">
-                    Terbilang : {terbilang.charAt(0).toUpperCase() + terbilang.slice(1)}
-                </div>
 
                 {/* Tanda Tangan */}
                 <div className="ttd-box-right mb-4">

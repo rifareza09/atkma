@@ -320,7 +320,7 @@ export default function CetakFakturIndex() {
                                         <td className="p-4">
                                             <div className="font-medium text-blue-600">{faktur.id}</div>
                                             <div className="text-xs text-muted-foreground">
-                                                {faktur.tanggalTransaksi 
+                                                {faktur.tanggalTransaksi
                                                     ? new Date(faktur.tanggalTransaksi).toLocaleDateString('id-ID')
                                                     : new Date(faktur.createdAt).toLocaleDateString('id-ID')}
                                             </div>
@@ -372,7 +372,7 @@ export default function CetakFakturIndex() {
             {/* BATCH PRINT CONTAINER */}
             <div id="print-batch-faktur">
                 {printingFakturs.map((faktur, pageIdx) => {
-                    const { kopPerusahaan, tanggalSurat, kepadaYth, nomorFaktur, hormatKami, direktur, terbilang } = faktur.raw_data;
+                    const { tanggalSurat, nomorFaktur, hormatKami, direktur } = faktur.raw_data;
                     const items = faktur.raw_data.items || [];
 
                     const subtotal = items.reduce((acc: number, item: any) => acc + (item.banyaknya * item.hargaSatuan), 0);
@@ -381,26 +381,10 @@ export default function CetakFakturIndex() {
 
                     return (
                         <div key={pageIdx} className="print-page">
-                            {/* Header Kop */}
-                            <div className="text-center font-bold" style={{ lineHeight: '1.2' }}>
-                                {(kopPerusahaan || '').split('\n').map((line: string, idx: number) => {
-                                    if (idx === 0) {
-                                        return <div key={idx} style={{ fontSize: '24px', whiteSpace: 'pre-wrap' }}>{line}</div>;
-                                    }
-                                    return <div key={idx} style={{ fontSize: '13px', whiteSpace: 'pre-wrap', fontWeight: 'normal' }}>{line}</div>;
-                                })}
-                            </div>
-
-                            <div className="hr-double"></div>
-
                             {/* Surat Info */}
                             <div className="w-full" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
                                 <div style={{ width: '45%' }}>
                                     <div>{tanggalSurat}</div>
-                                    <div className="mt-4">Kepada Yth.</div>
-                                    <div style={{ whiteSpace: 'pre-wrap' }}>
-                                        {kepadaYth}
-                                    </div>
                                 </div>
                             </div>
 
@@ -473,11 +457,6 @@ export default function CetakFakturIndex() {
                                     </tr>
                                 </tfoot>
                             </table>
-
-                            {/* Terbilang */}
-                            <div className="terbilang-text">
-                                Terbilang : {(terbilang || '').charAt(0).toUpperCase() + (terbilang || '').slice(1)}
-                            </div>
 
                             {/* Tanda Tangan */}
                             <div className="ttd-box-right mb-4">
