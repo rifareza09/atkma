@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
@@ -291,56 +292,34 @@ export default function CetakFakturIndex() {
 
                 {/* Table */}
                 <div className="rounded-md border bg-white">
-                    <table className="w-full text-sm">
-                        <thead className="border-b bg-muted/50">
-                            <tr className="text-left font-medium text-muted-foreground">
-                                <th className="p-4 py-3 w-[50px]">
+                    <Table>
+                        <TableHeader className="bg-muted/50">
+                            <TableRow className="text-left py-2 font-medium text-muted-foreground border-b">
+                                <TableHead className="w-[50px] p-4 text-center">
                                     <Checkbox
                                         checked={filteredFakturs.length > 0 && selectedIds.length === filteredFakturs.length}
                                         onCheckedChange={() => toggleSelectAll(filteredFakturs)}
                                     />
-                                </th>
-                                <th className="p-4 py-3">Transaksi (Simulasi)</th>
-                                <th className="p-4 py-3">Referensi</th>
-                                <th className="p-4 py-3">Item / Qty</th>
-                                <th className="p-4 py-3">Supplier/Sumber</th>
-                                <th className="p-4 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </TableHead>
+                                <TableHead className="p-4">Tanggal</TableHead>
+                                <TableHead className="p-4">Nomor Faktur</TableHead>
+                                <TableHead className="p-4">Nama Barang</TableHead>
+                                <TableHead className="p-4 text-center">Volume (satuan)</TableHead>
+                                <TableHead className="p-4 text-right">Banyaknya</TableHead>
+                                <TableHead className="p-4 text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {filteredFakturs.length > 0 ? (
-                                filteredFakturs.map((faktur) => (
-                                    <tr key={faktur.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                        <td className="p-4">
-                                            <Checkbox
-                                                checked={selectedIds.includes(faktur.id)}
-                                                onCheckedChange={() => toggleSelect(faktur.id)}
-                                            />
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="font-medium text-blue-600">{faktur.id}</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                {faktur.tanggalTransaksi
-                                                    ? new Date(faktur.tanggalTransaksi).toLocaleDateString('id-ID')
-                                                    : new Date(faktur.createdAt).toLocaleDateString('id-ID')}
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="text-sm">Ref: {faktur.nomorFaktur}</div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-1">
-                                                <TrendingUp className="size-4 text-green-600" />
-                                                <div>
-                                                    <p className="font-semibold text-green-600">+{faktur.totalQty} unit</p>
-                                                    <p className="text-xs text-muted-foreground">{faktur.totalItems} jenis barang</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="text-sm">{faktur.supplier}</div>
-                                        </td>
-                                        <td className="p-4 text-right">
+                                filteredFakturs.flatMap((faktur) => {
+                                    const items = faktur.raw_data?.items || [];
+                                    const rowCount = Math.max(1, items.length);
+                                    const dateStr = faktur.tanggalTransaksi ? new Date(faktur.tanggalTransaksi).toLocaleDateString('id-ID') : new Date(faktur.createdAt).toLocaleDateString('id-ID');
+
+                                    const isSelected = selectedIds.includes(faktur.id);
+
+                                    const aksiCell = (
+                                        <TableCell rowSpan={rowCount} className="align-top pt-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button size="sm" variant="outline" onClick={() => handlePrintSingle(faktur)}>
                                                     <Printer className="size-4" />
@@ -350,26 +329,59 @@ export default function CetakFakturIndex() {
                                                         <Pencil className="size-4" />
                                                     </Link>
                                                 </Button>
-                                                <Button size="icon" variant="destructive" onClick={() => handleDelete(faktur.id)}>
+                                                <Button size="sm" variant="destructive" onClick={() => handleDelete(faktur.id)}>
                                                     <Trash2 className="size-4" />
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                        </TableCell>
+                                    );
+
+                                    if (items.length === 0) {
+                                        return [
+                                            <TableRow key={`${faktur.id}-empty`} className="border-b transition-colors hover:bg-muted/50" data-state={isSelected ? 'selected' : undefined}>
+                                                <TableCell className="align-top text-center pt-4 px-4"><Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(faktur.id)} /></TableCell>
+                                                <TableCell className="align-top pt-4 px-4 font-medium text-blue-600">{dateStr}</TableCell>
+                                                <TableCell className="align-top pt-4 px-4 text-sm">{faktur.nomorFaktur}</TableCell>
+                                                <TableCell colSpan={3} className="text-muted-foreground italic text-xs pt-4 px-4">Tidak ada item</TableCell>
+                                                {aksiCell}
+                                            </TableRow>
+                                        ];
+                                    }
+
+                                    return items.map((item, itemIdx) => (
+                                        <TableRow key={`${faktur.id}-${itemIdx}`} className="hover:bg-muted/30 border-b-0" data-state={isSelected ? 'selected' : undefined}>
+                                            {itemIdx === 0 && (
+                                                <>
+                                                    <TableCell rowSpan={rowCount} className="align-top text-center pt-4 px-4 border-b">
+                                                        <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(faktur.id)} />
+                                                    </TableCell>
+                                                    <TableCell rowSpan={rowCount} className="align-top pt-4 px-4 border-b font-medium text-blue-600">
+                                                        {dateStr}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={rowCount} className="align-top pt-4 px-4 border-b text-sm">
+                                                        {faktur.nomorFaktur || '-'}
+                                                    </TableCell>
+                                                </>
+                                            )}
+                                            <TableCell className={`pt-3 px-4 ${itemIdx === items.length - 1 ? 'pb-4 border-b' : ''}`}>{item.namaBarang}</TableCell>
+                                            <TableCell className={`pt-3 px-4 text-center text-muted-foreground ${itemIdx === items.length - 1 ? 'pb-4 border-b' : ''}`}>{item.volume}</TableCell>
+                                            <TableCell className={`pt-3 px-4 text-right font-bold text-green-600 ${itemIdx === items.length - 1 ? 'pb-4 border-b' : ''}`}>{item.banyaknya}</TableCell>
+                                            {itemIdx === 0 && aksiCell}
+                                        </TableRow>
+                                    ));
+                                })
                             ) : (
-                                <tr>
-                                    <td colSpan={6} className="h-24 text-center">
+                                <TableRow>
+                                    <TableCell colSpan={8} className="h-24 text-center">
                                         Tidak ada data faktur tersimpan.
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             )}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
-
-            {/* BATCH PRINT CONTAINER */}
+            
             <div id="print-batch-faktur">
                 {printingFakturs.map((faktur, pageIdx) => {
                     const { tanggalSurat, nomorFaktur, hormatKami, direktur } = faktur.raw_data;
