@@ -98,6 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Ruangan routes - Admin can create/update/delete, Pengawas can only view
         Route::get('ruangan/{ruangan}/export-pdf', [RuanganController::class, 'exportPdf'])->name('ruangan.export-pdf');
+        Route::get('ruangan/export-multiple-pdf', [RuanganController::class, 'exportMultiplePdf'])->name('ruangan.export-multiple-pdf');
         Route::resource('ruangan', RuanganController::class);
     });
 
@@ -130,13 +131,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Laporan Pages - View reports with filters
     Route::prefix('laporan')->group(function () {
         Route::get('/inventaris', [ReportController::class, 'inventaris'])->name('laporan.inventaris');
-        Route::get('/cetak-faktur', function() {
+        Route::get('/cetak-faktur', function () {
             return Inertia::render('cetak-faktur/Index');
         })->name('cetak-faktur');
-        Route::get('/cetak-faktur/create', function() {
+        Route::get('/cetak-faktur/create', function () {
             return Inertia::render('cetak-faktur/Create');
         })->name('cetak-faktur.create');
-        Route::get('/cetak-faktur/{id}/edit', function($id) {
+        Route::get('/cetak-faktur/{id}/edit', function ($id) {
             return Inertia::render('cetak-faktur/Edit', ['id' => $id]);
         })->name('cetak-faktur.edit');
         Route::get('/transaksi', [ReportController::class, 'transaksi'])->name('laporan.transaksi');
