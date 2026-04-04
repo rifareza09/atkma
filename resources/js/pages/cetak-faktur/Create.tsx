@@ -26,12 +26,15 @@ export default function CetakFaktur() {
 
     // Form inputs matching the requirements
     const [tanggalTransaksi, setTanggalTransaksi] = useState(() => new Date().toISOString().split('T')[0]); // Added: specific date for sorting/table
-    const [tanggalSurat, setTanggalSurat] = useState('');
+    const [tanggalFaktur, setTanggalFaktur] = useState(() => new Date().toISOString().split('T')[0]);
+    const [lokasiTanggalFaktur, setLokasiTanggalFaktur] = useState('Jakarta');
     const [nomorFaktur, setNomorFaktur] = useState('');
+    const [tanggalSuratJalan, setTanggalSuratJalan] = useState(() => new Date().toISOString().split('T')[0]);
+    const [lokasiTanggalSuratJalan, setLokasiTanggalSuratJalan] = useState('Jakarta');
+    const [nomorSuratJalan, setNomorSuratJalan] = useState('');
 
-    // Signatures
-    const [hormatKami, setHormatKami] = useState('');
-    const [direktur, setDirektur] = useState('');
+    // Company info
+    const [namaPT, setNamaPT] = useState('');
 
     // Items
     const [items, setItems] = useState<InvoiceItem[]>([
@@ -39,7 +42,8 @@ export default function CetakFaktur() {
     ]);
 
     const handleAddItem = () => {
-        setItems([...items, { banyaknya: 0, volume: '', namaBarang: '', hargaSatuan: 0 }]);
+        const newItems = [...items, { banyaknya: 0, volume: '', namaBarang: '', hargaSatuan: 0 }];
+        setItems(newItems);
     };
 
     const handleRemoveItem = (index: number) => {
@@ -65,14 +69,23 @@ export default function CetakFaktur() {
         }).format(amount);
     };
 
+    // Format date to Indonesian format
+    const formatDate = (dateStr: string, lokasi: string) => {
+        if (!dateStr) return lokasi + ', --';
+        const date = new Date(dateStr + 'T00:00:00');
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        return `${lokasi}, ${day} ${month} ${year}`;
+    };
+
     const handleSave = () => {
         if (!confirm("Apakah Anda yakin ingin menyimpan faktur ini?")) return;
 
         // Save to localStorage
         const existingFakturs = JSON.parse(localStorage.getItem('cetak_fakturs') || '[]');
-
-        // Extract supplier name from hormatKami as Kop is removed
-        const supplierName = hormatKami || 'Supplier Tidak Diketahui';
 
         // Simple distinct ID
         const dateObj = new Date();
@@ -81,20 +94,28 @@ export default function CetakFaktur() {
         const newFaktur = {
             id,
             nomorFaktur,
-            tanggalFakturSurat: tanggalSurat,
+            tanggalFakturSurat: tanggalFaktur,
             tanggalTransaksi: tanggalTransaksi,
-            supplier: supplierName,
+            supplier: namaPT || 'PT/CV',
             totalItems: items.length,
             totalQty: items.reduce((acc, item) => acc + (item.banyaknya || 0), 0),
             createdAt: new Date(tanggalTransaksi).toISOString(), // Updated to use the selected date
             raw_data: {
-                tanggalSurat, nomorFaktur, hormatKami, direktur, items, tanggalTransaksi
+                namaPT, 
+                tanggalFaktur: formatDate(tanggalFaktur, lokasiTanggalFaktur), 
+                nomorFaktur, 
+                tanggalSuratJalan: formatDate(tanggalSuratJalan, lokasiTanggalSuratJalan),
+                nomorSuratJalan, 
+                items, 
+                tanggalTransaksi
             }
         };
 
         existingFakturs.unshift(newFaktur);
         localStorage.setItem('cetak_fakturs', JSON.stringify(existingFakturs));
         alert("Faktur berhasil disimpan!");
+        // Redirect ke dashboard
+        window.location.href = '/laporan/cetak-faktur';
         // return id to be used if needed
         return id;
     };
@@ -152,41 +173,45 @@ export default function CetakFaktur() {
                                     onChange={(e) => setTanggalTransaksi(e.target.value)}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Tanggal Surat</Label>
-                                    <Input
-                                        value={tanggalSurat}
-                                        onChange={(e) => setTanggalSurat(e.target.value)}
-                                        placeholder="Contoh: Jakarta, 12 Desember 2025"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Nomor Faktur</Label>
-                                    <Input
-                                        value={nomorFaktur}
-                                        onChange={(e) => setNomorFaktur(e.target.value)}
-                                        placeholder="Contoh: TMDJ/F/036.12.2025"
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <Label>Tanggal Faktur</Label>
+                                <Input
+                                    type="date"
+                                    value={tanggalFaktur}
+                                    onChange={(e) => setTanggalFaktur(e.target.value)}
+                                />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Nama Penyetuju / Hormat Kami</Label>
-                                    <Input
-                                        value={hormatKami}
-                                        onChange={(e) => setHormatKami(e.target.value)}
-                                        placeholder="Contoh: CV. TAMADO JAYA"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Nama Direktur / Pejabat</Label>
-                                    <Input
-                                        value={direktur}
-                                        onChange={(e) => setDirektur(e.target.value)}
-                                        placeholder="Contoh: Drs. SAUT SINAGA"
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <Label>Nomor Faktur</Label>
+                                <Input
+                                    value={nomorFaktur}
+                                    onChange={(e) => setNomorFaktur(e.target.value)}
+                                    placeholder="Contoh: TMDJ/F/036.12.2025"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Tanggal Surat Jalan</Label>
+                                <Input
+                                    type="date"
+                                    value={tanggalSuratJalan}
+                                    onChange={(e) => setTanggalSuratJalan(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Nomor Surat Jalan</Label>
+                                <Input
+                                    value={nomorSuratJalan}
+                                    onChange={(e) => setNomorSuratJalan(e.target.value)}
+                                    placeholder="Contoh: TMDJ/SJ/036.12.2025"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Nama PT / CV</Label>
+                                <Input
+                                    value={namaPT}
+                                    onChange={(e) => setNamaPT(e.target.value)}
+                                    placeholder="Contoh: CV. TAMADO JAYA"
+                                />
                             </div>
                         </CardContent>
                     </Card>
@@ -215,7 +240,7 @@ export default function CetakFaktur() {
                                         </Button>
                                     )}
                                     <div className="grid grid-cols-12 gap-3">
-                                        <div className="col-span-12 md:col-span-6 space-y-1">
+                                        <div className="col-span-12 md:col-span-5 space-y-1">
                                             <Label>Nama Barang</Label>
                                             <Input
                                                 placeholder="Contoh: Map Mahkamah Agung RI"
@@ -239,7 +264,7 @@ export default function CetakFaktur() {
                                                 onChange={(e) => updateItem(index, 'banyaknya', parseFloat(e.target.value) || 0)}
                                             />
                                         </div>
-                                        <div className="col-span-12 md:col-span-2 space-y-1">
+                                        <div className="col-span-12 md:col-span-3 space-y-1">
                                             <Label>Harga Satuan</Label>
                                             <Input
                                                 type="number"
@@ -329,94 +354,74 @@ export default function CetakFaktur() {
             </style>
 
             <div id="print-faktur">
-                {/* Surat Info */}
-                <div className="w-full" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-                    <div style={{ width: '45%' }}>
-                        <div>{tanggalSurat}</div>
+                {/* Company Name */}
+                {namaPT && (
+                    <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', marginBottom: '20px' }}>
+                        {namaPT}
                     </div>
-                </div>
+                )}
 
-                <div className="faktur-no" style={{ marginTop: '30px' }}>
-                    FAKTUR : {nomorFaktur}
+                {/* Faktur & Surat Jalan Info */}
+                <div className="w-full" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px', marginBottom: '20px' }}>
+                    <div>
+                        <div style={{ fontWeight: 'bold' }}>FAKTUR</div>
+                        <div>{tanggalFaktur}</div>
+                        <div>{nomorFaktur}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 'bold' }}>SURAT JALAN</div>
+                        <div>{tanggalSuratJalan}</div>
+                        <div>{nomorSuratJalan}</div>
+                    </div>
                 </div>
 
                 {/* Table */}
                 <table className="print-table">
                     <thead>
                         <tr>
-                            <th style={{ width: '5%' }}>No.</th>
-                            <th style={{ width: '10%' }}>Banyaknya</th>
-                            <th style={{ width: '10%' }}>Volume</th>
-                            <th style={{ width: '40%' }}>Nama Barang</th>
-                            <th style={{ width: '15%' }}>Harga Satuan</th>
-                            <th style={{ width: '20%' }}>Jumlah</th>
+                            <th style={{ width: '5%' }}>NO</th>
+                            <th style={{ width: '25%' }}>NAMA BARANG</th>
+                            <th style={{ width: '20%' }}>JUMLAH</th>
+                            <th style={{ width: '15%' }}>SATUAN</th>
+                            <th style={{ width: '15%' }}>HARGA SATUAN</th>
+                            <th style={{ width: '20%' }}>JUMLAH HARGA</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {items.map((item, idx) => (
-                            <tr key={idx}>
-                                <td className="text-center">{idx + 1}</td>
-                                <td className="text-center">{new Intl.NumberFormat('id-ID').format(item.banyaknya)}</td>
-                                <td className="text-center">{item.volume}</td>
-                                <td>{item.namaBarang}</td>
-                                <td>
-                                    <div className="currency-col">
-                                        <span>Rp</span>
-                                        <span>{formatRp(item.hargaSatuan)}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="currency-col">
-                                        <span>Rp</span>
-                                        <span>{formatRp(item.banyaknya * item.hargaSatuan)}</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {items.length > 0 && (
+                            <>
+                                {items.map((item, idx) => (
+                                    <tr key={idx}>
+                                        <td className="text-center">{idx + 1}</td>
+                                        <td>{item.namaBarang}</td>
+                                        <td className="text-center">{new Intl.NumberFormat('id-ID').format(item.banyaknya)}</td>
+                                        <td className="text-center">{item.volume}</td>
+                                        <td>
+                                            <div className="currency-col">
+                                                <span>Rp</span>
+                                                <span>{formatRp(item.hargaSatuan)}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="currency-col">
+                                                <span>Rp</span>
+                                                <span>{formatRp(item.banyaknya * item.hargaSatuan)}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </>
+                        )}
                     </tbody>
                     <tfoot style={{ fontWeight: 'bold' }}>
                         <tr>
-                            <td colSpan={4} rowSpan={3} style={{ border: 'none', borderRight: '1px solid black' }}></td>
-                            <td>Subtotal</td>
-                            <td>
-                                <div className="currency-col">
-                                    <span>Rp</span>
-                                    <span>{formatRp(subtotal)}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Ppn 11%</td>
-                            <td>
-                                <div className="currency-col">
-                                    <span>Rp</span>
-                                    <span>{formatRp(ppn)}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>JUMLAH</td>
-                            <td>
-                                <div className="currency-col">
-                                    <span>Rp</span>
-                                    <span>{formatRp(total)}</span>
-                                </div>
+                            <td colSpan={4} style={{ border: 'none', borderRight: '1px solid black', textAlign: 'right', paddingRight: '8px' }}>Total</td>
+                            <td colSpan={2} style={{ textAlign: 'right', paddingRight: '8px' }}>
+                                Rp {formatRp(items.reduce((acc, item) => acc + (item.banyaknya * item.hargaSatuan), 0))}
                             </td>
                         </tr>
                     </tfoot>
                 </table>
-
-                {/* Tanda Tangan */}
-                <div className="ttd-box-right mb-4">
-                    <div className="mb-20">
-                        <div>Hormat kami,</div>
-                        <div>{hormatKami}</div>
-                    </div>
-                    {/* The whitespace is for signature */}
-                    <div style={{ height: '80px' }}></div>
-                    <div className="font-bold underline" style={{ textDecoration: 'underline' }}>{direktur}</div>
-                    <div>Direktur</div>
-                </div>
             </div>
         </AppLayout>
     );

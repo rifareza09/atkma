@@ -14,6 +14,7 @@ interface SimulatedFaktur {
     nomorFaktur: string;
     tanggalFakturSurat: string;
     supplier: string;
+    namaPT?: string;
     totalItems: number;
     totalQty: number;
     createdAt: string;
@@ -87,14 +88,6 @@ export default function CetakFakturIndex() {
         }, 100);
     };
 
-    const handlePrintList = () => {
-        setPrintMode('list');
-        setTimeout(() => {
-            window.print();
-            setPrintMode('none');
-        }, 100);
-    };
-
     // Filter logic
     const filteredFakturs = fakturs.filter(faktur => {
         const d = new Date(faktur.createdAt);
@@ -107,6 +100,10 @@ export default function CetakFakturIndex() {
         const matchMonth = monthFilter ? m === monthFilter : true;
 
         return matchSearch && matchYear && matchMonth;
+    }).sort((a, b) => {
+        const dateA = new Date(a.raw_data?.tanggalTransaksi || a.createdAt).getTime();
+        const dateB = new Date(b.raw_data?.tanggalTransaksi || b.createdAt).getTime();
+        return dateA - dateB; // Earliest first
     });
 
     // Extract available years for filter
@@ -190,9 +187,23 @@ export default function CetakFakturIndex() {
                             height: auto !important;
                         }
                         .print-page:last-child { page-break-after: auto !important; break-after: auto !important; }
-                        .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
-                        .print-table th, .print-table td { border: 1px solid black; padding: 4px 8px; }
-                        .print-table th { text-align: center; font-weight: bold; }
+                        .print-table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            margin-top: 10px; 
+                            margin-bottom: 20px; 
+                            font-size: 12px;
+                        }
+                        .print-table th, .print-table td { 
+                            border: 1px solid black; 
+                            padding: 5px 6px; 
+                            font-size: 11px;
+                        }
+                        .print-table th { 
+                            text-align: center; 
+                            font-weight: bold; 
+                            background-color: #f5f5f5;
+                        }
                         .text-center { text-align: center; }
                         .text-right { text-align: right; }
                         .text-left { text-align: left; }
@@ -222,10 +233,6 @@ export default function CetakFakturIndex() {
                         <p className="text-muted-foreground">Kelola simulasi cetakan faktur barang masuk (tersimpan lokal)</p>
                     </div>
                     <div className="flex gap-2 no-print">
-                        <Button variant="outline" onClick={handlePrintList}>
-                            <Printer className="mr-2 size-4" />
-                            Print Daftar Tabel
-                        </Button>
                         {selectedIds.length > 0 && (
                             <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50" onClick={handlePrintMultiple}>
                                 <Printer className="mr-2 size-4" />
@@ -290,28 +297,33 @@ export default function CetakFakturIndex() {
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="rounded-md border bg-white">
-                    <Table>
+                {/* Table - Horizontal Scroll Container */}
+                <div className="rounded-md border bg-white overflow-x-auto">
+                    <Table className="min-w-full">
                         <TableHeader className="bg-muted/50">
                             <TableRow className="text-left py-2 font-medium text-muted-foreground border-b">
-                                <TableHead className="w-[50px] p-4 text-center">
+                                <TableHead className="w-[40px] p-2 text-center text-xs">
                                     <Checkbox
                                         checked={filteredFakturs.length > 0 && selectedIds.length === filteredFakturs.length}
                                         onCheckedChange={() => toggleSelectAll(filteredFakturs)}
                                     />
                                 </TableHead>
-                                <TableHead className="p-4">Tanggal</TableHead>
-                                <TableHead className="p-4">Nomor Faktur</TableHead>
-                                <TableHead className="p-4">Nama Barang</TableHead>
-                                <TableHead className="p-4 text-center">Volume (satuan)</TableHead>
-                                <TableHead className="p-4 text-right">Banyaknya</TableHead>
-                                <TableHead className="p-4 text-right">Aksi</TableHead>
+                                <TableHead className="w-[30px] p-2 text-center text-xs font-semibold">No.</TableHead>
+                                <TableHead className="p-2 text-xs font-semibold whitespace-nowrap min-w-[80px]">Tanggal</TableHead>
+                                <TableHead className="p-2 text-xs font-semibold whitespace-nowrap min-w-[100px]">No Faktur</TableHead>
+                                <TableHead className="p-2 text-xs font-semibold whitespace-nowrap min-w-[120px]">Tgl Faktur</TableHead>
+                                <TableHead className="p-2 text-xs font-semibold whitespace-nowrap min-w-[100px]">No SJ</TableHead>
+                                <TableHead className="p-2 text-xs font-semibold whitespace-nowrap min-w-[120px]">Tgl SJ</TableHead>
+                                <TableHead className="p-2 text-xs font-semibold whitespace-nowrap min-w-[120px]">Nama PT/CV</TableHead>
+                                <TableHead className="p-2 text-xs font-semibold whitespace-nowrap min-w-[150px]">Nama Barang</TableHead>
+                                <TableHead className="p-2 text-center text-xs font-semibold whitespace-nowrap">Vol</TableHead>
+                                <TableHead className="p-2 text-right text-xs font-semibold whitespace-nowrap">Qty</TableHead>
+                                <TableHead className="p-2 text-right text-xs font-semibold">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {filteredFakturs.length > 0 ? (
-                                filteredFakturs.flatMap((faktur) => {
+                                filteredFakturs.flatMap((faktur, fakturIdx) => {
                                     const items = faktur.raw_data?.items || [];
                                     const rowCount = Math.max(1, items.length);
                                     const dateStr = faktur.tanggalTransaksi ? new Date(faktur.tanggalTransaksi).toLocaleDateString('id-ID') : new Date(faktur.createdAt).toLocaleDateString('id-ID');
@@ -319,18 +331,18 @@ export default function CetakFakturIndex() {
                                     const isSelected = selectedIds.includes(faktur.id);
 
                                     const aksiCell = (
-                                        <TableCell rowSpan={rowCount} className="align-top pt-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => handlePrintSingle(faktur)}>
-                                                    <Printer className="size-4" />
+                                        <TableCell rowSpan={rowCount} className="align-top p-2 border-b text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button size="sm" variant="outline" onClick={() => handlePrintSingle(faktur)} className="h-7 w-7 p-0">
+                                                    <Printer className="size-3" />
                                                 </Button>
-                                                <Button size="sm" variant="outline" asChild>
+                                                <Button size="sm" variant="outline" asChild className="h-7 w-7 p-0">
                                                     <Link href={`/laporan/cetak-faktur/${faktur.id}/edit`}>
-                                                        <Pencil className="size-4" />
+                                                        <Pencil className="size-3" />
                                                     </Link>
                                                 </Button>
-                                                <Button size="sm" variant="destructive" onClick={() => handleDelete(faktur.id)}>
-                                                    <Trash2 className="size-4" />
+                                                <Button size="sm" variant="destructive" onClick={() => handleDelete(faktur.id)} className="h-7 w-7 p-0">
+                                                    <Trash2 className="size-3" />
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -339,33 +351,57 @@ export default function CetakFakturIndex() {
                                     if (items.length === 0) {
                                         return [
                                             <TableRow key={`${faktur.id}-empty`} className="border-b transition-colors hover:bg-muted/50" data-state={isSelected ? 'selected' : undefined}>
-                                                <TableCell className="align-top text-center pt-4 px-4"><Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(faktur.id)} /></TableCell>
-                                                <TableCell className="align-top pt-4 px-4 font-medium text-blue-600">{dateStr}</TableCell>
-                                                <TableCell className="align-top pt-4 px-4 text-sm">{faktur.nomorFaktur}</TableCell>
-                                                <TableCell colSpan={3} className="text-muted-foreground italic text-xs pt-4 px-4">Tidak ada item</TableCell>
+                                                <TableCell className="align-top text-center p-2"><Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(faktur.id)} /></TableCell>
+                                                <TableCell rowSpan={rowCount} className="align-top text-center p-2 text-xs font-bold">{fakturIdx + 1}</TableCell>
+                                                <TableCell className="align-top p-2 font-medium text-blue-600 text-xs whitespace-nowrap">{dateStr}</TableCell>
+                                                <TableCell className="align-top p-2 text-xs whitespace-nowrap">{faktur.raw_data?.nomorFaktur || '-'}</TableCell>
+                                                <TableCell className="align-top p-2 text-xs whitespace-nowrap">{faktur.raw_data?.tanggalFaktur?.substring(0, 20) || '-'}</TableCell>
+                                                <TableCell className="align-top p-2 text-xs whitespace-nowrap">{faktur.raw_data?.nomorSuratJalan || '-'}</TableCell>
+                                                <TableCell className="align-top p-2 text-xs whitespace-nowrap">{faktur.raw_data?.tanggalSuratJalan?.substring(0, 20) || '-'}</TableCell>
+                                                <TableCell className="align-top p-2 text-xs">{faktur.raw_data?.namaPT || '-'}</TableCell>
+                                                <TableCell colSpan={3} className="text-muted-foreground italic text-xs p-2">Tidak ada item</TableCell>
                                                 {aksiCell}
                                             </TableRow>
                                         ];
                                     }
 
                                     return items.map((item, itemIdx) => (
-                                        <TableRow key={`${faktur.id}-${itemIdx}`} className="hover:bg-muted/30 border-b-0" data-state={isSelected ? 'selected' : undefined}>
+                                        <TableRow key={`${faktur.id}-${itemIdx}`} className="hover:bg-muted/30 border-b-0 text-xs" data-state={isSelected ? 'selected' : undefined}>
                                             {itemIdx === 0 && (
                                                 <>
-                                                    <TableCell rowSpan={rowCount} className="align-top text-center pt-4 px-4 border-b">
+                                                    <TableCell rowSpan={rowCount} className="align-top text-center p-2 border-b">
                                                         <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(faktur.id)} />
                                                     </TableCell>
-                                                    <TableCell rowSpan={rowCount} className="align-top pt-4 px-4 border-b font-medium text-blue-600">
+                                                    <TableCell rowSpan={rowCount} className="align-top text-center p-2 border-b font-bold text-xs">{fakturIdx + 1}</TableCell>
+                                                </>
+                                            )}
+                                            {itemIdx === 0 && (
+                                                <>
+                                                    <TableCell rowSpan={rowCount} className="align-top p-2 border-b font-medium text-blue-600 text-xs whitespace-nowrap">
                                                         {dateStr}
                                                     </TableCell>
-                                                    <TableCell rowSpan={rowCount} className="align-top pt-4 px-4 border-b text-sm">
-                                                        {faktur.nomorFaktur || '-'}
+                                                    <TableCell rowSpan={rowCount} className="align-top p-2 border-b text-xs whitespace-nowrap">
+                                                        {faktur.raw_data?.nomorFaktur || '-'}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={rowCount} className="align-top p-2 border-b text-xs whitespace-nowrap">
+                                                        {faktur.raw_data?.tanggalFaktur?.substring(0, 20) || '-'}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={rowCount} className="align-top p-2 border-b text-xs whitespace-nowrap">
+                                                        {faktur.raw_data?.nomorSuratJalan || '-'}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={rowCount} className="align-top p-2 border-b text-xs whitespace-nowrap">
+                                                        {faktur.raw_data?.tanggalSuratJalan?.substring(0, 20) || '-'}
+                                                    </TableCell>
+                                                    <TableCell rowSpan={rowCount} className="align-top p-2 border-b text-xs">
+                                                        {faktur.raw_data?.namaPT || '-'}
                                                     </TableCell>
                                                 </>
                                             )}
-                                            <TableCell className={`pt-3 px-4 ${itemIdx === items.length - 1 ? 'pb-4 border-b' : ''}`}>{item.namaBarang}</TableCell>
-                                            <TableCell className={`pt-3 px-4 text-center text-muted-foreground ${itemIdx === items.length - 1 ? 'pb-4 border-b' : ''}`}>{item.volume}</TableCell>
-                                            <TableCell className={`pt-3 px-4 text-right font-bold text-green-600 ${itemIdx === items.length - 1 ? 'pb-4 border-b' : ''}`}>{item.banyaknya}</TableCell>
+                                            <TableCell className={`p-2 ${itemIdx === items.length - 1 ? 'pb-2 border-b' : ''}`}>
+                                                <span className="font-medium text-xs">{itemIdx + 1}.</span> <span className="text-xs">{item.namaBarang}</span>
+                                            </TableCell>
+                                            <TableCell className={`p-2 text-center text-muted-foreground text-xs whitespace-nowrap ${itemIdx === items.length - 1 ? 'pb-2 border-b' : ''}`}>{item.volume}</TableCell>
+                                            <TableCell className={`p-2 text-right font-bold text-green-600 text-xs ${itemIdx === items.length - 1 ? 'pb-2 border-b' : ''}`}>{item.banyaknya}</TableCell>
                                             {itemIdx === 0 && aksiCell}
                                         </TableRow>
                                     ));
@@ -381,108 +417,72 @@ export default function CetakFakturIndex() {
                     </Table>
                 </div>
             </div>
-            
+
             <div id="print-batch-faktur">
-                {printingFakturs.map((faktur, pageIdx) => {
-                    const { tanggalSurat, nomorFaktur, hormatKami, direktur } = faktur.raw_data;
-                    const items = faktur.raw_data.items || [];
+                <div className="print-page">
+                    {/* Collect all items from all transactions */}
+                    {(() => {
+                        let rowNumber = 1;
+                        let allItems: any[] = [];
+                        printingFakturs.forEach((faktur) => {
+                            const items = faktur.raw_data.items || [];
+                            items.forEach((item: any) => {
+                                allItems.push({
+                                    ...faktur.raw_data,
+                                    item,
+                                    rowNo: rowNumber++
+                                });
+                            });
+                        });
 
-                    const subtotal = items.reduce((acc: number, item: any) => acc + (item.banyaknya * item.hargaSatuan), 0);
-                    const ppn = subtotal * 0.11;
-                    const total = subtotal + ppn;
+                        const grandTotal = allItems.reduce((acc: number, row: any) => 
+                            acc + (row.item.banyaknya * row.item.hargaSatuan), 0
+                        );
 
-                    return (
-                        <div key={pageIdx} className="print-page">
-                            {/* Surat Info */}
-                            <div className="w-full" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-                                <div style={{ width: '45%' }}>
-                                    <div>{tanggalSurat}</div>
-                                </div>
-                            </div>
-
-                            <div className="faktur-no" style={{ marginTop: '30px' }}>
-                                FAKTUR : {nomorFaktur}
-                            </div>
-
-                            {/* Table */}
+                        return (
                             <table className="print-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: '5%' }}>No.</th>
-                                        <th style={{ width: '10%' }}>Banyaknya</th>
-                                        <th style={{ width: '10%' }}>Volume</th>
-                                        <th style={{ width: '40%' }}>Nama Barang</th>
-                                        <th style={{ width: '15%' }}>Harga Satuan</th>
-                                        <th style={{ width: '20%' }}>Jumlah</th>
+                                        <th style={{ width: '3%' }}>NO</th>
+                                        <th style={{ width: '7%' }}>NO FAKTUR</th>
+                                        <th style={{ width: '8%' }}>TGL FAKTUR</th>
+                                        <th style={{ width: '7%' }}>NO SJ</th>
+                                        <th style={{ width: '8%' }}>TGL SJ</th>
+                                        <th style={{ width: '9%' }}>NAMA PT</th>
+                                        <th style={{ width: '16%' }}>NAMA BARANG</th>
+                                        <th style={{ width: '6%' }}>SAT</th>
+                                        <th style={{ width: '10%' }}>HARGA SAT</th>
+                                        <th style={{ width: '10%' }}>JUMLAH HARGA</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {items.map((item: any, idx: number) => (
+                                    {allItems.map((row: any, idx: number) => (
                                         <tr key={idx}>
-                                            <td className="text-center">{idx + 1}</td>
-                                            <td className="text-center">{new Intl.NumberFormat('id-ID').format(item.banyaknya)}</td>
-                                            <td className="text-center">{item.volume}</td>
-                                            <td>{item.namaBarang}</td>
-                                            <td>
-                                                <div className="currency-col">
-                                                    <span>Rp</span>
-                                                    <span>{formatRp(item.hargaSatuan)}</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="currency-col">
-                                                    <span>Rp</span>
-                                                    <span>{formatRp(item.banyaknya * item.hargaSatuan)}</span>
-                                                </div>
-                                            </td>
+                                            <td className="text-center" style={{ fontSize: '11px' }}>{row.rowNo}</td>
+                                            <td className="text-center" style={{ fontSize: '10px' }}>{row.nomorFaktur}</td>
+                                            <td className="text-center" style={{ fontSize: '9px' }}>{row.tanggalFaktur?.substring(0, 15) || '-'}</td>
+                                            <td className="text-center" style={{ fontSize: '10px' }}>{row.nomorSuratJalan}</td>
+                                            <td className="text-center" style={{ fontSize: '9px' }}>{row.tanggalSuratJalan?.substring(0, 15) || '-'}</td>
+                                            <td style={{ fontSize: '9px' }}>{row.namaPT?.substring(0, 12) || '-'}</td>
+                                            <td style={{ fontSize: '9px' }}>{row.item.namaBarang?.substring(0, 18) || '-'}</td>
+                                            <td className="text-center" style={{ fontSize: '10px' }}>{row.item.volume}</td>
+                                            <td style={{ textAlign: 'right', fontSize: '9px' }}>Rp {formatRp(row.item.hargaSatuan)}</td>
+                                            <td style={{ textAlign: 'right', fontSize: '9px' }}>Rp {formatRp(row.item.banyaknya * row.item.hargaSatuan)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                                 <tfoot style={{ fontWeight: 'bold' }}>
                                     <tr>
-                                        <td colSpan={4} rowSpan={3} style={{ border: 'none', borderRight: '1px solid black' }}></td>
-                                        <td>Subtotal</td>
-                                        <td>
-                                            <div className="currency-col">
-                                                <span>Rp</span>
-                                                <span>{formatRp(subtotal)}</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Ppn 11%</td>
-                                        <td>
-                                            <div className="currency-col">
-                                                <span>Rp</span>
-                                                <span>{formatRp(ppn)}</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>JUMLAH</td>
-                                        <td>
-                                            <div className="currency-col">
-                                                <span>Rp</span>
-                                                <span>{formatRp(total)}</span>
-                                            </div>
+                                        <td colSpan={8} style={{ border: 'none', borderRight: '1px solid black', textAlign: 'right', paddingRight: '8px' }}>TOTAL</td>
+                                        <td colSpan={2} style={{ textAlign: 'right', paddingRight: '8px' }}>
+                                            Rp {formatRp(grandTotal)}
                                         </td>
                                     </tr>
                                 </tfoot>
                             </table>
-
-                            {/* Tanda Tangan */}
-                            <div className="ttd-box-right mb-4">
-                                <div className="mb-20">
-                                    <div>Hormat kami,</div>
-                                    <div>{hormatKami}</div>
-                                </div>
-                                <div style={{ height: '80px' }}></div>
-                                <div className="font-bold underline" style={{ textDecoration: 'underline' }}>{direktur}</div>
-                                <div>Direktur</div>
-                            </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })()}
+                </div>
             </div>
         </AppLayout>
     );
