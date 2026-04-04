@@ -40,9 +40,9 @@ class RuanganController extends Controller
 
         // Add transaction count manually since we use ruangan_nama now
         $ruangans = $query->addSelect([
-                'transactions_count' => \App\Models\Transaction::selectRaw('count(*)')
-                    ->whereColumn('transactions.ruangan_nama', 'ruangans.nama')
-            ])
+            'transactions_count' => \App\Models\Transaction::selectRaw('count(*)')
+                ->whereColumn('transactions.ruangan_nama', 'ruangans.nama')
+        ])
             ->orderBy('kode')
             ->get();
 
@@ -98,8 +98,8 @@ class RuanganController extends Controller
                     'items'          => $trx->items->map(function ($item) {
                         return [
                             'id'         => $item->id,
-                            'nama_barang'=> $item->barang?->nama ?? '-',
-                            'kode_barang'=> $item->barang?->kode ?? '-',
+                            'nama_barang' => $item->barang?->nama ?? '-',
+                            'kode_barang' => $item->barang?->kode ?? '-',
                             'satuan'     => $item->barang?->satuan ?? '-',
                             'jumlah'     => $item->jumlah,
                         ];
@@ -163,6 +163,47 @@ class RuanganController extends Controller
         $pdf->setPaper('a4', 'landscape');
 
         $filename = 'riwayat-' . str($ruangan->kode)->slug() . '-' . now()->format('Ymd') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export multiple ruangan ke satu PDF.
+     */
+    public function exportMultiplePdf(Request $request)
+    {
+        $ids = $request->query('ids', '');
+        $idArray = array_filter(array_map('intval', explode(',', $ids)));
+
+        if (empty($idArray)) {
+            return redirect()->back()->with('error', 'Tidak ada ruangan yang dipilih');
+        }
+
+        // Get ruangans
+        $ruangans = Ruangan::whereIn('id', $idArray)->get();
+
+        // Get transactions untuk setiap ruangan
+        $ruanganData = $ruangans->map(function ($ruangan) {
+            $transactions = \App\Models\Transaction::with(['items.barang'])
+                ->where('ruangan_nama', $ruangan->nama)
+                ->where('type', 'keluar')
+                ->orderBy('tanggal', 'desc')
+                ->get();
+
+            return [
+                'ruangan'      => $ruangan,
+                'transactions' => $transactions,
+            ];
+        });
+
+        $pdf = Pdf::loadView('exports.ruangan-pdf-multiple', [
+            'ruanganData'  => $ruanganData,
+            'generated_at' => now()->format('d F Y H:i:s'),
+        ]);
+
+        $pdf->setPaper('a4', 'landscape');
+
+        $filename = 'riwayat-peminjaman-' . now()->format('Ymd_His') . '.pdf';
 
         return $pdf->download($filename);
     }

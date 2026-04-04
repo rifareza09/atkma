@@ -34,6 +34,18 @@ import { permintaanCreate, permintaanShow } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
 import type { Transaction, Ruangan, BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
 
+// Helper untuk convert format tanggal
+const formatDateToISO = (year: string, month: string, day: string): string => {
+    if (!year || !month || !day) return '';
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const parseDateFromISO = (isoDate: string): { year: string; month: string; day: string } => {
+    if (!isoDate) return { year: '', month: '', day: '' };
+    const [y, m, d] = isoDate.split('-');
+    return { year: y || '', month: m || '', day: d || '' };
+};
+
 interface PermintaanIndexProps {
     transactions: PaginatedResponse<Transaction>;
     ruangans: Ruangan[];
@@ -54,6 +66,30 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
         from_date: filters.from_date || '',
         to_date: filters.to_date || '',
     });
+
+    // State untuk date parts
+    const [fromDateParts, setFromDateParts] = useState(parseDateFromISO(filters.from_date || ''));
+    const [toDateParts, setToDateParts] = useState(parseDateFromISO(filters.to_date || ''));
+
+    // Array bulan
+    const months = [
+        { value: '01', label: 'Januari' },
+        { value: '02', label: 'Februari' },
+        { value: '03', label: 'Maret' },
+        { value: '04', label: 'April' },
+        { value: '05', label: 'Mei' },
+        { value: '06', label: 'Juni' },
+        { value: '07', label: 'Juli' },
+        { value: '08', label: 'Agustus' },
+        { value: '09', label: 'September' },
+        { value: '10', label: 'Oktober' },
+        { value: '11', label: 'November' },
+        { value: '12', label: 'Desember' },
+    ];
+
+    // Generate tahun dari 2020 sampai tahun depan
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
@@ -81,6 +117,8 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
             from_date: '',
             to_date: '',
         });
+        setFromDateParts({ year: '', month: '', day: '' });
+        setToDateParts({ year: '', month: '', day: '' });
         router.get('/transaksi/permintaan', {}, {
             preserveState: true,
             preserveScroll: true,
@@ -143,32 +181,144 @@ export default function PermintaanIndex({ transactions, ruangans, filters }: Per
                         </div>
 
                         {/* Date Range */}
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <Label className="text-xs font-bold text-gray-600">
                                 TANGGAL PERMINTAAN
                             </Label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="relative">
-                                    <Input
-                                        type="date"
-                                        value={filterForm.from_date}
-                                        onChange={(e) =>
-                                            setFilterForm({ ...filterForm, from_date: e.target.value })
-                                        }
-                                        className="text-sm"
-                                    />
-                                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                            
+                            {/* Dari Tanggal */}
+                            <div className="space-y-1">
+                                <p className="text-xs text-gray-600 font-medium">Dari Tanggal</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Hari</p>
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            max="31"
+                                            placeholder="01"
+                                            value={fromDateParts.day}
+                                            onChange={(e) => {
+                                                const newVal = e.target.value;
+                                                setFromDateParts({ ...fromDateParts, day: newVal });
+                                                const isoDate = formatDateToISO(fromDateParts.year, fromDateParts.month, newVal);
+                                                setFilterForm({ ...filterForm, from_date: isoDate });
+                                            }}
+                                            className="text-center text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Bulan</p>
+                                        <Select
+                                            value={fromDateParts.month}
+                                            onValueChange={(value) => {
+                                                setFromDateParts({ ...fromDateParts, month: value });
+                                                const isoDate = formatDateToISO(fromDateParts.year, value, fromDateParts.day);
+                                                setFilterForm({ ...filterForm, from_date: isoDate });
+                                            }}
+                                        >
+                                            <SelectTrigger className="text-sm">
+                                                <SelectValue placeholder="Bln" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {months.map((m) => (
+                                                    <SelectItem key={m.value} value={m.value}>
+                                                        {m.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Tahun</p>
+                                        <Select
+                                            value={fromDateParts.year}
+                                            onValueChange={(value) => {
+                                                setFromDateParts({ ...fromDateParts, year: value });
+                                                const isoDate = formatDateToISO(value, fromDateParts.month, fromDateParts.day);
+                                                setFilterForm({ ...filterForm, from_date: isoDate });
+                                            }}
+                                        >
+                                            <SelectTrigger className="text-sm">
+                                                <SelectValue placeholder="Thn" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {years.map((y) => (
+                                                    <SelectItem key={y} value={y.toString()}>
+                                                        {y}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <div className="relative">
-                                    <Input
-                                        type="date"
-                                        value={filterForm.to_date}
-                                        onChange={(e) =>
-                                            setFilterForm({ ...filterForm, to_date: e.target.value })
-                                        }
-                                        className="text-sm"
-                                    />
-                                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                            </div>
+
+                            {/* Sampai Tanggal */}
+                            <div className="space-y-1">
+                                <p className="text-xs text-gray-600 font-medium">Sampai Tanggal</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Hari</p>
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            max="31"
+                                            placeholder="31"
+                                            value={toDateParts.day}
+                                            onChange={(e) => {
+                                                const newVal = e.target.value;
+                                                setToDateParts({ ...toDateParts, day: newVal });
+                                                const isoDate = formatDateToISO(toDateParts.year, toDateParts.month, newVal);
+                                                setFilterForm({ ...filterForm, to_date: isoDate });
+                                            }}
+                                            className="text-center text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Bulan</p>
+                                        <Select
+                                            value={toDateParts.month}
+                                            onValueChange={(value) => {
+                                                setToDateParts({ ...toDateParts, month: value });
+                                                const isoDate = formatDateToISO(toDateParts.year, value, toDateParts.day);
+                                                setFilterForm({ ...filterForm, to_date: isoDate });
+                                            }}
+                                        >
+                                            <SelectTrigger className="text-sm">
+                                                <SelectValue placeholder="Bln" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {months.map((m) => (
+                                                    <SelectItem key={m.value} value={m.value}>
+                                                        {m.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Tahun</p>
+                                        <Select
+                                            value={toDateParts.year}
+                                            onValueChange={(value) => {
+                                                setToDateParts({ ...toDateParts, year: value });
+                                                const isoDate = formatDateToISO(value, toDateParts.month, toDateParts.day);
+                                                setFilterForm({ ...filterForm, to_date: isoDate });
+                                            }}
+                                        >
+                                            <SelectTrigger className="text-sm">
+                                                <SelectValue placeholder="Thn" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {years.map((y) => (
+                                                    <SelectItem key={y} value={y.toString()}>
+                                                        {y}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
                         </div>

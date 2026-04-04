@@ -61,9 +61,14 @@ export default function RuanganIndex({ ruangans, filters }: RuanganIndexProps) {
     };
 
     const handleExportSelected = () => {
-        selectedIds.forEach((id) => {
-            window.open(`/master/ruangan/${id}/export-pdf`, '_blank');
-        });
+        if (selectedIds.size === 0) return;
+        
+        // Convert Set to array and build query params
+        const ids = Array.from(selectedIds).join(',');
+        const url = `/master/ruangan/export-multiple-pdf?ids=${ids}`;
+        
+        // Open the PDF export in a new tab
+        window.open(url, '_blank');
     };
 
     const handleSearch = (search: string) => {

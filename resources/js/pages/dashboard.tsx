@@ -126,6 +126,9 @@ export default function Dashboard({
     const [loadingMovements, setLoadingMovements] = useState(false);
     const [dialogHariIni, setDialogHariIni] = useState(false);
     const [dialogBulanIni, setDialogBulanIni] = useState(false);
+    const [dialogTotalBarang, setDialogTotalBarang] = useState(false);
+    const [dialogTotalRuangan, setDialogTotalRuangan] = useState(false);
+    const [dialogStokRendah, setDialogStokRendah] = useState(false);
 
     const fetchLowStockData = async () => {
         setLoadingLowStock(true);
@@ -194,22 +197,30 @@ export default function Dashboard({
 
                 {/* Statistics Cards */}
                 <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                    <div>
+                    <button
+                        type="button"
+                        onClick={() => setDialogTotalBarang(true)}
+                        className="text-left w-full rounded-xl ring-offset-background transition-all hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                    >
                         <StatCard
                             title="Total Barang"
                             value={stats.total_barang}
                             icon={<Package className="size-4" />}
                             description="Jenis barang terdaftar"
                         />
-                    </div>
-                    <div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDialogTotalRuangan(true)}
+                        className="text-left w-full rounded-xl ring-offset-background transition-all hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                    >
                         <StatCard
                             title="Total Ruangan"
                             value={stats.total_ruangan}
                             icon={<Building2 className="size-4" />}
                             description="Ruangan aktif"
                         />
-                    </div>
+                    </button>
                     <button
                         type="button"
                         onClick={() => setDialogHariIni(true)}
@@ -234,14 +245,18 @@ export default function Dashboard({
                             description="Klik untuk detail"
                         />
                     </button>
-                    <div>
+                    <button
+                        type="button"
+                        onClick={() => setDialogStokRendah(true)}
+                        className="text-left w-full rounded-xl ring-offset-background transition-all hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                    >
                         <StatCard
                             title="Stok Rendah"
                             value={stats.total_barang_stok_rendah}
                             icon={<AlertCircle className="size-4 text-destructive" />}
                             description="Barang perlu restok"
                         />
-                    </div>
+                    </button>
                 </div>
 
                 {/* Charts Row */}
@@ -547,9 +562,9 @@ export default function Dashboard({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {transaksi_hari_ini_detail.map((trx) =>
+                                {transaksi_hari_ini_detail.map((trx, index) =>
                                     trx.items.length === 0 ? (
-                                        <TableRow key={trx.id}>
+                                        <TableRow key={`hariini-${index}-${trx.id}`}>
                                             <TableCell className="font-mono text-sm">{trx.kode_transaksi}</TableCell>
                                             <TableCell>{trx.ruangan}</TableCell>
                                             <TableCell>{trx.tanggal}</TableCell>
@@ -557,7 +572,7 @@ export default function Dashboard({
                                         </TableRow>
                                     ) : (
                                         trx.items.map((item, i) => (
-                                            <TableRow key={`${trx.id}-${i}`}>
+                                            <TableRow key={`hariini-${index}-${i}`}>
                                                 {i === 0 && (
                                                     <>
                                                         <TableCell
@@ -630,9 +645,9 @@ export default function Dashboard({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {transaksi_bulan_ini_detail.map((trx) =>
+                                {transaksi_bulan_ini_detail.map((trx, index) =>
                                     trx.items.length === 0 ? (
-                                        <TableRow key={trx.id}>
+                                        <TableRow key={`bulanini-${index}-${trx.id}`}>
                                             <TableCell className="font-mono text-sm">{trx.kode_transaksi}</TableCell>
                                             <TableCell>{trx.ruangan}</TableCell>
                                             <TableCell>{trx.tanggal}</TableCell>
@@ -640,7 +655,7 @@ export default function Dashboard({
                                         </TableRow>
                                     ) : (
                                         trx.items.map((item, i) => (
-                                            <TableRow key={`${trx.id}-${i}`}>
+                                            <TableRow key={`bulanini-${index}-${i}`}>
                                                 {i === 0 && (
                                                     <>
                                                         <TableCell
@@ -682,6 +697,133 @@ export default function Dashboard({
                                 )}
                             </TableBody>
                         </Table>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        {/* Dialog: Total Barang */}
+        <Dialog open={dialogTotalBarang} onOpenChange={setDialogTotalBarang}>
+            <DialogContent className="sm:max-w-[90vw] max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Package className="size-5 text-blue-600" />
+                        Total Barang ({stats.total_barang})
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto flex-1 pr-1">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {top_barang.length > 0 ? (
+                            top_barang.map((barang) => (
+                                <Card key={barang.id}>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-base">{barang.nama}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-sm">
+                                            <p className="text-muted-foreground">Total Permintaan</p>
+                                            <p className="text-2xl font-bold text-blue-600">{barang.total_permintaan}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        ) : (
+                            <p className="py-12 text-center text-sm text-muted-foreground col-span-full">
+                                Tidak ada data barang
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        {/* Dialog: Total Ruangan */}
+        <Dialog open={dialogTotalRuangan} onOpenChange={setDialogTotalRuangan}>
+            <DialogContent className="sm:max-w-[90vw] max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Building2 className="size-5 text-green-600" />
+                        Total Ruangan ({stats.total_ruangan})
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto flex-1 pr-1">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {top_ruangan.length > 0 ? (
+                            top_ruangan.map((ruangan) => (
+                                <Card key={ruangan.id}>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-base">{ruangan.nama}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-sm">
+                                            <p className="text-muted-foreground">Total Transaksi</p>
+                                            <p className="text-2xl font-bold text-green-600">{ruangan.total_transaksi}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        ) : (
+                            <p className="py-12 text-center text-sm text-muted-foreground col-span-full">
+                                Tidak ada data ruangan
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+
+        {/* Dialog: Stok Rendah */}
+        <Dialog open={dialogStokRendah} onOpenChange={setDialogStokRendah}>
+            <DialogContent className="sm:max-w-[90vw] max-h-[85vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <AlertCircle className="size-5 text-destructive" />
+                        Barang Stok Rendah ({stats.total_barang_stok_rendah})
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto flex-1 pr-1">
+                    {barang_stok_rendah.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Kode</TableHead>
+                                    <TableHead>Nama Barang</TableHead>
+                                    <TableHead className="text-right">Stok Saat Ini</TableHead>
+                                    <TableHead className="text-right">Minimum</TableHead>
+                                    <TableHead className="text-right">Kurang</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {barang_stok_rendah.map((barang) => {
+                                    const selisih = (barang.stok_minimum || 0) - (barang.stok || 0);
+                                    return (
+                                        <TableRow key={barang.id}>
+                                            <TableCell className="font-mono text-sm font-medium">
+                                                {barang.kode}
+                                            </TableCell>
+                                            <TableCell>{barang.nama}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Badge variant="destructive">
+                                                    {barang.stok} {barang.satuan}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right text-muted-foreground">
+                                                {barang.stok_minimum} {barang.satuan}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <span className="text-sm text-destructive font-semibold">
+                                                    {selisih} {barang.satuan}
+                                                </span>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <p className="py-12 text-center text-sm text-muted-foreground">
+                            ✓ Semua barang stok aman
+                        </p>
                     )}
                 </div>
             </DialogContent>
