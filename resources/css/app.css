@@ -346,3 +346,11 @@
         }
     }
 }
+
+/* Login Page Background */
+.login-bg {
+    background-image: url('/Mahkamah_Agung_Building.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
