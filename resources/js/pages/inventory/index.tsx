@@ -559,26 +559,17 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                             value={formData.ruangan_nama}
                                             onChange={(e) => {
                                                 setFormData({ ...formData, ruangan_nama: e.target.value });
-                                                // Clear error when user starts typing
                                                 if (errors.ruangan_nama) {
                                                     setErrors(prev => ({ ...prev, ruangan_nama: '' }));
                                                 }
                                             }}
                                             placeholder="Ketik atau pilih nama ruangan/unit kerja"
-                                            className={cn(
-                                                errors.ruangan_nama && 'border-red-500 focus-visible:ring-red-500'
-                                            )}
                                         />
                                         <datalist id="ruangan-suggestions">
                                             {ruanganNames.map((nama, index) => (
                                                 <option key={index} value={nama} />
                                             ))}
                                         </datalist>
-                                        {errors.ruangan_nama && (
-                                            <p className="text-xs font-medium text-red-600">
-                                                ⚠️ {errors.ruangan_nama}
-                                            </p>
-                                        )}
                                         <p className="text-xs text-muted-foreground">
                                             Anda bisa memilih dari daftar atau mengetik manual
                                         </p>
