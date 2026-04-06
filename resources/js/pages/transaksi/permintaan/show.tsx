@@ -175,15 +175,10 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                                     <Download className="mr-2 h-4 w-4" />
                                     Unduh Bukti (PDF)
                                 </Button>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 gap-3">
                                     <Button variant="outline" className="h-11" asChild>
                                         <Link href={inventoryIndex()}>
                                             Kembali ke Katalog
-                                        </Link>
-                                    </Button>
-                                    <Button className="h-11 bg-blue-600 hover:bg-blue-700" asChild>
-                                        <Link href={permintaanIndex()}>
-                                            Lihat Status Permintaan
                                         </Link>
                                     </Button>
                                 </div>
@@ -209,7 +204,7 @@ export default function PermintaanShow({ transaction }: PermintaanShowProps) {
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={permintaanIndex()}>
+                        <Link href={inventoryIndex()}>
                             <ArrowLeft className="mr-2 size-4" />
                             Kembali
                         </Link>

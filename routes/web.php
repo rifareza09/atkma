@@ -105,7 +105,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Transaction routes - Admin can create/delete, Pengawas can only view
     Route::prefix('transaksi')->group(function () {
-        Route::resource('permintaan', TransactionController::class);
+        Route::resource('permintaan', TransactionController::class)->except(['index']);
 
         // Export routes
         Route::get('permintaan-export/excel', [TransactionController::class, 'exportExcel'])
