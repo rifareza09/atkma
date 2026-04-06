@@ -569,6 +569,11 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                                 <option key={index} value={nama} />
                                             ))}
                                         </datalist>
+                                        {errors.ruangan_nama && (
+                                            <p className="text-sm font-semibold text-red-600">
+                                                {errors.ruangan_nama}
+                                            </p>
+                                        )}
                                         <p className="text-xs text-muted-foreground">
                                             Anda bisa memilih dari daftar atau mengetik manual
                                         </p>
