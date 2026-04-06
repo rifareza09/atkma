@@ -43,7 +43,7 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
     const [nomorSuratJalan, setNomorSuratJalan] = useState('');
     const [tanggalFaktur, setTanggalFaktur] = useState('');
     const [keterangan, setKeterangan] = useState('');
-    const [items, setItems] = useState<ItemRow[]>([{ barang_id: 0, jumlah: 1 }]);
+    const [items, setItems] = useState<ItemRow[]>([{ barang_id: 0, jumlah: 0 }]);
     const [openStates, setOpenStates] = useState<boolean[]>([false]);
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,7 +53,7 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
     };
 
     const addItem = () => {
-        setItems((prev) => [...prev, { barang_id: 0, jumlah: 1 }]);
+        setItems((prev) => [...prev, { barang_id: 0, jumlah: 0 }]);
         setOpenStates((prev) => [...prev, false]);
     };
 
@@ -302,11 +302,19 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
                                             <div className="flex items-center gap-1">
                                                 <Input
                                                     type="number"
-                                                    min={1}
-                                                    value={item.jumlah}
-                                                    onChange={(e) =>
-                                                        updateItem(index, 'jumlah', parseInt(e.target.value) || 1)
-                                                    }
+                                                    value={item.jumlah === 0 ? '' : item.jumlah}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '' || val === '-') {
+                                                            updateItem(index, 'jumlah', 0);
+                                                        } else {
+                                                            const num = parseInt(val);
+                                                            if (!isNaN(num) && num >= 0) {
+                                                                updateItem(index, 'jumlah', num);
+                                                            }
+                                                        }
+                                                    }}
+                                                    placeholder="0"
                                                     className={itemErrors.jumlah ? 'border-destructive' : ''}
                                                 />
                                                 {selected && (

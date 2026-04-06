@@ -187,21 +187,21 @@ export default function CetakFakturIndex() {
                             height: auto !important;
                         }
                         .print-page:last-child { page-break-after: auto !important; break-after: auto !important; }
-                        .print-table { 
-                            width: 100%; 
-                            border-collapse: collapse; 
-                            margin-top: 10px; 
-                            margin-bottom: 20px; 
+                        .print-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 10px;
+                            margin-bottom: 20px;
                             font-size: 12px;
                         }
-                        .print-table th, .print-table td { 
-                            border: 1px solid black; 
-                            padding: 5px 6px; 
+                        .print-table th, .print-table td {
+                            border: 1px solid black;
+                            padding: 5px 6px;
                             font-size: 11px;
                         }
-                        .print-table th { 
-                            text-align: center; 
-                            font-weight: bold; 
+                        .print-table th {
+                            text-align: center;
+                            font-weight: bold;
                             background-color: #f5f5f5;
                         }
                         .text-center { text-align: center; }
@@ -435,7 +435,7 @@ export default function CetakFakturIndex() {
                             });
                         });
 
-                        const grandTotal = allItems.reduce((acc: number, row: any) => 
+                        const grandTotal = allItems.reduce((acc: number, row: any) =>
                             acc + (row.item.banyaknya * row.item.hargaSatuan), 0
                         );
 
