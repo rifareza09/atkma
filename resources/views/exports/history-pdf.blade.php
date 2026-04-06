@@ -41,6 +41,15 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 8px;
+            page-break-inside: auto;
+        }
+        table.data tbody tr {
+            page-break-inside: auto;
+            page-break-after: auto;
+        }
+        table.data tbody tr.header-row {
+            page-break-inside: avoid;
+            page-break-after: avoid;
         }
         table.data th {
             background-color: #dce8ff;
@@ -55,10 +64,11 @@
             border: 1px solid #bbb;
             font-size: 9px;
             vertical-align: top;
+            background-color: #ffffff;
         }
         table.data td.center { text-align: center; }
         table.data td.right  { text-align: right; }
-        table.data tr:nth-child(even) td { background-color: #f7f9ff; }
+        table.data tr:nth-child(even) td { background-color: #ffffff; }
         .total-row td {
             font-weight: bold;
             background-color: #eef2ff !important;
@@ -107,53 +117,72 @@
         <p style="text-align:center; color:#999; margin-top:30px;">Tidak ada data transaksi pada periode ini.</p>
     @else
         <table class="data">
-            <thead>
-                <tr>
-                    <th style="width:11%">No. Transaksi</th>
-                    <th style="width:9%">Tanggal</th>
-                    <th style="width:15%">Ruangan / Unit Kerja</th>
-                    <th style="width:14%">Nama Peminta</th>
-                    <th style="width:9%">Kode Barang</th>
-                    <th>Nama Barang</th>
-                    <th style="width:7%; text-align:right">Jumlah</th>
-                    <th style="width:7%">Satuan</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $grandTotal = 0; @endphp
-                @foreach($transactions as $trx)
-                    @php $itemCount = $trx->items->count() ?: 1; @endphp
+                @php 
+                    $grandTotal = 0;
+                    $ruanganCounter = 0;
+                    $itemCounterByTransaction = [];
+                    $isFirstTransaction = true;
+                @endphp
+                @foreach($transactions as $trxIdx => $trx)
+                    <tbody>
+                    @if($isFirstTransaction)
+                        <tr class="header-row">
+                            <th style="width:5%; background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">No</th>
+                            <th style="width:15%; background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">Ruangan / Unit Kerja</th>
+                            <th style="width:11%; background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">No. Transaksi</th>
+                            <th style="width:9%; background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">Tanggal</th>
+                            <th style="width:14%; background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">Nama Peminta</th>
+                            <th style="width:9%; background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">Kode Barang</th>
+                            <th style="background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">Nama Barang</th>
+                            <th style="width:7%; background-color: #dce8ff; padding: 6px 5px; text-align: right; font-weight: bold; font-size: 9px; border: 1px solid #555;">Jumlah</th>
+                            <th style="width:7%; background-color: #dce8ff; padding: 6px 5px; text-align: left; font-weight: bold; font-size: 9px; border: 1px solid #555;">Satuan</th>
+                        </tr>
+                        @php $isFirstTransaction = false; @endphp
+                    @endif
+                    @php 
+                        $ruanganCounter++;
+                        $itemCount = $trx->items->count() ?: 1;
+                        $itemCounterByTransaction[$trxIdx] = 0;
+                    @endphp
                     @foreach($trx->items as $idx => $item)
-                        @php $grandTotal += $item->jumlah; @endphp
+                        @php 
+                            $grandTotal += $item->jumlah;
+                            $itemCounterByTransaction[$trxIdx]++;
+                            $itemNumber = $itemCounterByTransaction[$trxIdx];
+                        @endphp
                         <tr>
                             @if($idx === 0)
+                                <td rowspan="{{ $itemCount }}" class="center"><strong>{{ $ruanganCounter }}</strong></td>
+                                <td rowspan="{{ $itemCount }}">{{ $trx->ruangan_nama ?? '-' }}</td>
                                 <td rowspan="{{ $itemCount }}" class="center">{{ $trx->kode_transaksi }}</td>
                                 <td rowspan="{{ $itemCount }}" class="center">{{ $trx->tanggal?->format('d/m/Y') }}</td>
-                                <td rowspan="{{ $itemCount }}">{{ $trx->ruangan_nama ?? '-' }}</td>
                                 <td rowspan="{{ $itemCount }}">{{ $trx->nama_peminta ?? '-' }}</td>
                             @endif
                             <td class="center">{{ $item->barang?->kode ?? '-' }}</td>
-                            <td>{{ $item->barang?->nama ?? '-' }}</td>
+                            <td><strong>{{ $itemNumber }}.</strong> {{ $item->barang?->nama ?? '-' }}</td>
                             <td class="right">{{ $item->jumlah }}</td>
                             <td class="center">{{ $item->barang?->satuan ?? '-' }}</td>
                         </tr>
                     @endforeach
                     @if($trx->items->isEmpty())
                         <tr>
+                            <td class="center"><strong>{{ $ruanganCounter }}</strong></td>
+                            <td>{{ $trx->ruangan_nama ?? '-' }}</td>
                             <td class="center">{{ $trx->kode_transaksi }}</td>
                             <td class="center">{{ $trx->tanggal?->format('d/m/Y') }}</td>
-                            <td>{{ $trx->ruangan_nama ?? '-' }}</td>
                             <td>{{ $trx->nama_peminta ?? '-' }}</td>
                             <td colspan="4" style="color:#999; font-style:italic;">Tidak ada item</td>
                         </tr>
                     @endif
+                    </tbody>
                 @endforeach
+                <tbody>
                 <tr class="total-row">
-                    <td colspan="6" class="right">Total Jumlah</td>
+                    <td colspan="7" class="right">Total Jumlah</td>
                     <td class="right">{{ $grandTotal }}</td>
                     <td></td>
                 </tr>
-            </tbody>
+                </tbody>
         </table>
     @endif
 
