@@ -93,6 +93,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('master')->group(function () {
         // Barang routes - Admin can create/update/delete, Pengawas can only view
         Route::resource('barang', controller: BarangController::class);
+        Route::post('barang/{barang}/upload-image', [BarangController::class, 'uploadImage'])->name('barang.uploadImage');
         Route::get('barang/{barang}/transaction-history', [BarangController::class, 'transactionHistory'])->name('barang.transactionHistory');
         Route::get('barang/{barang}/transaction-history/export', [BarangController::class, 'exportTransactionHistory'])->name('barang.transactionHistory.export');
 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
+import BarangImageUpload from '@/components/barang-image-upload';
 import { barangIndex, barangShow } from '@/lib/atk-routes';
 import { dashboard } from '@/routes';
 import type { Barang, BarangFormData, BarangSatuan, BreadcrumbItem, SelectOption } from '@/types';
@@ -185,6 +186,15 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                                 placeholder="Deskripsi barang (opsional)"
                                 rows={4}
                             />
+
+                            {/* Gambar Barang */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">Gambar Barang</label>
+                                <BarangImageUpload
+                                    barangId={barang.id}
+                                    currentImage={barang.image_path}
+                                />
+                            </div>
 
                             {/* Action Buttons */}
                             <div className="flex justify-end gap-4">

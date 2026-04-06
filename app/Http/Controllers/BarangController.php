@@ -12,6 +12,7 @@ use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class BarangController extends Controller
 {
@@ -389,5 +390,52 @@ class BarangController extends Controller
         }
         
         return 'SEMUA PERIODE';
+    }
+
+    /**
+     * Upload image for a barang
+     */
+    public function uploadImage(Request $request, Barang $barang)
+    {
+        $this->authorize('update', $barang);
+
+        try {
+            $validated = $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB
+            ]);
+
+            // Delete old image if exists
+            if ($barang->image_path && Storage::disk('public')->exists($barang->image_path)) {
+                Storage::disk('public')->delete($barang->image_path);
+            }
+
+            // Store new image
+            $path = $request->file('image')->store('barang-images', 'public');
+
+            if (!$path) {
+                throw new \Exception('Failed to store image');
+            }
+
+            // Update barang with new image path
+            $barang->update(['image_path' => $path]);
+
+            return response()->json([
+                'success' => true,
+                'image_path' => $path,
+                'image_url' => Storage::disk('public')->url($path),
+                'message' => 'Gambar berhasil diupload'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal: ' . implode(', ', $e->errors()['image'] ?? [])
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Image upload error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading image: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

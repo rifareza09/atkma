@@ -274,7 +274,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                     className="overflow-hidden hover:shadow-lg transition-shadow"
                                 >
                                     <div
-                                        className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center cursor-pointer hover:from-gray-200 hover:to-gray-300 transition-colors"
+                                        className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center cursor-pointer hover:from-gray-200 hover:to-gray-300 transition-colors overflow-hidden group"
                                         onClick={() => {
                                             setSelectedBarang({ id: barang.id, nama: barang.nama });
                                             setHistoryDialogOpen(true);
@@ -282,7 +282,15 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                         title="Klik untuk melihat riwayat permintaan"
                                     >
                                         {getStockBadge(barang)}
-                                        <div className="text-6xl text-gray-300">📦</div>
+                                        {barang.image_path ? (
+                                            <img
+                                                src={`/storage/${barang.image_path}`}
+                                                alt={barang.nama}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="text-6xl text-gray-300">📦</div>
+                                        )}
                                     </div>
                                     <CardContent className="p-4 space-y-3">
                                         <div>

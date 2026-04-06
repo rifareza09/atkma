@@ -19,6 +19,7 @@ class Barang extends Model
         'stok',
         'stok_minimum',
         'deskripsi',
+        'image_path',
         'is_active',
     ];
 
