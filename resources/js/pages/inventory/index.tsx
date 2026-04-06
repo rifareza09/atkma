@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 import {
     Select,
     SelectContent,
@@ -124,14 +125,18 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleSubmit = () => {
-        // Reset errors
-        setErrors({});
-        
         // Validation untuk mode Permintaan Barang (keluar)
         const newErrors: { [key: string]: string } = {};
         
         if (transactionMode === 'keluar' && !formData.ruangan_nama.trim()) {
             newErrors.ruangan_nama = 'Masukkan nama ruangan terlebih dahulu';
+            setErrors(newErrors);
+            toast({
+                title: 'Perhatian',
+                description: 'Masukkan nama ruangan terlebih dahulu',
+                variant: 'destructive',
+            });
+            return;
         }
 
         if (cart.length === 0) {
@@ -143,15 +148,8 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
             return;
         }
 
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            toast({
-                title: 'Perhatian',
-                description: Object.values(newErrors).join(', '),
-                variant: 'destructive',
-            });
-            return;
-        }
+        // Clear errors jika valid
+        setErrors({});
 
         // Submit the request
         const requestData: any = {
@@ -561,12 +559,15 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                             value={formData.ruangan_nama}
                                             onChange={(e) => {
                                                 setFormData({ ...formData, ruangan_nama: e.target.value });
+                                                // Clear error when user starts typing
                                                 if (errors.ruangan_nama) {
-                                                    setErrors({ ...errors, ruangan_nama: '' });
+                                                    setErrors(prev => ({ ...prev, ruangan_nama: '' }));
                                                 }
                                             }}
                                             placeholder="Ketik atau pilih nama ruangan/unit kerja"
-                                            className={errors.ruangan_nama ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                                            className={cn(
+                                                errors.ruangan_nama && 'border-red-500 focus-visible:ring-red-500'
+                                            )}
                                         />
                                         <datalist id="ruangan-suggestions">
                                             {ruanganNames.map((nama, index) => (
@@ -574,8 +575,8 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                             ))}
                                         </datalist>
                                         {errors.ruangan_nama && (
-                                            <p className="text-xs text-red-500 font-medium">
-                                                {errors.ruangan_nama}
+                                            <p className="text-xs font-medium text-red-600">
+                                                ⚠️ {errors.ruangan_nama}
                                             </p>
                                         )}
                                         <p className="text-xs text-muted-foreground">
