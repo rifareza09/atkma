@@ -70,7 +70,7 @@ export default function RuanganEdit({ ruangan }: RuanganEditProps) {
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={ruanganShow(ruangan.id)}>
+                        <Link href={ruanganIndex()}>
                             <ArrowLeft className="mr-2 size-4" />
                             Kembali
                         </Link>
