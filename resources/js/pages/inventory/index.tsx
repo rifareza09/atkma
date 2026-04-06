@@ -131,11 +131,6 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         if (transactionMode === 'keluar' && !formData.ruangan_nama.trim()) {
             newErrors.ruangan_nama = 'Masukkan nama ruangan terlebih dahulu';
             setErrors(newErrors);
-            toast({
-                title: 'Perhatian',
-                description: 'Masukkan nama ruangan terlebih dahulu',
-                variant: 'destructive',
-            });
             return;
         }
 
@@ -559,11 +554,15 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                             value={formData.ruangan_nama}
                                             onChange={(e) => {
                                                 setFormData({ ...formData, ruangan_nama: e.target.value });
+                                                // Clear error when user starts typing
                                                 if (errors.ruangan_nama) {
                                                     setErrors(prev => ({ ...prev, ruangan_nama: '' }));
                                                 }
                                             }}
                                             placeholder="Ketik atau pilih nama ruangan/unit kerja"
+                                            className={cn(
+                                                errors.ruangan_nama && 'border-red-500 focus-visible:ring-red-500'
+                                            )}
                                         />
                                         <datalist id="ruangan-suggestions">
                                             {ruanganNames.map((nama, index) => (
