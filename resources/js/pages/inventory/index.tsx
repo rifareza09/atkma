@@ -51,6 +51,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
         tanggal_permintaan: new Date().toISOString().split('T')[0],
         keperluan: '',
     });
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
     const [selectedBarang, setSelectedBarang] = useState<{ id: number; nama: string } | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -66,6 +67,7 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
             tanggal_permintaan: new Date().toISOString().split('T')[0],
             keperluan: '',
         });
+        setErrors({});
     }, [transactionMode]);
 
     const quotaPercentage = 85;
@@ -122,20 +124,30 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleSubmit = () => {
+        // Reset errors
+        setErrors({});
+        
         // Validation untuk mode Permintaan Barang (keluar)
-        if (transactionMode === 'keluar' && !formData.ruangan_nama) {
-            toast({
-                title: 'Perhatian',
-                description: 'Masukkan nama ruangan terlebih dahulu',
-                variant: 'destructive',
-            });
-            return;
+        const newErrors: { [key: string]: string } = {};
+        
+        if (transactionMode === 'keluar' && !formData.ruangan_nama.trim()) {
+            newErrors.ruangan_nama = 'Masukkan nama ruangan terlebih dahulu';
         }
 
         if (cart.length === 0) {
             toast({
                 title: 'Perhatian',
                 description: 'Pilih minimal satu barang',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            toast({
+                title: 'Perhatian',
+                description: Object.values(newErrors).join(', '),
                 variant: 'destructive',
             });
             return;
@@ -547,16 +559,25 @@ export default function InventoryIndex({ barangs, ruangans }: InventoryIndexProp
                                             id="ruangan_nama"
                                             list="ruangan-suggestions"
                                             value={formData.ruangan_nama}
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, ruangan_nama: e.target.value })
-                                            }
+                                            onChange={(e) => {
+                                                setFormData({ ...formData, ruangan_nama: e.target.value });
+                                                if (errors.ruangan_nama) {
+                                                    setErrors({ ...errors, ruangan_nama: '' });
+                                                }
+                                            }}
                                             placeholder="Ketik atau pilih nama ruangan/unit kerja"
+                                            className={errors.ruangan_nama ? 'border-red-500 focus-visible:ring-red-500' : ''}
                                         />
                                         <datalist id="ruangan-suggestions">
                                             {ruanganNames.map((nama, index) => (
                                                 <option key={index} value={nama} />
                                             ))}
                                         </datalist>
+                                        {errors.ruangan_nama && (
+                                            <p className="text-xs text-red-500 font-medium">
+                                                {errors.ruangan_nama}
+                                            </p>
+                                        )}
                                         <p className="text-xs text-muted-foreground">
                                             Anda bisa memilih dari daftar atau mengetik manual
                                         </p>
