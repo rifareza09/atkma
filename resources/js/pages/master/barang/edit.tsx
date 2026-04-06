@@ -84,7 +84,7 @@ export default function BarangEdit({ barang }: BarangEditProps) {
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={barangShow(barang.id)}>
+                        <Link href={barangIndex()}>
                             <ArrowLeft className="mr-2 size-4" />
                             Kembali
                         </Link>
