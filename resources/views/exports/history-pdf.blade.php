@@ -74,6 +74,15 @@
             background-color: #eef2ff !important;
             border-top: 2px solid #555;
         }
+        .trx-first-row td {
+            border-top: 2px solid #555;
+        }
+        .trx-group-odd td {
+            background-color: #f9f9f9;
+        }
+        .trx-last-row td {
+            border-bottom: 3px solid #000;
+        }
         .footer {
             margin-top: 16px;
             font-size: 8px;
@@ -141,7 +150,6 @@
                     @endif
                     @php 
                         $ruanganCounter++;
-                        $itemCount = $trx->items->count() ?: 1;
                         $itemCounterByTransaction[$trxIdx] = 0;
                     @endphp
                     @foreach($trx->items as $idx => $item)
@@ -149,14 +157,21 @@
                             $grandTotal += $item->jumlah;
                             $itemCounterByTransaction[$trxIdx]++;
                             $itemNumber = $itemCounterByTransaction[$trxIdx];
+                            $trxGroupClass = ($trxIdx % 2 === 0) ? 'trx-group-even' : 'trx-group-odd';
                         @endphp
-                        <tr>
+                        <tr class="{{ $trxGroupClass }} @if($loop->last)trx-last-row @endif" @if($idx === 0) style="border-top: 2px solid #555;" @endif>
                             @if($idx === 0)
-                                <td rowspan="{{ $itemCount }}" class="center"><strong>{{ $ruanganCounter }}</strong></td>
-                                <td rowspan="{{ $itemCount }}">{{ $trx->ruangan_nama ?? '-' }}</td>
-                                <td rowspan="{{ $itemCount }}" class="center">{{ $trx->kode_transaksi }}</td>
-                                <td rowspan="{{ $itemCount }}" class="center">{{ $trx->tanggal?->format('d/m/Y') }}</td>
-                                <td rowspan="{{ $itemCount }}">{{ $trx->nama_peminta ?? '-' }}</td>
+                                <td class="center"><strong>{{ $ruanganCounter }}</strong></td>
+                                <td>{{ $trx->ruangan_nama ?? '-' }}</td>
+                                <td class="center">{{ $trx->kode_transaksi }}</td>
+                                <td class="center">{{ $trx->tanggal?->format('d/m/Y') }}</td>
+                                <td>{{ $trx->nama_peminta ?? '-' }}</td>
+                            @else
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
                             @endif
                             <td class="center">{{ $item->barang?->kode ?? '-' }}</td>
                             <td><strong>{{ $itemNumber }}.</strong> {{ $item->barang?->nama ?? '-' }}</td>
@@ -165,7 +180,10 @@
                         </tr>
                     @endforeach
                     @if($trx->items->isEmpty())
-                        <tr>
+                        @php 
+                            $trxGroupClass = ($trxIdx % 2 === 0) ? 'trx-group-even' : 'trx-group-odd';
+                        @endphp
+                        <tr class="{{ $trxGroupClass }} trx-last-row" style="border-top: 2px solid #555;">
                             <td class="center"><strong>{{ $ruanganCounter }}</strong></td>
                             <td>{{ $trx->ruangan_nama ?? '-' }}</td>
                             <td class="center">{{ $trx->kode_transaksi }}</td>
