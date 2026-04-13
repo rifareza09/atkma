@@ -408,76 +408,141 @@ export default function CetakFakturEdit({ id }: { id: string }) {
             </style>
 
             <div id="print-faktur">
-                {/* Company Name */}
-                {namaPT && (
-                    <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '16px', marginBottom: '20px' }}>
-                        {namaPT}
+                <div className="print-page">
+                    {/* Header Section */}
+                    <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>MAHKAMAH AGUNG RI — SISTEM INVENTARIS ATK</div>
+                        <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>Transaksi Barang Keluar</div>
                     </div>
-                )}
 
-                {/* Table */}
-                <table className="print-table">
-                    <thead>
-                        <tr>
-                            <th style={{ width: '5%' }}>NO</th>
-                            <th style={{ width: '20%' }}>NAMA PT/CV</th>
-                            <th style={{ width: '15%' }}>NO FAKTUR</th>
-                            <th style={{ width: '15%' }}>TGL FAKTUR</th>
-                            <th style={{ width: '20%' }}>NAMA BARANG</th>
-                            <th style={{ width: '10%' }}>JUMLAH</th>
-                            <th style={{ width: '10%' }}>SATUAN</th>
-                            <th style={{ width: '15%' }}>HARGA SATUAN</th>
-                            <th style={{ width: '15%' }}>JUMLAH HARGA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.length > 0 && (
-                            <>
-                                {items.map((item, idx) => (
-                                    <tr key={idx}>
-                                        <td className="text-center">{idx + 1}</td>
-                                        {/* Nama PT hanya ditampilkan di baris pertama */}
-                                        <td className="text-left">{idx === 0 ? namaPT : ''}</td>
-                                        {/* No Faktur hanya di baris pertama */}
-                                        <td className="text-left">{idx === 0 ? nomorFaktur : ''}</td>
-                                        {/* Tanggal Faktur hanya di baris pertama */}
-                                        <td className="text-center">{idx === 0 ? (() => {
-                                            if (!tanggalFaktur) return '';
-                                            const date = new Date(tanggalFaktur + 'T00:00:00');
-                                            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                                            const day = date.getDate();
-                                            const month = months[date.getMonth()];
-                                            const year = date.getFullYear();
-                                            return `${day} ${month} ${year}`;
-                                        })() : ''}</td>
-                                        <td>{item.namaBarang}</td>
-                                        <td className="text-center">{new Intl.NumberFormat('id-ID').format(item.banyaknya)}</td>
-                                        <td className="text-center">{item.volume}</td>
-                                        <td>
-                                            <div className="currency-col">
-                                                <span>Rp</span>
-                                                <span>{formatRp(item.hargaSatuan)}</span>
-                                            </div>
+                    {/* Summary Info */}
+                    <div style={{ marginBottom: '15px', fontSize: '10px' }}>
+                        <div style={{ marginBottom: '3px' }}>
+                            <strong>No. Transaksi</strong> : {nomorFaktur}
+                        </div>
+                        <div style={{ marginBottom: '3px' }}>
+                            <strong>Tanggal</strong> : {tanggalFaktur || '-'}
+                        </div>
+                        <div style={{ marginBottom: '3px' }}>
+                            <strong>Dicetak</strong> : {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} {new Date().toLocaleTimeString('id-ID')}
+                        </div>
+                    </div>
+
+                    {/* Main Table */}
+                    {items && items.length > 0 ? (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', marginTop: '10px' }}>
+                            <thead>
+                                <tr style={{ border: '1px solid #999' }}>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '2%' }}>No</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '10%' }}>Nama PT</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '10%' }}>No Faktur</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '10%' }}>No Surat Jalan</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '8%' }}>Tanggal</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '8%' }}>Tgl Surat Jalan</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '6%' }}>Kode Barang</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', fontWeight: 'bold', width: '16%' }}>Nama Barang</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '7%' }}>Harga Satuan</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '6%' }}>Jumlah</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '8%' }}>Jumlah Harga</th>
+                                    <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '6%' }}>Satuan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {/* Header Row */}
+                                <tr style={{ border: '1px solid #999' }}>
+                                    <td rowSpan={items.length} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'top', fontSize: '9px' }}>
+                                        1
+                                    </td>
+                                    <td rowSpan={items.length} style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', verticalAlign: 'top', fontSize: '9px' }}>
+                                        {namaPT || '-'}
+                                    </td>
+                                    <td rowSpan={items.length} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                        {nomorFaktur || '-'}
+                                    </td>
+                                    <td rowSpan={items.length} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                        {nomorSuratJalan || '-'}
+                                    </td>
+                                    <td rowSpan={items.length} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                        {tanggalFaktur?.substring(0, 10) || '-'}
+                                    </td>
+                                    <td rowSpan={items.length} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                        {tanggalSuratJalan?.substring(0, 10) || '-'}
+                                    </td>
+                                    <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                        ATK-001
+                                    </td>
+                                    <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', fontSize: '9px' }}>
+                                        1. {items[0]?.namaBarang}
+                                    </td>
+                                    <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                        {items[0]?.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(items[0]?.hargaSatuan) : '-'}
+                                    </td>
+                                    <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                        {items[0]?.banyaknya}
+                                    </td>
+                                    <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                        {items[0]?.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format((items[0]?.hargaSatuan || 0) * (items[0]?.banyaknya || 0)) : '-'}
+                                    </td>
+                                    <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                        {items[0]?.volume}
+                                    </td>
+                                </tr>
+
+                                {/* Item Rows - skip item pertama */}
+                                {items.slice(1).map((item: any, itemIdx: number) => (
+                                    <tr key={itemIdx} style={{ border: '1px solid #999' }}>
+                                        <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                            ATK-{String(itemIdx + 2).padStart(3, '0')}
                                         </td>
-                                        <td>
-                                            <div className="currency-col">
-                                                <span>Rp</span>
-                                                <span>{formatRp(item.banyaknya * item.hargaSatuan)}</span>
-                                            </div>
+                                        <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', fontSize: '9px' }}>
+                                            {itemIdx + 2}. {item.namaBarang}
+                                        </td>
+                                        <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                            {item.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.hargaSatuan) : '-'}
+                                        </td>
+                                        <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                            {item.banyaknya}
+                                        </td>
+                                        <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                            {item.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format((item.hargaSatuan || 0) * (item.banyaknya || 0)) : '-'}
+                                        </td>
+                                        <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                            {item.volume}
                                         </td>
                                     </tr>
                                 ))}
-                            </>
-                        )}
-                    </tbody>
-                    <tfoot style={{ fontWeight: 'bold' }}>
-                        <tr>
-                            <td colSpan={7} style={{ border: 'none', borderRight: '1px solid black', textAlign: 'right', paddingRight: '8px' }}>Total</td>
-                            <td colSpan={2} style={{ textAlign: 'right', paddingRight: '8px' }}>
-                                Rp {formatRp(items.reduce((acc, item) => acc + (item.banyaknya * item.hargaSatuan), 0))}
-                            </td>
-                        </tr>
-                    </tfoot>
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div style={{ textAlign: 'center', padding: '20px', fontSize: '12px', color: '#999' }}>
+                            Tidak ada item
+                        </div>
+                    )}
+
+                    {/* Footer */}
+                    {items && items.length > 0 && (
+                        <div style={{ marginTop: '20px', marginBottom: '10px' }}>
+                            <div style={{ textAlign: 'right', paddingRight: '10px', fontWeight: 'bold', fontSize: '10px', marginBottom: '5px' }}>
+                                Total Jumlah: <span style={{ marginLeft: '50px', display: 'inline-block', width: '150px', textAlign: 'right' }}>
+                                    {items.reduce((sum: number, item: any) => sum + (item.banyaknya || 0), 0)}
+                                </span>
+                            </div>
+                            <div style={{ textAlign: 'right', paddingRight: '10px', fontWeight: 'bold', fontSize: '10px' }}>
+                                Total Harga: <span style={{ marginLeft: '50px', display: 'inline-block', width: '150px', textAlign: 'right' }}>
+                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
+                                        items.reduce((sum: number, item: any) => sum + ((item.hargaSatuan || 0) * (item.banyaknya || 0)), 0)
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Print Footer */}
+                    <div style={{ fontSize: '8px', textAlign: 'center', color: '#999', borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '30px' }}>
+                        Dicetak pada {new Date().toLocaleString('id-ID')} • Sistem Inventaris ATK Mahkamah Agung RI
+                    </div>
+                </div>
+            </div>
                 </table>
             </div>
         </AppLayout>

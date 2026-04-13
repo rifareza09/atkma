@@ -420,68 +420,169 @@ export default function CetakFakturIndex() {
 
             <div id="print-batch-faktur">
                 <div className="print-page">
-                    {/* Collect all items from all transactions */}
-                    {(() => {
-                        let rowNumber = 1;
-                        let allItems: any[] = [];
-                        printingFakturs.forEach((faktur) => {
-                            const items = faktur.raw_data.items || [];
-                            items.forEach((item: any) => {
-                                allItems.push({
-                                    ...faktur.raw_data,
-                                    item,
-                                    rowNo: rowNumber++
+                    {/* Header Section */}
+                    <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>MAHKAMAH AGUNG RI — SISTEM INVENTARIS ATK</div>
+                        <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>History Transaksi Barang Keluar</div>
+                    </div>
+
+                    {/* Summary Info */}
+                    <div style={{ marginBottom: '15px', fontSize: '10px' }}>
+                        <div style={{ marginBottom: '3px' }}>
+                            <strong>Periode</strong> : Transaksi Terpilih ({printingFakturs.length})
+                        </div>
+                        <div style={{ marginBottom: '3px' }}>
+                            <strong>Total Transaksi</strong> : {printingFakturs.length} transaksi
+                        </div>
+                        <div style={{ marginBottom: '3px' }}>
+                            <strong>Dicetak</strong> : {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} {new Date().toLocaleTimeString('id-ID')}
+                        </div>
+                    </div>
+
+                    {/* Main Table */}
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', marginTop: '10px' }}>
+                        <thead>
+                            <tr style={{ border: '1px solid #999' }}>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '2%' }}>No</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '10%' }}>Nama PT</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '10%' }}>No Faktur</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '10%' }}>No Surat Jalan</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '8%' }}>Tanggal</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '8%' }}>Tgl Surat Jalan</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '6%' }}>Kode Barang</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', fontWeight: 'bold', width: '16%' }}>Nama Barang</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '7%' }}>Harga Satuan</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '6%' }}>Jumlah</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '8%' }}>Jumlah Harga</th>
+                                <th style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', width: '6%' }}>Satuan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(() => {
+                                let transNo = 1;
+                                const rows: any[] = [];
+                                
+                                printingFakturs.forEach((faktur) => {
+                                    const items = faktur.raw_data?.items || [];
+                                    if (items.length === 0) return;
+
+                                    // Header row untuk transaksi dengan item pertama
+                                    rows.push({
+                                        type: 'header',
+                                        transNo,
+                                        faktur,
+                                        itemCount: items.length
+                                    });
+
+                                    // Item rows - skip item pertama (sudah ditampilkan di header)
+                                    items.forEach((item: any, itemIdx: number) => {
+                                        if (itemIdx > 0) {
+                                            rows.push({
+                                                type: 'item',
+                                                itemIdx,
+                                                item
+                                            });
+                                        }
+                                    });
+
+                                    transNo++;
                                 });
-                            });
-                        });
 
-                        const grandTotal = allItems.reduce((acc: number, row: any) =>
-                            acc + (row.item.banyaknya * row.item.hargaSatuan), 0
-                        );
+                                return rows.map((row, idx) => {
+                                    if (row.type === 'header') {
+                                        return (
+                                            <tr key={`header-${idx}`} style={{ border: '1px solid #999' }}>
+                                                <td rowSpan={row.itemCount} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'top', fontSize: '9px' }}>
+                                                    {row.transNo}
+                                                </td>
+                                                <td rowSpan={row.itemCount} style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', verticalAlign: 'top', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.namaPT || '-'}
+                                                </td>
+                                                <td rowSpan={row.itemCount} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.nomorFaktur || '-'}
+                                                </td>
+                                                <td rowSpan={row.itemCount} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.nomorSuratJalan || '-'}
+                                                </td>
+                                                <td rowSpan={row.itemCount} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.tanggalFaktur?.substring(0, 10) || '-'}
+                                                </td>
+                                                <td rowSpan={row.itemCount} style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', verticalAlign: 'top', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.tanggalSuratJalan?.substring(0, 10) || '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                                    ATK-001
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', fontSize: '9px' }}>
+                                                    1. {row.faktur.raw_data?.items[0]?.namaBarang}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.items[0]?.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(row.faktur.raw_data?.items[0]?.hargaSatuan) : '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.items[0]?.banyaknya}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.items[0]?.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format((row.faktur.raw_data?.items[0]?.hargaSatuan || 0) * (row.faktur.raw_data?.items[0]?.banyaknya || 0)) : '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                                    {row.faktur.raw_data?.items[0]?.volume}
+                                                </td>
+                                            </tr>
+                                        );
+                                    } else if (row.type === 'item') {
+                                        return (
+                                            <tr key={`item-${idx}`} style={{ border: '1px solid #999' }}>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                                    ATK-{String(row.itemIdx + 1).padStart(3, '0')}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'left', fontSize: '9px' }}>
+                                                    {row.itemIdx + 1}. {row.item.namaBarang}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                                    {row.item.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(row.item.hargaSatuan) : '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                                    {row.item.banyaknya}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'right', fontSize: '9px' }}>
+                                                    {row.item.hargaSatuan ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format((row.item.hargaSatuan || 0) * (row.item.banyaknya || 0)) : '-'}
+                                                </td>
+                                                <td style={{ border: '1px solid #999', padding: '6px', textAlign: 'center', fontSize: '9px' }}>
+                                                    {row.item.volume}
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                });
+                            })()}
+                        </tbody>
+                    </table>
 
-                        return (
-                            <table className="print-table">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: '3%' }}>NO</th>
-                                        <th style={{ width: '7%' }}>NO FAKTUR</th>
-                                        <th style={{ width: '8%' }}>TGL FAKTUR</th>
-                                        <th style={{ width: '7%' }}>NO SJ</th>
-                                        <th style={{ width: '8%' }}>TGL SJ</th>
-                                        <th style={{ width: '9%' }}>NAMA PT</th>
-                                        <th style={{ width: '16%' }}>NAMA BARANG</th>
-                                        <th style={{ width: '6%' }}>SAT</th>
-                                        <th style={{ width: '10%' }}>HARGA SAT</th>
-                                        <th style={{ width: '10%' }}>JUMLAH HARGA</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {allItems.map((row: any, idx: number) => (
-                                        <tr key={idx}>
-                                            <td className="text-center" style={{ fontSize: '11px' }}>{row.rowNo}</td>
-                                            <td className="text-center" style={{ fontSize: '10px' }}>{row.nomorFaktur}</td>
-                                            <td className="text-center" style={{ fontSize: '9px' }}>{row.tanggalFaktur?.substring(0, 15) || '-'}</td>
-                                            <td className="text-center" style={{ fontSize: '10px' }}>{row.nomorSuratJalan}</td>
-                                            <td className="text-center" style={{ fontSize: '9px' }}>{row.tanggalSuratJalan?.substring(0, 15) || '-'}</td>
-                                            <td style={{ fontSize: '9px' }}>{row.namaPT?.substring(0, 12) || '-'}</td>
-                                            <td style={{ fontSize: '9px' }}>{row.item.namaBarang?.substring(0, 18) || '-'}</td>
-                                            <td className="text-center" style={{ fontSize: '10px' }}>{row.item.volume}</td>
-                                            <td style={{ textAlign: 'right', fontSize: '9px' }}>Rp {formatRp(row.item.hargaSatuan)}</td>
-                                            <td style={{ textAlign: 'right', fontSize: '9px' }}>Rp {formatRp(row.item.banyaknya * row.item.hargaSatuan)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                                <tfoot style={{ fontWeight: 'bold' }}>
-                                    <tr>
-                                        <td colSpan={8} style={{ border: 'none', borderRight: '1px solid black', textAlign: 'right', paddingRight: '8px' }}>TOTAL</td>
-                                        <td colSpan={2} style={{ textAlign: 'right', paddingRight: '8px' }}>
-                                            Rp {formatRp(grandTotal)}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        );
-                    })()}
+                    {/* Footer */}
+                    <div style={{ marginTop: '20px', marginBottom: '10px' }}>
+                        <div style={{ textAlign: 'right', paddingRight: '10px', fontWeight: 'bold', fontSize: '10px', marginBottom: '5px' }}>
+                            Total Jumlah: <span style={{ marginLeft: '50px', display: 'inline-block', width: '150px', textAlign: 'right' }}>
+                                {printingFakturs.reduce((total: number, f: any) => {
+                                    return total + (f.raw_data?.items || []).reduce((sum: number, i: any) => sum + (i.banyaknya || 0), 0);
+                                }, 0)}
+                            </span>
+                        </div>
+                        <div style={{ textAlign: 'right', paddingRight: '10px', fontWeight: 'bold', fontSize: '10px' }}>
+                            Total Harga: <span style={{ marginLeft: '50px', display: 'inline-block', width: '150px', textAlign: 'right' }}>
+                                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
+                                    printingFakturs.reduce((total: number, f: any) => {
+                                        return total + (f.raw_data?.items || []).reduce((sum: number, i: any) => sum + ((i.hargaSatuan || 0) * (i.banyaknya || 0)), 0);
+                                    }, 0)
+                                )}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Print Footer */}
+                    <div style={{ fontSize: '8px', textAlign: 'center', color: '#999', borderTop: '1px solid #ddd', paddingTop: '10px' }}>
+                        Dicetak pada {new Date().toLocaleString('id-ID')} • Sistem Inventaris ATK Mahkamah Agung RI
+                    </div>
                 </div>
             </div>
         </AppLayout>
