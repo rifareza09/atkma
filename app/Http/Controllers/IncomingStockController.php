@@ -27,6 +27,7 @@ class IncomingStockController extends Controller
             \DB::raw('MAX(nomor_dokumen) as nomor_dokumen'),
             \DB::raw('MAX(nomor_faktur) as nomor_faktur'),
             \DB::raw('MAX(nomor_surat_jalan) as nomor_surat_jalan'),
+            \DB::raw('MAX(tanggal_surat_jalan) as tanggal_surat_jalan'),
             \DB::raw('MAX(tanggal_faktur) as tanggal_faktur'),
             \DB::raw('COUNT(id) as total_items'),
             \DB::raw('SUM(jumlah) as total_jumlah')
@@ -121,6 +122,7 @@ class IncomingStockController extends Controller
                 'nomor_dokumen' => $request->nomor_referensi,
                 'nomor_faktur'  => $request->nomor_faktur,
                 'nomor_surat_jalan' => $request->nomor_surat_jalan,
+                'tanggal_surat_jalan' => $request->tanggal_surat_jalan,
                 'tanggal_faktur' => $request->tanggal_faktur,
                 'keterangan'    => $request->keterangan,
                 'user_id'       => auth()->id(),
@@ -187,6 +189,7 @@ class IncomingStockController extends Controller
             'nomor_dokumen'     => 'nullable|string|max:255',
             'nomor_faktur'      => 'nullable|string|max:100',
             'nomor_surat_jalan' => 'nullable|string|max:100',
+            'tanggal_surat_jalan' => 'nullable|date',
             'tanggal_faktur'    => 'nullable|date',
             'keterangan'        => 'nullable|string|max:1000',
         ]);

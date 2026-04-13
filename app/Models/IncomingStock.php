@@ -18,6 +18,7 @@ class IncomingStock extends Model
         'nomor_dokumen',
         'nomor_faktur',
         'nomor_surat_jalan',
+        'tanggal_surat_jalan',
         'tanggal_faktur',
         'keterangan',
         'status',
@@ -25,6 +26,7 @@ class IncomingStock extends Model
 
     protected $casts = [
         'tanggal_masuk' => 'date',
+        'tanggal_surat_jalan' => 'date',
         'tanggal_faktur' => 'date',
         'jumlah' => 'integer',
     ];

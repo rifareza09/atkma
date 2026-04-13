@@ -81,6 +81,7 @@ export default function BarangMasukShow({ movement, items }: BarangMasukShowProp
         nomor_dokumen: movement.nomor_dokumen || '',
         nomor_faktur: movement.nomor_faktur || '',
         nomor_surat_jalan: movement.nomor_surat_jalan || '',
+        tanggal_surat_jalan: movement.tanggal_surat_jalan ? movement.tanggal_surat_jalan.split('T')[0] : '',
         tanggal_faktur: movement.tanggal_faktur ? movement.tanggal_faktur.split('T')[0] : '',
         keterangan: movement.keterangan || '',
     });
@@ -161,6 +162,10 @@ export default function BarangMasukShow({ movement, items }: BarangMasukShowProp
                                         <p className="text-lg font-semibold">{movement.tanggal_faktur ? new Date(movement.tanggal_faktur).toLocaleDateString('id-ID') : '-'}</p>
                                     </div>
                                     <div>
+                                        <p className="text-sm font-medium text-muted-foreground">Tanggal Surat Jalan</p>
+                                        <p className="text-lg font-semibold">{movement.tanggal_surat_jalan ? new Date(movement.tanggal_surat_jalan).toLocaleDateString('id-ID') : '-'}</p>
+                                    </div>
+                                    <div>
                                         <p className="text-sm font-medium text-muted-foreground">Supplier/Sumber</p>
                                         <p className="text-lg">{movement.sumber || '-'}</p>
                                     </div>
@@ -188,6 +193,10 @@ export default function BarangMasukShow({ movement, items }: BarangMasukShowProp
                                         <Input type="date" value={data.tanggal_faktur} onChange={e => setData('tanggal_faktur', e.target.value)} />
                                     </div>
                                     <div className="space-y-2">
+                                        <Label>Tanggal Surat Jalan</Label>
+                                        <Input type="date" value={data.tanggal_surat_jalan} onChange={e => setData('tanggal_surat_jalan', e.target.value)} />
+                                    </div>
+                                    <div className="md:col-span-3">
                                         <Label>Supplier/Sumber</Label>
                                         <Input value={data.sumber} onChange={e => setData('sumber', e.target.value)} />
                                     </div>

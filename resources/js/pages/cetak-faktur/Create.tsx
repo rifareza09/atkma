@@ -361,30 +361,19 @@ export default function CetakFaktur() {
                     </div>
                 )}
 
-                {/* Faktur & Surat Jalan Info */}
-                <div className="w-full" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px', marginBottom: '20px' }}>
-                    <div>
-                        <div style={{ fontWeight: 'bold' }}>FAKTUR</div>
-                        <div>{tanggalFaktur}</div>
-                        <div>{nomorFaktur}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 'bold' }}>SURAT JALAN</div>
-                        <div>{tanggalSuratJalan}</div>
-                        <div>{nomorSuratJalan}</div>
-                    </div>
-                </div>
-
                 {/* Table */}
                 <table className="print-table">
                     <thead>
                         <tr>
                             <th style={{ width: '5%' }}>NO</th>
-                            <th style={{ width: '25%' }}>NAMA BARANG</th>
-                            <th style={{ width: '20%' }}>JUMLAH</th>
-                            <th style={{ width: '15%' }}>SATUAN</th>
+                            <th style={{ width: '20%' }}>NAMA PT/CV</th>
+                            <th style={{ width: '15%' }}>NO FAKTUR</th>
+                            <th style={{ width: '15%' }}>TGL FAKTUR</th>
+                            <th style={{ width: '20%' }}>NAMA BARANG</th>
+                            <th style={{ width: '10%' }}>JUMLAH</th>
+                            <th style={{ width: '10%' }}>SATUAN</th>
                             <th style={{ width: '15%' }}>HARGA SATUAN</th>
-                            <th style={{ width: '20%' }}>JUMLAH HARGA</th>
+                            <th style={{ width: '15%' }}>JUMLAH HARGA</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -393,6 +382,12 @@ export default function CetakFaktur() {
                                 {items.map((item, idx) => (
                                     <tr key={idx}>
                                         <td className="text-center">{idx + 1}</td>
+                                        {/* Nama PT hanya ditampilkan di baris pertama */}
+                                        <td className="text-left">{idx === 0 ? namaPT : ''}</td>
+                                        {/* No Faktur hanya di baris pertama */}
+                                        <td className="text-left">{idx === 0 ? nomorFaktur : ''}</td>
+                                        {/* Tanggal Faktur hanya di baris pertama */}
+                                        <td className="text-center">{idx === 0 ? formatDate(tanggalFaktur, lokasiTanggalFaktur).split(', ').slice(1).join(', ') : ''}</td>
                                         <td>{item.namaBarang}</td>
                                         <td className="text-center">{new Intl.NumberFormat('id-ID').format(item.banyaknya)}</td>
                                         <td className="text-center">{item.volume}</td>
@@ -415,7 +410,7 @@ export default function CetakFaktur() {
                     </tbody>
                     <tfoot style={{ fontWeight: 'bold' }}>
                         <tr>
-                            <td colSpan={4} style={{ border: 'none', borderRight: '1px solid black', textAlign: 'right', paddingRight: '8px' }}>Total</td>
+                            <td colSpan={7} style={{ border: 'none', borderRight: '1px solid black', textAlign: 'right', paddingRight: '8px' }}>Total</td>
                             <td colSpan={2} style={{ textAlign: 'right', paddingRight: '8px' }}>
                                 Rp {formatRp(items.reduce((acc, item) => acc + (item.banyaknya * item.hargaSatuan), 0))}
                             </td>

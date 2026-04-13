@@ -26,6 +26,7 @@ class IncomingStockRequest extends FormRequest
             'keterangan'           => ['nullable', 'string', 'max:1000'],
             'nomor_faktur'         => ['nullable', 'string', 'max:100'],
             'nomor_surat_jalan'    => ['nullable', 'string', 'max:100'],
+            'tanggal_surat_jalan'  => ['nullable', 'date'],
             'tanggal_faktur'       => ['nullable', 'date'],
             'items'                => ['required', 'array', 'min:1'],
             'items.*.barang_id'    => ['required', 'integer', 'exists:barangs,id'],
@@ -39,16 +40,17 @@ class IncomingStockRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'tanggal'           => 'tanggal barang masuk',
-            'sumber_tujuan'     => 'sumber',
-            'nomor_referensi'   => 'nomor referensi',
-            'nomor_faktur'      => 'nomor faktur',
-            'nomor_surat_jalan' => 'nomor surat jalan',
-            'tanggal_faktur'    => 'tanggal faktur',
-            'keterangan'        => 'keterangan',
-            'items'             => 'daftar barang',
-            'items.*.barang_id' => 'barang',
-            'items.*.jumlah'    => 'jumlah barang',
+            'tanggal'              => 'tanggal barang masuk',
+            'sumber_tujuan'        => 'sumber',
+            'nomor_referensi'      => 'nomor referensi',
+            'nomor_faktur'         => 'nomor faktur',
+            'nomor_surat_jalan'    => 'nomor surat jalan',
+            'tanggal_surat_jalan'  => 'tanggal surat jalan',
+            'tanggal_faktur'       => 'tanggal faktur',
+            'keterangan'           => 'keterangan',
+            'items'                => 'daftar barang',
+            'items.*.barang_id'    => 'barang',
+            'items.*.jumlah'       => 'jumlah barang',
         ];
     }
 

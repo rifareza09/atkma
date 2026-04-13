@@ -149,6 +149,10 @@ export interface IncomingStock {
     tanggal_masuk: string;
     sumber: string | null;
     nomor_dokumen: string | null;
+    nomor_faktur?: string | null;
+    nomor_surat_jalan?: string | null;
+    tanggal_surat_jalan?: string | null;
+    tanggal_faktur?: string | null;
     keterangan: string | null;
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;

@@ -41,6 +41,7 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
     const [nomorReferensi, setNomorReferensi] = useState('');
     const [nomorFaktur, setNomorFaktur] = useState('');
     const [nomorSuratJalan, setNomorSuratJalan] = useState('');
+    const [tanggalSuratJalan, setTanggalSuratJalan] = useState('');
     const [tanggalFaktur, setTanggalFaktur] = useState('');
     const [keterangan, setKeterangan] = useState('');
     const [items, setItems] = useState<ItemRow[]>([{ barang_id: 0, jumlah: 0 }]);
@@ -83,6 +84,7 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
                 nomor_referensi: nomorReferensi,
                 nomor_faktur: nomorFaktur,
                 nomor_surat_jalan: nomorSuratJalan,
+                tanggal_surat_jalan: tanggalSuratJalan,
                 tanggal_faktur: tanggalFaktur,
                 keterangan,
                 items,
@@ -159,6 +161,13 @@ export default function BarangMasukCreate({ barangs }: BarangMasukCreateProps) {
                                     onChange={(e) => setNomorSuratJalan(e.target.value)}
                                     error={errors.nomor_surat_jalan}
                                     placeholder="Contoh: SJ-2024-001"
+                                />
+                                <InputWithLabel
+                                    label="Tanggal Surat Jalan"
+                                    type="date"
+                                    value={tanggalSuratJalan}
+                                    onChange={(e) => setTanggalSuratJalan(e.target.value)}
+                                    error={errors.tanggal_surat_jalan}
                                 />
                                 <InputWithLabel
                                     label="Nomor Faktur"
